@@ -1,0 +1,77 @@
+name: Deploy site
+
+# Builds the static site from whatever data is committed and publishes it to
+# GitHub Pages. Separate from the scoring run on purpose:
+#
+#   * the first deploy needs no 40-minute data run - the data is in the repo;
+#   * the monthly run pushes new data to main, which triggers this;
+#   * only one workflow ever deploys, so two runs cannot race for Pages.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "data/**"
+      - ".github/workflows/deploy-site.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: rankfield-pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # `enablement: true` turns Pages on via the API, so there is no manual
+      # Settings step before the first deploy.
+      - id: pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Build
+        working-directory: site
+        env:
+          # A project page is served from /<repo>/, so the asset base must match
+          # or every script and stylesheet 404s. `configure-pages` reports the
+          # real base path; the repo name is the fallback.
+          RANKFIELD_BASE: ${{ vars.RANKFIELD_BASE || steps.pages.outputs.base_path || format('/{0}/', github.event.repository.name) }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Verify payloads shipped
+        working-directory: site
+        run: |
+          test -f dist/data/scores_full.json || { echo "scores_full.json missing from the build"; exit 1; }
+          test -f dist/data/scores_public.json || { echo "scores_public.json missing from the build"; exit 1; }
+          echo "payloads present:"
+          ls -lh dist/data
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

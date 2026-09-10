@@ -6,6 +6,10 @@ name: Monthly score
 # A missed month is a permanent hole in history - there is no external source to
 # reconstruct past Rankfield scores from - so the job retries rather than
 # skipping, and history files are append-only.
+#
+# This workflow does not deploy. It pushes the new data to main, which triggers
+# deploy-site.yml; keeping one deploying workflow stops two runs racing for
+# Pages.
 on:
   schedule:
     - cron: "0 6 2 * *"
@@ -21,8 +25,6 @@ concurrency:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 jobs:
   score:
@@ -39,6 +41,7 @@ jobs:
       - run: pip install -r requirements.txt
 
       # SEC policy requires a User-Agent carrying a real name and email.
+      # Set the RANKFIELD_USER_AGENT repository secret before the first run.
       - name: Fetch universe
         env:
           RANKFIELD_USER_AGENT: ${{ secrets.RANKFIELD_USER_AGENT }}
@@ -66,39 +69,16 @@ jobs:
       - name: Build site payloads
         run: python scripts/build_json.py
 
+      - name: Split-handling acceptance test
+        env:
+          RANKFIELD_USER_AGENT: ${{ secrets.RANKFIELD_USER_AGENT }}
+        run: python scripts/test_split_handling.py
+
       - name: Commit data
         run: |
           git config user.name  "rankfield-bot"
           git config user.email "actions@github.com"
           # The companyfacts cache is regenerable and enormous; never commit it.
-          git add data/ ':!data/.cache'
+          git add data/ site/public/data/ ':!data/.cache'
           git commit -m "Monthly scores $(date -u +%Y-%m)" || echo "nothing to commit"
           git push
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: site/package-lock.json
-
-      - name: Build site
-        working-directory: site
-        env:
-          RANKFIELD_BASE: ${{ vars.RANKFIELD_BASE || '/' }}
-        run: |
-          npm ci
-          npm run build
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site/dist
-
-  deploy:
-    needs: score
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
