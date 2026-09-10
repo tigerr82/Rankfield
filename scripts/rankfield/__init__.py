@@ -1,0 +1,1 @@
+"""Rankfield batch pipeline."""

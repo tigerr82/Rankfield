@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "effective_from": "2026-09",
+  "note": "Official weights. Changing these MUST bump `version`; historical score records keep the weights_version that produced them and are never re-scored. See docs/METHODOLOGY notes in the site methodology page.",
+  "weights": {
+    "quality": 25,
+    "growth": 25,
+    "valuation": 25,
+    "health": 25
+  }
+}

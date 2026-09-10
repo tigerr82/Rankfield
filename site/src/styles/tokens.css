@@ -1,0 +1,125 @@
+/* Design tokens. No component may take a colour, size or face from outside
+   this file.
+
+   Ground is a faintly cool off-white in light and a deep desaturated slate in
+   dark - never pure black. The brand accent is a single deep teal, used only
+   for interactive chrome, active filter states and focus rings: green and red
+   are reserved for gains and losses and must never be spent on decoration.
+   Both themes are complete token sets, not an inverted filter. */
+
+:root {
+  color-scheme: light;
+
+  /* surfaces */
+  --ground: #f6f8f7;
+  --surface: #ffffff;
+  --surface-2: #fbfcfc;
+  --surface-3: #f1f4f4;
+
+  /* ink */
+  --ink: #13181a;
+  --ink-2: #4a5358;
+  --ink-3: #7d868b;
+
+  /* lines */
+  --line: #e4e8e7;
+  --line-2: #ccd3d2;
+
+  /* brand accent - neither green nor red */
+  --accent: #0d6e6e;
+  --accent-2: #0a5757;
+  --accent-soft: #e0efed;
+  --on-accent: #ffffff;
+
+  /* semantics: only for gains and losses, always paired with a sign + arrow */
+  --up: #146b43;
+  --down: #a93b2b;
+  --warn: #8a5a12;
+  --warn-soft: #fbf1de;
+
+  /* score magnitude ramp */
+  --bar: #0d6e6e;
+  --bar-track: #eceff0;
+
+  --shadow: 0 1px 2px rgba(19, 24, 26, 0.05), 0 8px 24px -12px rgba(19, 24, 26, 0.18);
+
+  /* type scale */
+  --font-ui: "Public Sans", system-ui, -apple-system, sans-serif;
+  --font-head: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --t-micro: 9.5px;
+  --t-tiny: 11px;
+  --t-small: 11.5px;
+  --t-body: 12.5px;
+  --t-table: 12.8px;
+  --t-lead: 14px;
+  --t-h3: 17px;
+  --t-h2: 20px;
+  --t-h1: 25px;
+
+  /* spacing scale */
+  --s-1: 3px;
+  --s-2: 6px;
+  --s-3: 9px;
+  --s-4: 12px;
+  --s-5: 16px;
+  --s-6: 22px;
+  --s-7: 30px;
+
+  --radius-sm: 3px;
+  --radius: 6px;
+  --radius-lg: 10px;
+
+  --rail-w: 236px;
+  --toolbar-h: 48px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #0e1214;
+    --surface: #161b1e;
+    --surface-2: #1b2124;
+    --surface-3: #202729;
+    --ink: #eef2f1;
+    --ink-2: #a7b1b3;
+    --ink-3: #78838a;
+    --line: #242c30;
+    --line-2: #36403f;
+    --accent: #4fb3a8;
+    --accent-2: #69c6bb;
+    --accent-soft: #11312f;
+    --on-accent: #08201f;
+    --up: #42b07f;
+    --down: #e07b64;
+    --warn: #d8a75a;
+    --warn-soft: #2a2313;
+    --bar: #4fb3a8;
+    --bar-track: #222a2d;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px -14px rgba(0, 0, 0, 0.7);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #0e1214;
+  --surface: #161b1e;
+  --surface-2: #1b2124;
+  --surface-3: #202729;
+  --ink: #eef2f1;
+  --ink-2: #a7b1b3;
+  --ink-3: #78838a;
+  --line: #242c30;
+  --line-2: #36403f;
+  --accent: #4fb3a8;
+  --accent-2: #69c6bb;
+  --accent-soft: #11312f;
+  --on-accent: #08201f;
+  --up: #42b07f;
+  --down: #e07b64;
+  --warn: #d8a75a;
+  --warn-soft: #2a2313;
+  --bar: #4fb3a8;
+  --bar-track: #222a2d;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px -14px rgba(0, 0, 0, 0.7);
+}

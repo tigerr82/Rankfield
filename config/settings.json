@@ -1,0 +1,40 @@
+{
+  "universe": {
+    "exchanges": [
+      "NYSE",
+      "NASDAQ"
+    ],
+    "market_cap_floor_usd": 1000000000,
+    "adv_dollar_floor": 5000000,
+    "min_quarters_filed": 8,
+    "coverage_threshold": 0.7,
+    "min_sector_cohort": 12,
+    "segment_metric_applicability": 0.4
+  },
+  "scoring": {
+    "winsorize_lo_pct": 5,
+    "winsorize_hi_pct": 95,
+    "roic_hurdle": 0.09,
+    "effective_tax_clamp": [
+      0.0,
+      0.35
+    ],
+    "stability_sweep": [
+      10,
+      15,
+      20,
+      25,
+      30,
+      35,
+      40
+    ]
+  },
+  "sanity": {
+    "price_move_review_pct": 50
+  },
+  "http": {
+    "user_agent": "Rankfield (personal research) ranchook@gmail.com",
+    "sec_rate_limit_per_sec": 9,
+    "price_workers": 6
+  }
+}

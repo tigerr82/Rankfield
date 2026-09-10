@@ -1,0 +1,104 @@
+name: Monthly score
+
+# Scoring date is the last trading day of the prior month; the run happens on
+# the 2nd at 06:00 UTC to give the sources a day to settle.
+#
+# A missed month is a permanent hole in history - there is no external source to
+# reconstruct past Rankfield scores from - so the job retries rather than
+# skipping, and history files are append-only.
+on:
+  schedule:
+    - cron: "0 6 2 * *"
+  workflow_dispatch:
+    inputs:
+      as_of:
+        description: "Scoring date override (YYYY-MM-DD)"
+        required: false
+
+concurrency:
+  group: rankfield-score
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      # SEC policy requires a User-Agent carrying a real name and email.
+      - name: Fetch universe
+        env:
+          RANKFIELD_USER_AGENT: ${{ secrets.RANKFIELD_USER_AGENT }}
+        run: python scripts/fetch_universe.py
+
+      - name: Fetch prices
+        env:
+          RANKFIELD_USER_AGENT: ${{ secrets.RANKFIELD_USER_AGENT }}
+        run: python scripts/fetch_prices.py ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }}
+
+      - name: Fetch fundamentals
+        env:
+          RANKFIELD_USER_AGENT: ${{ secrets.RANKFIELD_USER_AGENT }}
+        # Retry rather than skip: a failed month cannot be recovered later.
+        run: |
+          for attempt in 1 2 3; do
+            python scripts/fetch_fundamentals.py ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }} && break
+            echo "attempt $attempt failed, retrying in 120s"
+            sleep 120
+          done
+
+      - name: Compute scores
+        run: python scripts/compute_scores.py ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }}
+
+      - name: Build site payloads
+        run: python scripts/build_json.py
+
+      - name: Commit data
+        run: |
+          git config user.name  "rankfield-bot"
+          git config user.email "actions@github.com"
+          # The companyfacts cache is regenerable and enormous; never commit it.
+          git add data/ ':!data/.cache'
+          git commit -m "Monthly scores $(date -u +%Y-%m)" || echo "nothing to commit"
+          git push
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Build site
+        working-directory: site
+        env:
+          RANKFIELD_BASE: ${{ vars.RANKFIELD_BASE || '/' }}
+        run: |
+          npm ci
+          npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+  deploy:
+    needs: score
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

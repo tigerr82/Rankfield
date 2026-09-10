@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node
+node_modules/
+site/dist/
+.vite/
+
+# Local caches — regenerable, never committed
+.cache/
+data/.cache/
+
+# Environment
+.env
+.env.local
