@@ -2,6 +2,8 @@
 
 **Sector-relative equity scoring, with the work shown.**
 
+Live: <https://tigerr82.github.io/Rankfield/>
+
 Rankfield ranks every NYSE and NASDAQ common stock above $1B market cap on a transparent,
 sector-relative composite score, and shows every sub-score behind every score. A scheduled
 batch job produces static JSON; the website only ever reads those files. No live data, no
