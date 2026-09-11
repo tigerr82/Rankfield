@@ -14,7 +14,12 @@
  */
 import type { CoverageReport, HistoryIndex, ScoresPayload, StockRow } from "./types";
 
-const BASE = `${import.meta.env.BASE_URL}data`;
+// BASE_URL is "/" at a domain root and "/Rankfield/" under a GitHub Pages
+// project page. A base configured WITHOUT a trailing slash yields "/Rankfield",
+// which naive concatenation turns into "/Rankfielddata" - a 404 on every
+// payload, while the assets still load because Vite joins those separately.
+// Normalise once, here, so the join cannot depend on how base was configured.
+const BASE = `${import.meta.env.BASE_URL.replace(/\/+$/, "")}/data`;
 
 export type Tier = "public" | "full";
 

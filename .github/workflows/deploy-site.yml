@@ -54,13 +54,31 @@ jobs:
           npm ci
           npm run build
 
-      - name: Verify payloads shipped
+      - name: Verify the build serves its payloads under the deployed path
         working-directory: site
         run: |
           test -f dist/data/scores_full.json || { echo "scores_full.json missing from the build"; exit 1; }
           test -f dist/data/scores_public.json || { echo "scores_public.json missing from the build"; exit 1; }
-          echo "payloads present:"
-          ls -lh dist/data
+
+          # A base path without a trailing slash concatenates into
+          # "/<repo>data/..." and 404s every payload at runtime, while the
+          # assets still load because Vite joins those separately. That failure
+          # is invisible in the build log, so assert the normalised base is what
+          # actually got compiled in.
+          base=$(grep -oE '"/[A-Za-z0-9_.-]+/"' dist/assets/*.js | sort -u | head -1)
+          echo "compiled base: $base"
+          grep -qE '"/[A-Za-z0-9_.-]+/"|"/"' dist/assets/*.js             || { echo "no trailing-slash base found in the bundle"; exit 1; }
+
+          # End-to-end: serve dist exactly as a project page does and fetch both
+          # the shell and a payload by their real URLs.
+          repo='${{ github.event.repository.name }}'
+          mkdir -p /tmp/pages/"$repo"
+          cp -r dist/. /tmp/pages/"$repo"/
+          (cd /tmp/pages && python3 -m http.server 8099 >/dev/null 2>&1 &)
+          for i in $(seq 1 20); do curl -fsS "http://localhost:8099/$repo/" -o /dev/null && break; sleep 1; done
+          curl -fsS "http://localhost:8099/$repo/" -o /dev/null
+          curl -fsS "http://localhost:8099/$repo/data/scores_full.json" -o /dev/null
+          echo "shell and payload both serve under /$repo/"
 
       - uses: actions/upload-pages-artifact@v3
         with:
