@@ -18,6 +18,10 @@ on:
       as_of:
         description: "Scoring date override (YYYY-MM-DD)"
         required: false
+      limit:
+        description: "Cap the universe size for a fast validation run. Any value here also SKIPS the data commit, so a test run cannot touch the live site."
+        required: false
+        default: ""
 
 concurrency:
   group: rankfield-score
@@ -40,17 +44,32 @@ jobs:
 
       - run: pip install -r requirements.txt
 
+      - name: Check the SEC contact secret
+        env:
+          RANKFIELD_USER_AGENT: ${{ secrets.RANKFIELD_USER_AGENT }}
+        # Fail here with a clear message rather than 40 minutes later with an
+        # opaque EDGAR rejection. The value itself is never printed.
+        run: |
+          if [ -z "$RANKFIELD_USER_AGENT" ]; then
+            echo "::error::RANKFIELD_USER_AGENT repository secret is not set. SEC policy requires a User-Agent carrying a real name and email address."
+            exit 1
+          fi
+          case "$RANKFIELD_USER_AGENT" in
+            *@*.*) echo "SEC contact is configured and contains an email address (value masked).";;
+            *) echo "::error::RANKFIELD_USER_AGENT must contain an email address."; exit 1;;
+          esac
+
       # SEC policy requires a User-Agent carrying a real name and email.
       # Set the RANKFIELD_USER_AGENT repository secret before the first run.
       - name: Fetch universe
         env:
           RANKFIELD_USER_AGENT: ${{ secrets.RANKFIELD_USER_AGENT }}
-        run: python scripts/fetch_universe.py
+        run: python scripts/fetch_universe.py ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }}
 
       - name: Fetch prices
         env:
           RANKFIELD_USER_AGENT: ${{ secrets.RANKFIELD_USER_AGENT }}
-        run: python scripts/fetch_prices.py ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }}
+        run: python scripts/fetch_prices.py ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }} ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }}
 
       - name: Fetch fundamentals
         env:
@@ -58,7 +77,7 @@ jobs:
         # Retry rather than skip: a failed month cannot be recovered later.
         run: |
           for attempt in 1 2 3; do
-            python scripts/fetch_fundamentals.py ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }} && break
+            python scripts/fetch_fundamentals.py ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }} ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }} && break
             echo "attempt $attempt failed, retrying in 120s"
             sleep 120
           done
@@ -75,6 +94,9 @@ jobs:
         run: python scripts/test_split_handling.py
 
       - name: Commit data
+        # A capped run is a validation run: it proves the credentials and the
+        # pipeline work, and must not publish a partial universe.
+        if: ${{ !inputs.limit }}
         run: |
           git config user.name  "rankfield-bot"
           git config user.email "actions@github.com"
