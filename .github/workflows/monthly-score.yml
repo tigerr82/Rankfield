@@ -19,7 +19,9 @@ on:
         description: "Scoring date override (YYYY-MM-DD)"
         required: false
       limit:
-        description: "Cap the universe size for a fast validation run. Any value here also SKIPS the data commit, so a test run cannot touch the live site."
+        # Keep this short: GitHub renders the description as the field's only
+        # label, so a long one reads as body text and the input looks unlabelled.
+        description: "Limit — cap universe size (validation run, skips the data commit)"
         required: false
         default: ""
 
