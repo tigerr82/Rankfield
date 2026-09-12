@@ -119,11 +119,26 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     persisted<Record<string, number>>("rankfield_widths_v1", {}),
   );
   const [watchEvents, setWatchEvents] = useState<WatchEvent[]>(() => allEvents());
-  // Collapsing the rail returns 236px to the table - enough to clear the Pro
-  // column set on a 1280px laptop without any horizontal scrolling.
-  const [railCollapsed, setRailCollapsed] = useState<boolean>(() =>
-    persisted<boolean>("rankfield_rail_collapsed_v1", false),
-  );
+  // Below this the window cannot hold the rail AND the full Pro column set:
+  // 236px of rail + ~36px of margin + a ~997px table + a scrollbar.
+  const RAIL_FITS_ABOVE = 1280;
+
+  // Seeing every column at once matters more than keeping the filters pinned,
+  // so on a narrow window the rail starts closed and opens as an overlay. It
+  // only ever auto-closes - never auto-opens - so it cannot fight the user.
+  const [railCollapsed, setRailCollapsed] = useState<boolean>(() => {
+    const stored = persisted<boolean>("rankfield_rail_collapsed_v1", false);
+    if (typeof window !== "undefined" && window.innerWidth < RAIL_FITS_ABOVE) return true;
+    return stored;
+  });
+
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth < RAIL_FITS_ABOVE) setRailCollapsed(true);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;

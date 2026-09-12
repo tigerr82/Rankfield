@@ -354,10 +354,10 @@ thead th {
   background: var(--surface-2);
   font-family: var(--font-mono);
   font-size: var(--t-micro);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--ink-3);
-  padding: 8px 9px;
+  padding: 8px 6px;
   cursor: pointer;
   white-space: nowrap;
   user-select: none;
@@ -369,7 +369,7 @@ thead th:hover { color: var(--accent); }
 thead th.srt { color: var(--accent); }
 thead th .ar { font-size: 8px; margin-left: 2px; }
 tbody td {
-  padding: 0 9px;
+  padding: 0 6px;
   border-bottom: 1px solid var(--line);
   border-right: 1px solid var(--line);
   height: 34px;
@@ -406,12 +406,12 @@ tbody tr:hover td.stick, tbody tr.open td.stick { background: var(--accent-soft)
 .rk { font-family: var(--font-mono); color: var(--ink-3); font-size: var(--t-small); }
 .tk { font-family: var(--font-mono); font-weight: 600; font-size: 13px; }
 .exch {
-  font-size: 9px;
+  font-size: 8.5px;
   color: var(--ink-3);
   border: 1px solid var(--line-2);
   border-radius: var(--radius-sm);
-  padding: 0 3px;
-  margin-left: 5px;
+  padding: 0 2px;
+  margin-left: 4px;
 }
 .nm { color: var(--ink); font-size: 12.3px; }
 .sec { color: var(--ink-2); font-size: 12px; }
@@ -447,8 +447,8 @@ body.resizing { cursor: col-resize; user-select: none; }
   font-weight: 600;
   font-size: 12.2px;
   display: inline-block;
-  min-width: 44px;
-  padding: 2px 6px;
+  min-width: 37px;
+  padding: 2px 4px;
   border-radius: 4px;
   background: var(--bar-track);
   text-align: right;
@@ -456,7 +456,7 @@ body.resizing { cursor: col-resize; user-select: none; }
 .sc .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--bar); opacity: 0.2; }
 .sc .n { position: relative; }
 .sc.na { background: transparent; color: var(--ink-3); font-weight: 400; }
-.sc.comp { font-size: 13px; min-width: 50px; }
+.sc.comp { font-size: 13px; min-width: 43px; }
 
 /* change cells: never colour alone - always a sign and an arrow too */
 .delta { font-family: var(--font-mono); font-weight: 600; font-size: 12.3px; }
@@ -482,14 +482,14 @@ body.resizing { cursor: col-resize; user-select: none; }
 .stab {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   font-family: var(--font-mono);
   font-size: var(--t-small);
   color: var(--ink-2);
 }
 .stab .track {
   position: relative;
-  width: 46px;
+  width: 30px;
   height: 5px;
   border-radius: 3px;
   background: var(--bar-track);
@@ -670,6 +670,24 @@ footer.pf a { color: var(--ink-2); }
 .stat .sub { font-size: var(--t-small); color: var(--ink-3); margin-top: 3px; }
 
 /* ============================================================== responsive */
+
+/* Below this width the rail and the full Pro column set cannot both fit, and
+   seeing every column at once is the point of the table. So the rail stops
+   taking a grid column and floats above the table instead: opening it covers
+   part of the table briefly rather than squeezing every column permanently. */
+@media (max-width: 1279px) {
+  .shell { grid-template-columns: 1fr; }
+  .rail {
+    position: absolute;
+    z-index: 60;
+    top: 0;
+    bottom: 0;
+    width: var(--rail-w);
+    box-shadow: var(--shadow);
+    border-right: 1px solid var(--line-2);
+  }
+  .shell { position: relative; }
+}
 
 @media (max-width: 900px) {
   /* Nothing may push the body sideways on a narrow window. */
