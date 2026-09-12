@@ -115,6 +115,27 @@ company, and JPMorgan legitimately has no gross margin.
 
 ---
 
+## Corrections to the record
+
+History is append-only, so any rewrite of a stored month is logged here. There has
+been one.
+
+**2026-09 — the 2026-08 record was regenerated once.** Growth in profitability
+(dGPOA) subtracted a fiscal-year ratio from a trailing-twelve-month one, so the
+near endpoint used a balance sheet up to six months newer than the far endpoint.
+Companies growing their asset base were penalised for where their fiscal year
+fell rather than for their economics, and 1,108 of 1,354 rows were mis-ranked.
+Microsoft, whose fiscal year already aligned with the scoring date, was the only
+large name unaffected - which is what identified it as a calendar artifact.
+
+The record was corrected in the same month it was written, before any track
+record depended on it. The original is preserved in git history at commit
+`fb17365~1`. This is the exception the rule tolerates: a defect in a metric,
+caught immediately. It is **not** licence to re-score history when the weights
+change - that remains forbidden, because it guarantees a flattering backtest.
+
+---
+
 ## Configuration
 
 `config/weights.json` — the official factor weights, versioned. Changing them **must** bump
