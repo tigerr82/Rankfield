@@ -198,3 +198,45 @@ class TestTaxRate:
         )["provenance"]
         assert prov["tax_rate_source"] == "statutory-fallback"
         assert prov["effective_tax_rate"] == 0.21
+
+
+class TestDeltaGpoaIsLikeForLike:
+    """dGPOA must compare two fiscal years, not a trailing figure against one.
+
+    Dividing the near endpoint by the latest quarter-end balance sheet while the
+    far endpoint used a fiscal year-end one made the result depend on how far a
+    company's fiscal year-end sat from the scoring date. A December filer scored
+    in August was measured against a balance sheet six months newer than its own
+    historical endpoint, so growing the asset base was punished for the calendar.
+    """
+
+    def test_a_growing_asset_base_is_not_punished_for_the_calendar(self):
+        fs = build()
+        gaap = fs._facts["us-gaap"]
+        # Assets jump 50% in the stub quarter after the last fiscal year end -
+        # exactly the shape of a capital-expenditure surge.
+        gaap["Assets"]["units"]["USD"].append(
+            {"end": "2026-06-30", "val": 3000.0, "filed": "2026-07-30", "form": "10-Q", "accn": "q"}
+        )
+        # A quarter, which is what filers actually tag - not a 12-month window,
+        # which would legitimately read as a new fiscal year.
+        for concept in ("Revenues", "CostOfGoodsAndServicesSold"):
+            rows = gaap[concept]["units"]["USD"]
+            quarter = rows[-1]["val"] / 4
+            for start, end in (("2026-01-01", "2026-03-31"), ("2026-04-01", "2026-06-30")):
+                rows.append({"start": start, "end": end, "val": quarter,
+                             "filed": "2026-07-30", "form": "10-Q", "accn": "q"})
+        fs._cache.clear()
+        result = compute_metrics(fs, market_cap=5000.0)
+        delta = result["values"]["delta_gpoa"]
+        assert delta is not None
+        # The fiscal-year ratio barely moved, so dGPOA must stay near zero
+        # rather than collapsing because of the newer, larger balance sheet.
+        assert abs(delta) < 0.05, f"dGPOA {delta:+.3f} reflects the balance-sheet date, not the business"
+
+    def test_both_endpoints_come_from_the_annual_series(self):
+        fs = build()
+        from rankfield.metrics import _annual_gpoa
+        result = compute_metrics(fs, market_cap=5000.0)
+        expected = _annual_gpoa(fs, 0) - _annual_gpoa(fs, 3)
+        assert result["values"]["delta_gpoa"] == pytest.approx(expected)

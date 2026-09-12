@@ -364,7 +364,19 @@ def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) ->
             missing["fcf_ev"] = "operating cash flow unavailable"
 
     # ----------------------------------------------------------- Growth
-    gpoa_now = values["gpoa"]
+    # Both endpoints come from the ANNUAL series, so the comparison is
+    # like-for-like.
+    #
+    # Using the trailing-twelve-month GPOA as the near endpoint looked fresher
+    # but compared unlike things: the TTM figure divides by the latest
+    # quarter-end balance sheet, while the historical figure divides by a fiscal
+    # year-end one. For a December filer scored in August that is a balance
+    # sheet six months newer, so any company growing its asset base was
+    # penalised for the calendar rather than for its economics - Alphabet's
+    # decline read -13.4pp instead of -2.5pp. Microsoft, whose fiscal year ends
+    # in June, was unaffected, which is what identified the artifact: the
+    # distortion tracked the fiscal calendar, not the business.
+    gpoa_now = _annual_gpoa(fs, 0)
     gpoa_then = _annual_gpoa(fs, 3)
     if gpoa_now is not None and gpoa_then is not None:
         values["delta_gpoa"] = gpoa_now - gpoa_then
