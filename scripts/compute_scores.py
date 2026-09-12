@@ -118,6 +118,9 @@ def main() -> int:
     parser.add_argument("--as-of", default=None)
     parser.add_argument("--force-history", action="store_true",
                         help="overwrite this month's history file (normally refused)")
+    parser.add_argument("--no-history", action="store_true",
+                        help="refresh the display payloads without touching data/history/ "
+                             "(used by the weekly price refresh)")
     args = parser.parse_args()
 
     ensure_dirs()
@@ -302,7 +305,14 @@ def main() -> int:
 
     # ---- append-only history
     history_path = HISTORY_DIR / f"scores_{month_key(scoring_date)}.json"
-    if history_path.exists() and not args.force_history:
+    if args.no_history:
+        # The weekly price refresh must never create a month's record. If it
+        # fired before that month's scoring run - possible whenever the 1st
+        # falls on a Saturday - it would write a record built on fresh prices
+        # and stale fundamentals, and append-only means the real run could
+        # never correct it.
+        print(f"  history untouched (--no-history); {month_key(scoring_date)} left to the scoring run")
+    elif history_path.exists() and not args.force_history:
         print(f"  history for {month_key(scoring_date)} already exists - left untouched (append-only)")
     else:
         write_json(history_path, {
