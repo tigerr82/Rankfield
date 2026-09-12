@@ -2,7 +2,7 @@ import { useMemo, type RefObject } from "react";
 import type { FactorSpec, HistoryPoint, MetricSpec, StockRow } from "../data/types";
 import { summarisePortfolio } from "../lib/analytics";
 import { percent } from "../lib/format";
-import { rankRows } from "../lib/scoring";
+import { rankRows, type Weights } from "../lib/scoring";
 import { useApp } from "../state/AppState";
 import { RankTable } from "./RankTable";
 
@@ -12,6 +12,7 @@ interface Props {
   factors: FactorSpec[];
   history: Record<string, HistoryPoint[]>;
   scrollRef: RefObject<HTMLElement | null>;
+  official: Weights;
   windowStart: string;
   windowEnd: string;
 }
@@ -21,14 +22,17 @@ interface Props {
  * table, above it. The summary answers the question the user actually has:
  * am I beating the field, and is that selection or just sector exposure?
  */
-export function PortfolioSection({ universe, metrics, factors, history, scrollRef, windowStart, windowEnd }: Props) {
+export function PortfolioSection({ universe, metrics, factors, history, scrollRef, official, windowStart, windowEnd }: Props) {
   const { holdings, watchEvents, weights, clearHoldings } = useApp();
 
   const heldRows = useMemo(
     () => universe.filter((row) => holdings.includes(row.ticker)),
     [universe, holdings],
   );
-  const ranked = useMemo(() => rankRows(heldRows, weights), [heldRows, weights]);
+  const ranked = useMemo(
+    () => rankRows(heldRows, weights, official),
+    [heldRows, weights, official],
+  );
   const summary = useMemo(
     () => summarisePortfolio(heldRows, universe, watchEvents, windowStart, windowEnd),
     [heldRows, universe, watchEvents, windowStart, windowEnd],

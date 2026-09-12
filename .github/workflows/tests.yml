@@ -1,0 +1,44 @@
+name: Tests
+
+# The scoring maths is the product. It shipped once with an inverted percentile
+# rank - a -47.8% ROIC scoring 97.7 - so the suite runs on every push, not only
+# before a release.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  python:
+    name: Python (scoring engine)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest tests/ -v
+
+  frontend:
+    name: TypeScript (display + portfolio)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - working-directory: site
+        run: npm ci
+      - name: Typecheck
+        working-directory: site
+        run: npx tsc -b --noEmit
+      # Includes the cross-language parity check: the browser must never show a
+      # composite that disagrees with the one Python wrote into history.
+      - name: Unit tests
+        working-directory: site
+        run: npm test

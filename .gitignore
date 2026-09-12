@@ -16,3 +16,6 @@ data/.cache/
 # Environment
 .env
 .env.local
+
+# TypeScript incremental build artifact
+site/tsconfig.tsbuildinfo

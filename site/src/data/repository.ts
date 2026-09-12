@@ -26,12 +26,25 @@ export type Tier = "public" | "full";
 /** Which payload the app reads. Flip to "public" to exercise the free tier. */
 const TIER: Tier = "full";
 
+/** Thrown only when the file genuinely is not there - distinct from a corrupt
+ *  or unreachable one, which must never be mistaken for "no data yet". */
+class PayloadMissing extends Error {}
+
 async function fetchJson<T>(file: string): Promise<T> {
   const res = await fetch(`${BASE}/${file}`, { cache: "no-cache" });
+  if (res.status === 404) {
+    throw new PayloadMissing(`${file} has not been generated yet.`);
+  }
   if (!res.ok) {
     throw new Error(`Could not load ${file} (HTTP ${res.status}). Has the batch job run?`);
   }
-  return (await res.json()) as T;
+  try {
+    return (await res.json()) as T;
+  } catch {
+    // A truncated or malformed payload is a real failure. Reporting it as
+    // absent would render an "accumulating" empty state over broken data.
+    throw new Error(`${file} is not valid JSON - the payload is corrupt or truncated.`);
+  }
 }
 
 /** Promise-level memoisation: many components ask for the same payload during
@@ -52,10 +65,15 @@ export function loadHistoryIndex(): Promise<HistoryIndex> {
   return once("history_index.json", async () => {
     try {
       return await fetchJson<HistoryIndex>("history_index.json");
-    } catch {
-      // Run 1 may not have an index yet. An empty index renders the honest
-      // "history begins accumulating" state rather than a fake flat line.
-      return { months: [], observations: 0, tickers: {} };
+    } catch (err) {
+      if (err instanceof PayloadMissing) {
+        // Run 1 has no index yet. An empty index renders the honest
+        // "history begins accumulating" state rather than a fake flat line.
+        return { months: [], observations: 0, tickers: {} };
+      }
+      // A corrupt or unreachable index is a failure, not an empty history -
+      // showing "accumulating" over broken data would be a quiet lie.
+      throw err;
     }
   });
 }

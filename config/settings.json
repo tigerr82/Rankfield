@@ -33,8 +33,9 @@
     "price_move_review_pct": 50
   },
   "http": {
-    "user_agent": "Rankfield (personal research) ranchook@gmail.com",
+    "user_agent": "",
     "sec_rate_limit_per_sec": 9,
-    "price_workers": 6
+    "price_workers": 6,
+    "_user_agent_note": "SEC policy requires a User-Agent with a real name and email. Set RANKFIELD_USER_AGENT in the environment (or the repository secret in CI) rather than committing a personal address here."
   }
 }

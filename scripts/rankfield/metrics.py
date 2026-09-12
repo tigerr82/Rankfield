@@ -333,8 +333,17 @@ def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) ->
     if market_cap and debt is not None:
         ev = market_cap + debt - (cash or 0.0)
     if ev is None:
+        # Name the input that is actually absent. These reasons are published in
+        # the coverage report and on the stock page, so a wrong one sends
+        # somebody debugging the wrong thing.
+        if not market_cap and debt is None:
+            cause = "market cap and total debt both unavailable"
+        elif not market_cap:
+            cause = "market cap unavailable"
+        else:
+            cause = "total debt unresolved"
         for k in ("ebit_ev", "ebitda_ev", "fcf_ev"):
-            missing[k] = "enterprise value unavailable (total debt unresolved)"
+            missing[k] = f"enterprise value unavailable ({cause})"
     elif ev <= 0:
         for k in ("ebit_ev", "ebitda_ev", "fcf_ev"):
             missing[k] = "negative enterprise value"

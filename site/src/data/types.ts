@@ -34,6 +34,17 @@ export interface Stability {
   score: number;
 }
 
+/** How each figure was derived - which tag resolved, which fallback was taken.
+ *  The period, filing date, accession and form live on the row itself. */
+export interface Derivation {
+  basis: string | null;
+  ebit_source: string;
+  debt_source: string;
+  gross_profit_source: string;
+  tax_rate_source: string;
+  effective_tax_rate: number;
+}
+
 export interface StockRow {
   ticker: string;
   name: string;
@@ -65,6 +76,7 @@ export interface StockRow {
   filed: string | null;
   accn: string | null;
   form: string | null;
+  derivation: Derivation;
   notes: string[];
   weights_version: string;
   is_new: boolean;

@@ -25,7 +25,11 @@ export function RankingPage() {
 
   // Re-ranked under the currently active weights. At the official weighting this
   // reproduces the stored ranks exactly.
-  const ranked = useMemo(() => rankRows(segmentRows, app.weights), [segmentRows, app.weights]);
+  const official = scores?.meta.weights;
+  const ranked = useMemo(
+    () => rankRows(segmentRows, app.weights, official),
+    [segmentRows, app.weights, official],
+  );
 
   const sectorCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -37,7 +41,15 @@ export function RankingPage() {
     return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   }, [segmentRows, scores, app.segment]);
 
-  const visible = useMemo(() => filterAndSort(ranked, app), [ranked, app]);
+  const { query, sectors, ranges, chgMin, sortKey, sortDir, scope } = app;
+  const visible = useMemo(
+    () => filterAndSort(ranked, app),
+    // Depend on the individual filter values: `app` is a new object on every
+    // render, so listing it alone defeated the memo entirely and re-sorted
+    // 1,177 rows on every keystroke.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ranked, query, sectors, ranges, chgMin, sortKey, sortDir, scope],
+  );
 
   if (error) {
     return (
@@ -81,6 +93,7 @@ export function RankingPage() {
             factors={scores.factors}
             history={history.tickers}
             scrollRef={scrollRef}
+            official={scores.meta.weights}
             windowStart={scores.meta.prior_scoring_date}
             windowEnd={scores.meta.scoring_date}
           />

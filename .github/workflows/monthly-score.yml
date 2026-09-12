@@ -44,7 +44,12 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      - run: pip install -r requirements.txt
+      - run: pip install -r requirements-dev.txt
+
+      - name: Scoring engine tests
+        # History is append-only: a scoring bug that reaches it cannot be undone
+        # by fixing the code later. Gate the run on the maths first.
+        run: python -m pytest tests/ -q
 
       - name: Check the SEC contact secret
         env:

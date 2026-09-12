@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { usePayload } from "../data/usePayload";
 import { Shell, useScrollRef } from "../components/Shell";
@@ -6,7 +6,7 @@ import { ScoreCell } from "../components/cells";
 import { cleanName } from "../components/columns";
 import { DASH, marketCap, metricValue, money, monthLabel, percent } from "../lib/format";
 import { stockOutcomes } from "../lib/analytics";
-import { compositeOf, isDefaultWeights } from "../lib/scoring";
+import { displayComposite, isDefaultWeights } from "../lib/scoring";
 import { useApp } from "../state/AppState";
 
 /** Stable, shareable URL per stock: /stock/{TICKER}, linkable from day one.
@@ -70,7 +70,7 @@ export function StockPage() {
   }
 
   if (!scores) return null;
-  const live = compositeOf(row.factors, weights);
+  const live = displayComposite(row, weights, scores.meta.weights);
   const byFactor = new Map<string, (typeof scores.metrics)>();
   for (const m of scores.metrics) {
     if (!byFactor.has(m.factor)) byFactor.set(m.factor, []);
@@ -126,8 +126,8 @@ export function StockPage() {
           </thead>
           <tbody>
             {scores.factors.map((factor) => (
-              <>
-                <tr key={factor.key} style={{ cursor: "default", background: "var(--surface-2)" }}>
+              <Fragment key={factor.key}>
+                <tr style={{ cursor: "default", background: "var(--surface-2)" }}>
                   <td className="al-l" style={{ fontWeight: 700 }}>{factor.label}</td>
                   <td className="al-r" />
                   <td className="al-r"><ScoreCell value={row.factors[factor.key]} /></td>
@@ -148,10 +148,17 @@ export function StockPage() {
                     </tr>
                   );
                 })}
-              </>
+              </Fragment>
             ))}
           </tbody>
         </table>
+
+        <p style={{ fontSize: 12, color: "var(--ink-3)", marginTop: -4 }}>
+          <b>How these were derived.</b> EBIT from {row.derivation.ebit_source}; total debt via{" "}
+          {row.derivation.debt_source}; gross profit as {row.derivation.gross_profit_source}; effective
+          tax rate {(row.derivation.effective_tax_rate * 100).toFixed(1)}%{" "}
+          ({row.derivation.tax_rate_source}); figures on a {row.derivation.basis ?? "—"} basis.
+        </p>
 
         <h2>Score history</h2>
         {points.length > 1 ? (

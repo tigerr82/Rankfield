@@ -26,8 +26,12 @@ export function WeightsPage() {
     () => (scores ? scores.segments[(segment === "insufficient" ? "operating" : segment) as SegmentKey] ?? [] : []),
     [scores, segment],
   );
-  const ranked = useMemo(() => rankRows(rows, weights), [rows, weights]);
-  const moved = useMemo(() => (rows.length ? rankDisplacement(rows, weights) : 0), [rows, weights]);
+  const official = scores?.meta.weights;
+  const ranked = useMemo(() => rankRows(rows, weights, official), [rows, weights, official]);
+  const moved = useMemo(
+    () => (rows.length ? rankDisplacement(rows, weights, official) : 0),
+    [rows, weights, official],
+  );
 
   if (loading || !scores || !history) {
     return (

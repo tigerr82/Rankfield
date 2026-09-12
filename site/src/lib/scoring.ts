@@ -41,7 +41,33 @@ export function compositeOf(
 }
 
 export function isDefaultWeights(weights: Weights): boolean {
-  return FACTOR_ORDER.every((k) => weights[k] === DEFAULT_WEIGHTS[k]);
+  return weightsEqual(weights, DEFAULT_WEIGHTS);
+}
+
+export function weightsEqual(a: Weights, b: Weights): boolean {
+  return FACTOR_ORDER.every((k) => (a[k] ?? 0) === (b[k] ?? 0));
+}
+
+/**
+ * The composite to display for a row.
+ *
+ * At the official weighting this returns the STORED value instead of
+ * recomputing it. Python writes the published payload and the append-only
+ * history; re-deriving the same figure here disagreed with it on 22% of rows,
+ * because Python rounds half-to-even on the exact double while JavaScript
+ * rounds half away from zero after a multiplication that is itself lossy. The
+ * browser must never contradict the record it was given.
+ *
+ * Only a what-if weighting is computed live - that value is exploratory, is
+ * labelled as such, and is never stored.
+ */
+export function displayComposite(
+  row: Pick<StockRow, "composite" | "factors">,
+  weights: Weights,
+  official?: Weights,
+): number | null {
+  if (official && weightsEqual(weights, official)) return row.composite;
+  return compositeOf(row.factors, weights);
 }
 
 export interface RankedRow extends StockRow {
@@ -51,11 +77,13 @@ export interface RankedRow extends StockRow {
   liveRank: number;
 }
 
-/** Re-rank a segment under arbitrary weights. Rows with no composite sort last. */
-export function rankRows(rows: StockRow[], weights: Weights): RankedRow[] {
+/** Re-rank a segment under arbitrary weights. Rows with no composite sort last.
+ *  Pass `official` (from the payload meta) so the official weighting shows the
+ *  stored figures rather than recomputed ones. */
+export function rankRows(rows: StockRow[], weights: Weights, official?: Weights): RankedRow[] {
   const out = rows.map((row) => ({
     ...row,
-    liveComposite: compositeOf(row.factors, weights),
+    liveComposite: displayComposite(row, weights, official),
   })) as RankedRow[];
   out.sort((a, b) => {
     if (a.liveComposite == null) return b.liveComposite == null ? 0 : 1;
@@ -69,9 +97,10 @@ export function rankRows(rows: StockRow[], weights: Weights): RankedRow[] {
 }
 
 /** How many stocks the current weighting moves relative to the official one. */
-export function rankDisplacement(rows: StockRow[], weights: Weights): number {
-  const base = rankRows(rows, DEFAULT_WEIGHTS).map((r) => r.ticker);
-  const now = rankRows(rows, weights).map((r) => r.ticker);
+export function rankDisplacement(rows: StockRow[], weights: Weights, official?: Weights): number {
+  const reference = official ?? DEFAULT_WEIGHTS;
+  const base = rankRows(rows, reference, official).map((r) => r.ticker);
+  const now = rankRows(rows, weights, official).map((r) => r.ticker);
   let moved = 0;
   for (let i = 0; i < base.length; i += 1) if (base[i] !== now[i]) moved += 1;
   return moved;

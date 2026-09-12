@@ -224,7 +224,13 @@ def main() -> int:
             "filed": row["provenance"]["filed"],
             "accn": row["provenance"]["accn"],
             "form": row["provenance"]["form"],
-            "provenance": row["provenance"],
+            # Only the derivation trail: the period, filing date, accession and
+            # form are already flattened above, and two copies of one field are
+            # two things that can drift apart.
+            "derivation": {
+                k: v for k, v in row["provenance"].items()
+                if k not in ("fundamentals_asof", "filed", "accn", "form")
+            },
             "notes": row["notes"],
             "weights_version": weights_cfg["version"],
             "is_new": was is None,

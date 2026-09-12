@@ -214,6 +214,12 @@ class FactSet:
                 break
         if used and 350 <= covered <= 380:
             newest = max(used, key=lambda f: f["filed"])
+            # A single annual fact satisfies the window without any stitching, so
+            # it is the last annual report rather than a trailing figure built
+            # from quarters. Label it for what it is: the same data reached via
+            # the fallback below would otherwise be described differently, and
+            # this label is shown to users as provenance.
+            stitched_from_one_annual = len(used) == 1 and covered >= ANNUAL_MIN
             return {
                 "val": total,
                 "start": min(f["start"] for f in used),
@@ -222,7 +228,7 @@ class FactSet:
                 "accn": newest["accn"],
                 "form": newest["form"],
                 "concept": used[0]["concept"],
-                "basis": "ttm",
+                "basis": "fy" if stitched_from_one_annual else "ttm",
             }
         annual = self.annual_series(concepts, 1)
         if annual:

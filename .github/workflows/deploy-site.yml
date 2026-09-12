@@ -43,6 +43,13 @@ jobs:
           cache: npm
           cache-dependency-path: site/package-lock.json
 
+      - name: Unit tests
+        working-directory: site
+        # A broken display layer must not reach the live site.
+        run: |
+          npm ci
+          npm test
+
       - name: Build
         working-directory: site
         env:
@@ -50,9 +57,7 @@ jobs:
           # or every script and stylesheet 404s. `configure-pages` reports the
           # real base path; the repo name is the fallback.
           RANKFIELD_BASE: ${{ vars.RANKFIELD_BASE || steps.pages.outputs.base_path || format('/{0}/', github.event.repository.name) }}
-        run: |
-          npm ci
-          npm run build
+        run: npm run build
 
       - name: Verify the build serves its payloads under the deployed path
         working-directory: site
