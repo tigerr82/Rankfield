@@ -36,12 +36,25 @@ const MOVERS: { key: string; dir: 1 | -1; label: string; title: string }[] = [
 ];
 
 export function Toolbar({ segmentsMeta, counts, shown, total }: Props) {
-  const { mode, setMode, query, setQuery, sortKey, sortDir, setSort, segment, setSegment, scope, setScope } = useApp();
+  const { mode, setMode, query, setQuery, sortKey, sortDir, setSort, segment, setSegment,
+          scope, setScope, railCollapsed, toggleRail } = useApp();
   const ref = useRef<HTMLDivElement | null>(null);
   useToolbarHeight(ref);
 
   return (
     <div className="toolbar" ref={ref}>
+      <button
+        type="button"
+        className="railtoggle"
+        onClick={toggleRail}
+        aria-pressed={!railCollapsed}
+        aria-label={railCollapsed ? "Show the filter rail" : "Hide the filter rail"}
+        title={railCollapsed
+          ? "Show filters"
+          : "Hide filters — gives the table the full window width"}
+      >
+        {railCollapsed ? "»" : "«"}
+      </button>
       <div className="seg modeseg" role="group" aria-label="Detail level">
         <button type="button" className={mode === "basic" ? "on" : ""} onClick={() => setMode("basic")}>
           Basic

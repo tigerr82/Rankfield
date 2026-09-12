@@ -23,9 +23,10 @@ export function Shell({
   scrollRef: RefObject<HTMLElement | null>;
 }) {
   const { scores } = usePayload();
+  const { railCollapsed } = useApp();
   return (
-    <div className={`shell${rail ? "" : " norail"}`}>
-      {rail}
+    <div className={`shell${rail && !railCollapsed ? "" : " norail"}`}>
+      {rail && !railCollapsed ? rail : null}
       <main ref={scrollRef as RefObject<HTMLDivElement>}>
         {children}
         {/* Attribution and disclaimer sit inside the scroll container so they

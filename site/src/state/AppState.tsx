@@ -79,6 +79,9 @@ interface AppContextValue {
   setWeight: (key: FactorKey, value: number) => void;
   resetWeights: () => void;
 
+  railCollapsed: boolean;
+  toggleRail: () => void;
+
   hiddenColumns: string[];
   toggleColumn: (key: string) => void;
   widths: Record<string, number>;
@@ -116,6 +119,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     persisted<Record<string, number>>("rankfield_widths_v1", {}),
   );
   const [watchEvents, setWatchEvents] = useState<WatchEvent[]>(() => allEvents());
+  // Collapsing the rail returns 236px to the table - enough to clear the Pro
+  // column set on a 1280px laptop without any horizontal scrolling.
+  const [railCollapsed, setRailCollapsed] = useState<boolean>(() =>
+    persisted<boolean>("rankfield_rail_collapsed_v1", false),
+  );
 
   useEffect(() => {
     const root = document.documentElement;
@@ -197,6 +205,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     persist("rankfield_widths_v1", {});
   }, []);
 
+  const toggleRail = useCallback(() => {
+    setRailCollapsed((prev) => {
+      persist("rankfield_rail_collapsed_v1", !prev);
+      return !prev;
+    });
+  }, []);
+
   const toggleHolding = useCallback((ticker: string) => setWatchEvents([...toggle(ticker)]), []);
   const clearHoldings = useCallback(() => setWatchEvents([...removeAll()]), []);
 
@@ -214,6 +229,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     clearFilters, hasFilters,
     sortKey, sortDir, setSort,
     weights, setWeight, resetWeights,
+    railCollapsed, toggleRail,
     hiddenColumns, toggleColumn, widths, setWidths, resetWidths,
     watchEvents, holdings, toggleHolding, clearHoldings,
   };

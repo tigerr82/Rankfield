@@ -264,6 +264,20 @@ main {
 }
 .pillbtn:hover { background: var(--accent-soft); color: var(--ink); }
 .pillbtn.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.railtoggle {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+.railtoggle:hover { background: var(--accent-soft); color: var(--ink); border-color: var(--accent); }
+
 .seg { display: flex; border: 1px solid var(--line-2); border-radius: var(--radius); overflow: hidden; }
 .seg button {
   border: none;
@@ -374,7 +388,18 @@ tbody tr.spacer:hover td { background: transparent; }
 .al-r { text-align: right; }
 .al-c { text-align: center; }
 
-th.stick, td.stick { position: sticky; left: 0; z-index: 10; background: var(--surface); }
+/* The pinned ticker column. Content scrolls underneath it, so it needs an
+   opaque background AND a visible edge: without the edge a company name sliding
+   under it just looks like broken text ("dobe Inc." for Adobe) rather than a
+   column passing behind a pinned one. */
+th.stick, td.stick {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background: var(--surface);
+  box-shadow: 6px 0 8px -6px rgba(0, 0, 0, 0.28);
+  clip-path: inset(0 -14px 0 0);
+}
 thead th.stick { z-index: 14; background: var(--surface-2); }
 tbody tr:hover td.stick, tbody tr.open td.stick { background: var(--accent-soft); }
 
