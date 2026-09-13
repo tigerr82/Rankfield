@@ -26,6 +26,9 @@ interface Props {
   counts: Record<string, number>;
   shown: number;
   total: number;
+  /** How many rows each scope would show under the current filters, so both
+   *  options state their consequence before anyone clicks. */
+  scopeCounts?: { top: number; all: number };
 }
 
 const MOVERS: { key: string; dir: 1 | -1; label: string; title: string }[] = [
@@ -35,7 +38,7 @@ const MOVERS: { key: string; dir: 1 | -1; label: string; title: string }[] = [
   { key: "composite", dir: -1, label: "By score", title: "Highest Rankfield Score first" },
 ];
 
-export function Toolbar({ segmentsMeta, counts, shown, total }: Props) {
+export function Toolbar({ segmentsMeta, counts, shown, total, scopeCounts }: Props) {
   const { mode, setMode, query, setQuery, sortKey, sortDir, setSort, segment, setSegment,
           scope, setScope, railCollapsed, toggleRail } = useApp();
   const ref = useRef<HTMLDivElement | null>(null);
@@ -110,18 +113,29 @@ export function Toolbar({ segmentsMeta, counts, shown, total }: Props) {
               {m.label}
             </button>
           ))}
-          <button
-            type="button"
-            className={`pillbtn${scope === "all" ? " on" : ""}`}
-            title={
-              scope === "top_decile"
-                ? "Currently showing the top decile within each sector. Click to show every scored stock."
-                : "Showing every scored stock. Click to return to the top decile within each sector."
-            }
-            onClick={() => setScope(scope === "top_decile" ? "all" : "top_decile")}
-          >
-            {scope === "top_decile" ? "Top decile per sector" : "All scored stocks"}
-          </button>
+          {/* Both scopes stay visible. A single button that showed only the
+              current mode made the other one something you had to guess at. */}
+          <span className="uppercase">Show</span>
+          <div className="seg" role="group" aria-label="Which stocks to show">
+            <button
+              type="button"
+              className={scope === "top_decile" ? "on" : ""}
+              aria-pressed={scope === "top_decile"}
+              onClick={() => setScope("top_decile")}
+              title="The best 10% of each sector. A global top list would be dominated by whichever sectors score high on absolute numbers."
+            >
+              Top 10% per sector{scopeCounts && <span className="mono"> · {scopeCounts.top.toLocaleString()}</span>}
+            </button>
+            <button
+              type="button"
+              className={scope === "all" ? "on" : ""}
+              aria-pressed={scope === "all"}
+              onClick={() => setScope("all")}
+              title="Every scored stock in this segment."
+            >
+              All stocks{scopeCounts && <span className="mono"> · {scopeCounts.all.toLocaleString()}</span>}
+            </button>
+          </div>
         </>
       )}
 

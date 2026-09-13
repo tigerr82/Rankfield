@@ -54,6 +54,7 @@ interface AppContextValue {
   setMode: (mode: Mode) => void;
   theme: Theme;
   cycleTheme: () => void;
+  setTheme: (theme: Theme) => void;
 
   segment: SegmentKey | "insufficient";
   setSegment: (segment: SegmentKey | "insufficient") => void;
@@ -238,7 +239,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     Object.values(ranges).some((v) => v > 0);
 
   const value: AppContextValue = {
-    mode, setMode, theme, cycleTheme,
+    mode, setMode, theme, cycleTheme, setTheme,
     segment, setSegment, scope, setScope,
     query, setQuery, sectors, toggleSector, ranges, setRange, chgMin, setChgMin,
     clearFilters, hasFilters,

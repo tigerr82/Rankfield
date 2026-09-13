@@ -282,6 +282,11 @@ main {
   font-weight: 500;
 }
 .seg button.on { background: var(--accent); color: var(--on-accent); }
+.seg button:not(.on):hover { background: var(--accent-soft); color: var(--ink); }
+.seg button + button { border-left: 1px solid var(--line-2); }
+.seg button.on + button, .seg button + button.on { border-left-color: var(--accent); }
+.seg button .mono { opacity: 0.8; }
+.themeseg button { padding: 4px 9px; }
 .seg.modeseg button { font-weight: 600; letter-spacing: 0.02em; }
 .count { margin-left: auto; font-family: var(--font-mono); font-size: var(--t-small); color: var(--ink-3); }
 .search {

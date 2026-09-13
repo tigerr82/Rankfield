@@ -51,6 +51,17 @@ export function RankingPage() {
     [ranked, query, sectors, ranges, chgMin, sortKey, sortDir, scope],
   );
 
+  // Row counts for both scopes under the current filters, shown on the scope
+  // switch itself so each option says what it will do before it is clicked.
+  const scopeCounts = useMemo(
+    () => ({
+      top: filterAndSort(ranked, { ...app, scope: "top_decile" }).length,
+      all: filterAndSort(ranked, { ...app, scope: "all" }).length,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ranked, query, sectors, ranges, chgMin],
+  );
+
   if (error) {
     return (
       <Shell scrollRef={scrollRef}>
@@ -80,6 +91,7 @@ export function RankingPage() {
         counts={scores.meta.counts}
         shown={app.segment === "insufficient" ? scores.insufficient.length : visible.length}
         total={app.segment === "insufficient" ? scores.insufficient.length : ranked.length}
+        scopeCounts={app.segment === "insufficient" ? undefined : scopeCounts}
       />
       <Chips factors={scores.factors} />
 
@@ -112,7 +124,7 @@ export function RankingPage() {
               Showing the top decile within each sector ({visible.length} of {ranked.length} scored
               stocks in this segment). A global top-N would be dominated by whichever sectors score
               high on absolute metrics and can erase entire sectors, so the default cut is
-              per-sector. Use “All scored stocks” in the toolbar to widen it.
+              per-sector. Switch to “All stocks” in the toolbar to see every one.
             </p>
           )}
         </>
@@ -127,7 +139,7 @@ function EmptyResult({ scope }: { scope: string }) {
     <div className="emptyq">
       <strong>No stocks match the current filters.</strong>
       {scope === "top_decile"
-        ? "You are viewing the top decile within each sector — try widening to all scored stocks, or clear a filter."
+        ? "You are viewing the top 10% of each sector — switch to “All stocks”, or clear a filter."
         : "Try clearing a filter or widening a score range."}
     </div>
   );

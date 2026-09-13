@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 import type { ScoresMeta } from "../data/types";
 import { usePayload } from "../data/usePayload";
 import { weeksSince } from "../lib/format";
-import { useApp } from "../state/AppState";
+import { useApp, type Theme } from "../state/AppState";
 
 /**
  * A fixed application shell, not a scrolling document.
@@ -41,8 +41,14 @@ export function useScrollRef(): RefObject<HTMLElement | null> {
   return useRef<HTMLElement | null>(null);
 }
 
+const THEMES: [Theme, string, string][] = [
+  ["system", "Auto", "Follow your computer's light or dark setting"],
+  ["light", "Light", "Always light"],
+  ["dark", "Dark", "Always dark"],
+];
+
 export function AppHeader({ meta, coverage }: { meta?: ScoresMeta; coverage?: number }) {
-  const { theme, cycleTheme } = useApp();
+  const { theme, setTheme } = useApp();
   const scored = meta
     ? Object.entries(meta.counts).filter(([k]) => k !== "insufficient").reduce((a, [, v]) => a + v, 0)
     : null;
@@ -79,9 +85,22 @@ export function AppHeader({ meta, coverage }: { meta?: ScoresMeta; coverage?: nu
           </span>
         )}
       </div>
-      <button type="button" className="icon-btn" onClick={cycleTheme} title="Cycle theme: auto (follows your system) -> dark -> light">
-        {theme === "system" ? "Auto" : theme === "dark" ? "Dark" : "Light"}
-      </button>
+      {/* All three themes visible at once, rather than one button that cycles
+          through options you cannot see. */}
+      <div className="seg themeseg" role="group" aria-label="Theme">
+        {THEMES.map(([key, label, hint]) => (
+          <button
+            key={key}
+            type="button"
+            className={theme === key ? "on" : ""}
+            aria-pressed={theme === key}
+            onClick={() => setTheme(key)}
+            title={hint}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
     </header>
   );
 }
