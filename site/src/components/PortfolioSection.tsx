@@ -38,52 +38,55 @@ export function PortfolioSection({ universe, metrics, factors, history, scrollRe
     [heldRows, universe, watchEvents, windowStart, windowEnd],
   );
 
+  const observations = useMemo(
+    () => Math.max(1, ...heldRows.map((row) => (history[row.ticker] ?? []).length)),
+    [heldRows, history],
+  );
+
   if (!holdings.length) return null;
 
   return (
     <section className="section">
-      <div className="sechead">
+      {/* One strip instead of a heading, three cards and two paragraphs. Every
+          figure stays visible; the explanations that used to sit under each one
+          are now its tooltip, so they cost no height until someone asks. */}
+      <div className="pfstrip">
         <h2>My Portfolio</h2>
-        <span className="meta">
-          {summary.holdings} holding{summary.holdings === 1 ? "" : "s"} · avg score{" "}
-          {summary.avgComposite?.toFixed(1) ?? "—"} · avg 1-month {percent(summary.avgChange)}
+        <Metric label="Holdings" value={String(summary.holdings)} />
+        <Metric
+          label="Avg score"
+          value={summary.avgComposite?.toFixed(1) ?? "—"}
+          sub={`vs ${summary.universeAvgComposite?.toFixed(1) ?? "—"} universe`}
+          title="Average Rankfield Score of your holdings against the whole table - are you actually holding higher-scoring stocks?"
+        />
+        <Metric
+          label="Avg 1-mo"
+          value={percent(summary.avgChange)}
+          title="Average price change of your current holdings. Descriptive only: a position added after the window opened did not earn this return, so it is not a measured result."
+        />
+        <Metric
+          label="Spread vs universe"
+          value={summary.measurable ? percent(summary.spread) : "—"}
+          title={
+            summary.measurable
+              ? `Portfolio ${percent(summary.portfolioReturn)} vs universe ${percent(summary.universeReturn)}, ${windowStart} → ${windowEnd}. Equal-weighted on both sides; ${summary.measurable} position${summary.measurable === 1 ? "" : "s"} held across the whole window.`
+              : `Measured only over positions held across the whole window (${windowStart} → ${windowEnd}). None were, so there is no return to measure yet.`
+          }
+        />
+        <Metric
+          label="Sector-adj."
+          value={summary.measurable ? percent(summary.sectorAdjustedSpread) : "—"}
+          title="Each holding against its own sector's average. This isolates stock selection; the raw spread also includes sector allocation."
+        />
+        <span
+          className="pfnote"
+          title={`${summary.note ? summary.note + " " : ""}${summary.holdings} holdings over ${observations} monthly observation${observations === 1 ? "" : "s"} is a very small sample dominated by noise - these figures describe what happened, they do not establish skill.`}
+        >
+          {summary.measurable ? `${observations} mo · small sample` : "not measurable yet"}
         </span>
         <button type="button" className="linkbtn" onClick={clearHoldings}>
           Remove all
         </button>
-      </div>
-
-      <div className="card" style={{ margin: "0 0 10px" }}>
-        <div className="grid2">
-          <Stat
-            label={`Spread vs universe (${windowStart} → ${windowEnd})`}
-            value={summary.measurable ? percent(summary.spread) : "—"}
-            sub={
-              summary.measurable
-                ? `portfolio ${percent(summary.portfolioReturn)} vs universe ${percent(summary.universeReturn)} · equal-weighted both sides · ${summary.measurable} position${summary.measurable === 1 ? "" : "s"} measured`
-                : "no position held across this window yet"
-            }
-          />
-          <Stat
-            label="Sector-adjusted spread"
-            value={summary.measurable ? percent(summary.sectorAdjustedSpread) : "—"}
-            sub="each holding against its own sector's average — this is stock selection; the figure on the left also contains sector allocation"
-          />
-          <Stat
-            label="Average score vs universe"
-            value={summary.avgComposite != null ? summary.avgComposite.toFixed(1) : "—"}
-            sub={`universe average ${summary.universeAvgComposite?.toFixed(1) ?? "—"} — are you actually holding higher-scoring stocks?`}
-          />
-        </div>
-        {summary.note && (
-          <p className="note" style={{ margin: "11px 0 0" }}>
-            {summary.note}
-          </p>
-        )}
-        <p className="note" style={{ margin: "6px 0 0" }}>
-          {summary.holdings} holdings over 1 monthly observation is a very small sample dominated by
-          noise. These figures describe what happened; they do not establish skill.
-        </p>
       </div>
 
       <RankTable
@@ -131,12 +134,12 @@ export function PortfolioSection({ universe, metrics, factors, history, scrollRe
   );
 }
 
-function Stat({ label, value, sub }: { label: string; value: string; sub: string }) {
+function Metric({ label, value, sub, title }: { label: string; value: string; sub?: string; title?: string }) {
   return (
-    <div className="stat">
+    <span className="pfm" title={title}>
       <span className="k">{label}</span>
-      <span className="v">{value}</span>
-      <div className="sub">{sub}</div>
-    </div>
+      <span className="v mono">{value}</span>
+      {sub && <span className="s">{sub}</span>}
+    </span>
   );
 }

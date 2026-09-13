@@ -43,80 +43,59 @@ export function useScrollRef(): RefObject<HTMLElement | null> {
 
 export function AppHeader({ meta, coverage }: { meta?: ScoresMeta; coverage?: number }) {
   const { theme, cycleTheme } = useApp();
+  const scored = meta
+    ? Object.entries(meta.counts).filter(([k]) => k !== "insufficient").reduce((a, [, v]) => a + v, 0)
+    : null;
+  // One row. The brand line and tagline repeated what the page already shows,
+  // and the three stats do not need a two-line label each - so the whole
+  // header now costs a single line of height instead of three.
   return (
     <header className="app">
-      <div>
-        <div className="brandline">NYSE · NASDAQ — monthly factor scoring</div>
-        <h1>Rankfield</h1>
-        <div className="sub">Sector-relative equity scoring, with the work shown.</div>
+      <span className="wordmark" title="Rankfield - sector-relative equity scoring, with the work shown.">
+        Rankfield
+      </span>
+      <nav className="main">
+        <NavLink to="/" end>Rankings</NavLink>
+        <NavLink to="/weights">Weights</NavLink>
+        <NavLink to="/validation">Validation</NavLink>
+        <NavLink to="/stability">Stability</NavLink>
+        <NavLink to="/methodology">Methodology</NavLink>
+        <NavLink to="/coverage">Coverage</NavLink>
+      </nav>
+      <div className="hdr-meta mono">
+        {scored != null && <span title="Stocks with a Rankfield Score this month">{scored.toLocaleString()} scored</span>}
+        {meta && <span title="Scoring date - the last trading day of the prior month">{meta.scoring_date}</span>}
+        {meta?.first_run && (
+          <span
+            className="tag"
+            title="The first scoring run: there is no prior month yet, so change columns show a dash (never 0%) until the next monthly run."
+          >
+            First run
+          </span>
+        )}
+        {coverage != null && (
+          <span title="Share of applicable metrics resolved across every scored stock">
+            {Math.round(coverage * 100)}% coverage
+          </span>
+        )}
       </div>
-      <div className="hdr-right">
-        <nav className="main">
-          <NavLink to="/" end>Rankings</NavLink>
-          <NavLink to="/weights">Weights</NavLink>
-          <NavLink to="/validation">Validation</NavLink>
-          <NavLink to="/stability">Stability</NavLink>
-          <NavLink to="/methodology">Methodology</NavLink>
-          <NavLink to="/coverage">Coverage</NavLink>
-        </nav>
-        <div className="hdr-stats">
-          <div className="hstat">
-            <span className="v mono">
-              {meta ? Object.entries(meta.counts).filter(([k]) => k !== "insufficient").reduce((a, [, v]) => a + v, 0).toLocaleString() : "–"}
-            </span>
-            <span className="k">Stocks scored</span>
-          </div>
-          <div className="hstat">
-            <span className="v mono">{meta?.scoring_date ?? "–"}</span>
-            <span className="k">Scoring date</span>
-          </div>
-          <div className="hstat">
-            <span className="v mono">{coverage != null ? `${Math.round(coverage * 100)}%` : "–"}</span>
-            <span className="k">Metric coverage</span>
-          </div>
-        </div>
-        <button type="button" className="icon-btn" onClick={cycleTheme} title="Cycle theme: system → dark → light">
-          {theme === "system" ? "Theme: auto" : theme === "dark" ? "Theme: dark" : "Theme: light"}
-        </button>
-      </div>
+      <button type="button" className="icon-btn" onClick={cycleTheme} title="Cycle theme: auto (follows your system) -> dark -> light">
+        {theme === "system" ? "Auto" : theme === "dark" ? "Dark" : "Light"}
+      </button>
     </header>
   );
 }
 
-/** Stale-data banner once the last run is more than five weeks old, and the
- *  first-run notice while month-over-month columns have no prior data. */
+/** Only a warning earns a full-width bar: data more than five weeks old means a
+ *  monthly run was missed. The first-run notice now lives as a tag in the header,
+ *  and the routine "scored on ..." bar is gone - the header already says it. */
 export function StatusBanner({ meta }: { meta?: ScoresMeta }) {
-  if (!meta) return null;
-
-  const stale = weeksSince(meta.scoring_date) > 5;
-  if (stale) {
-    return (
-      <div className="banner stale">
-        <span className="tag">Stale data</span>
-        <span>
-          The last scoring run was <b>{meta.scoring_date}</b>, more than five weeks ago. A monthly
-          run has been missed — figures below are not current.
-        </span>
-      </div>
-    );
-  }
-  if (meta.first_run) {
-    return (
-      <div className="banner">
-        <span className="tag">First run</span>
-        <span>
-          This is the first scoring run, so there is no prior month to compare against.{" "}
-          <b>Change columns show “—”, never 0%</b>, and score history begins accumulating from now.
-        </span>
-      </div>
-    );
-  }
+  if (!meta || weeksSince(meta.scoring_date) <= 5) return null;
   return (
-    <div className="banner">
-      <span className="tag">Rankfield</span>
+    <div className="banner stale">
+      <span className="tag">Stale data</span>
       <span>
-        Scored <b>{meta.scoring_date}</b> using weights v{meta.weights_version}. Fundamentals are
-        point-in-time: only filings public on that date were used.
+        Last scoring run <b>{meta.scoring_date}</b> is over five weeks old - a monthly run was missed.
       </span>
     </div>
   );

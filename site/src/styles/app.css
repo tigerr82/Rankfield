@@ -65,7 +65,7 @@ a { color: var(--accent); text-underline-offset: 2px; }
   gap: var(--s-2);
   align-items: center;
   flex-wrap: wrap;
-  padding: 8px 20px;
+  padding: 4px 16px;
   font-size: var(--t-small);
   color: var(--ink-2);
   background: var(--accent-soft);
@@ -91,45 +91,37 @@ a { color: var(--accent); text-underline-offset: 2px; }
 header.app {
   flex: none;
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
+  align-items: center;
+  gap: 6px 18px;
   flex-wrap: wrap;
-  padding: 14px 20px 12px;
+  padding: 7px 16px;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
-.brandline {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 5px;
+.wordmark {
+  font-family: var(--font-head);
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  cursor: default;
 }
-header.app .sub { font-size: var(--t-body); color: var(--ink-3); margin-top: 3px; }
-.hdr-right { display: flex; align-items: flex-end; gap: var(--s-6); flex-wrap: wrap; }
-.hdr-stats { display: flex; gap: var(--s-6); flex-wrap: wrap; }
-.hstat .v {
-  font-family: var(--font-mono);
-  font-size: var(--t-h3);
-  font-weight: 600;
-  display: block;
-  line-height: 1.15;
-}
-.hstat .k {
-  font-size: 10px;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+.hdr-meta {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--t-small);
   color: var(--ink-3);
 }
+.hdr-meta > span { white-space: nowrap; }
 nav.main { display: flex; gap: 2px; flex-wrap: wrap; }
 nav.main a {
   font-size: var(--t-body);
   font-weight: 500;
   color: var(--ink-2);
   text-decoration: none;
-  padding: 5px 10px;
+  padding: 4px 9px;
   border-radius: var(--radius);
   border: 1px solid transparent;
 }
@@ -141,8 +133,8 @@ nav.main a.active { background: var(--accent); color: var(--on-accent); }
   border: 1px solid var(--line-2);
   border-radius: var(--radius);
   color: var(--ink-2);
-  padding: 6px 11px;
-  font-size: var(--t-body);
+  padding: 4px 10px;
+  font-size: var(--t-small);
   cursor: pointer;
   font-family: var(--font-ui);
   font-weight: 500;
@@ -554,7 +546,46 @@ tr.exp:hover td { background: var(--surface-2); }
 
 /* ============================================================== sections */
 
-.section { margin: 14px 18px 0; }
+.section { margin: 10px 18px 0; }
+
+/* Portfolio summary: one strip. Labels are quiet, figures carry the weight,
+   and the explanation behind every figure is its tooltip. */
+.pfstrip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  padding: 6px 12px;
+  margin: 0 0 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+.pfstrip h2 {
+  font-family: var(--font-ui);
+  font-size: var(--t-small);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin: 0 2px 0 0;
+}
+.pfm { display: inline-flex; align-items: baseline; gap: 5px; font-size: var(--t-small); white-space: nowrap; }
+.pfm[title] { cursor: help; }
+.pfm .k { color: var(--ink-3); }
+.pfm .v { color: var(--ink); font-weight: 600; font-size: var(--t-body); }
+.pfm .s { color: var(--ink-3); font-size: var(--t-tiny); }
+.pfnote {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--warn);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  padding: 1px 8px;
+  white-space: nowrap;
+  cursor: help;
+}
+.pfstrip .linkbtn { margin-left: auto; }
 .sechead { display: flex; align-items: baseline; gap: 11px; flex-wrap: wrap; margin-bottom: 7px; }
 .sechead h2 {
   font-family: var(--font-ui);
@@ -569,7 +600,7 @@ tr.exp:hover td { background: var(--surface-2); }
 .pfwrap { margin: 0; border-color: var(--line-2); box-shadow: none; }
 .pfwrap thead th { background: var(--accent-soft); }
 .mainlabel {
-  margin: 26px 18px 8px;
+  margin: 14px 18px 6px;
   font-family: var(--font-ui);
   font-size: var(--t-lead);
   font-weight: 700;
