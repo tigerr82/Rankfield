@@ -40,10 +40,35 @@ export function shortDate(iso: string | null | undefined): string {
   return iso;
 }
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 export function monthLabel(month: string): string {
   const [y, m] = month.split("-");
-  const names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  return `${names[Number(m) - 1] ?? m} ${y}`;
+  return `${MONTHS[Number(m) - 1] ?? m} ${y}`;
+}
+
+// Dates are split from the ISO string rather than parsed with `new Date()`:
+// a bare "2026-08-31" is read as UTC midnight and shows as 30 Aug anywhere west
+// of Greenwich. Month names are spelled out because 8/31 and 31/8 each mislead
+// half of all readers.
+
+/** "2026-08-31" -> "31 Aug" */
+export function dayMonth(iso: string | null | undefined): string {
+  if (!iso) return DASH;
+  const [, m, d] = iso.slice(0, 10).split("-");
+  return `${Number(d)} ${MONTHS[Number(m) - 1] ?? m}`;
+}
+
+/** "2026-08-31" -> "31 Aug 2026" */
+export function fullDate(iso: string | null | undefined): string {
+  if (!iso) return DASH;
+  return `${dayMonth(iso)} ${iso.slice(0, 4)}`;
+}
+
+/** "2026-08-31" -> "Aug" */
+export function monthShort(iso: string | null | undefined): string {
+  if (!iso) return DASH;
+  return MONTHS[Number(iso.slice(5, 7)) - 1] ?? DASH;
 }
 
 export function weeksSince(iso: string): number {

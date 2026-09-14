@@ -9,7 +9,7 @@ import { Shell, useScrollRef } from "../components/Shell";
 import { Toolbar } from "../components/Toolbar";
 import { TableSkeleton } from "../components/Skeleton";
 import { cleanName } from "../components/columns";
-import { marketCap, percent } from "../lib/format";
+import { dayMonth, marketCap, monthShort, percent } from "../lib/format";
 import { rankRows, type RankedRow } from "../lib/scoring";
 import { CHG_ANY, useApp } from "../state/AppState";
 
@@ -96,7 +96,11 @@ export function RankingPage() {
       <Chips factors={scores.factors} />
 
       {app.segment === "insufficient" ? (
-        <InsufficientTable rows={scores.insufficient} />
+        <InsufficientTable
+          rows={scores.insufficient}
+          priceDate={scores.meta.scoring_date}
+          priorDate={scores.meta.prior_scoring_date}
+        />
       ) : (
         <>
           <PortfolioSection
@@ -145,7 +149,15 @@ function EmptyResult({ scope }: { scope: string }) {
   );
 }
 
-function InsufficientTable({ rows }: { rows: InsufficientRow[] }) {
+function InsufficientTable({
+  rows,
+  priceDate,
+  priorDate,
+}: {
+  rows: InsufficientRow[];
+  priceDate: string;
+  priorDate: string;
+}) {
   const { query, sectors } = useApp();
   const shown = rows.filter((r) => {
     if (sectors.length && !sectors.includes(r.sector ?? "(unclassified)")) return false;
@@ -177,8 +189,12 @@ function InsufficientTable({ rows }: { rows: InsufficientRow[] }) {
               <th className="al-l">Company</th>
               <th className="al-l">Sector</th>
               <th className="al-r">Cap</th>
-              <th className="al-r">Price</th>
-              <th className="al-r">1-Mo %</th>
+              <th className="al-r" title="Closing price on the scoring date. Prices update once a month.">
+                Price<span className="thsub">{dayMonth(priceDate)}</span>
+              </th>
+              <th className="al-r" title="Price change from the previous scoring date to this one">
+                1-Mo %<span className="thsub">{monthShort(priorDate)}→{monthShort(priceDate)}</span>
+              </th>
               <th className="al-l">Why it is unranked</th>
             </tr>
           </thead>

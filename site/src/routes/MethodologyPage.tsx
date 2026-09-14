@@ -167,7 +167,8 @@ if ROIC <= ${hurdle}% (hurdle):   growth percentile inverted (100 - p)`}</pre>
         <p>
           All prices are <b>split- and dividend-adjusted closes</b>. The scoring date is the last
           trading day of the prior month, and the change column compares it to the prior scoring
-          date.
+          date. The price shown is therefore that day&apos;s close, not today&apos;s price: it moves
+          forward once a month, at the next scoring run, and the table labels its date.
         </p>
         <div className="callout caution">
           <b>Both endpoints are read from today&apos;s adjusted series</b>, never from the price

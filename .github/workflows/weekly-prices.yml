@@ -1,11 +1,14 @@
-name: Weekly prices
+name: Weekly price adjustment
 
 # Prices only - no fundamentals, no new history record.
 #
-# This refreshes the price and month-over-month columns between monthly runs.
-# It rebuilds the display payloads as well as the snapshot: writing only
-# data/price_snapshot.json left the refreshed prices invisible, because
-# scores_full.json is the file the site actually reads.
+# This does NOT show newer prices. Every price on the site is the close on the
+# scoring date, and the site only moves to a new price date at the monthly run.
+# What this job keeps current is the adjustment: after a split or a dividend,
+# that same close is restated on today's adjusted basis, so the dollar figure
+# stays consistent with what a broker shows for that date. It rebuilds the
+# display payloads as well as the snapshot, because scores_full.json is the
+# file the site actually reads.
 #
 # `--no-history` is load-bearing. Scores belong to their scoring date, and this
 # job must never create a month's record - if it ran before that month's

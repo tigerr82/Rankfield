@@ -3,7 +3,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import type { HistoryPoint, MetricSpec, FactorSpec } from "../data/types";
 import type { RankedRow } from "../lib/scoring";
 import { useApp } from "../state/AppState";
-import { activeColumns, type Column } from "./columns";
+import { activeColumns, type Column, type HeaderDates } from "./columns";
 import { RowExpansion } from "./RowExpansion";
 
 const MIN_W = 32;
@@ -28,6 +28,16 @@ export function RankTable({ rows, metrics, factors, history, scrollRef, tag, cla
   const { mode, hiddenColumns, widths, setWidths, sortKey, sortDir, setSort, holdings, toggleHolding } = useApp();
   const [open, setOpen] = useState<string | null>(null);
   const columns = useMemo(() => activeColumns(mode, hiddenColumns), [mode, hiddenColumns]);
+  // The price dates actually behind these rows. Taken as the most common value
+  // rather than the first row's, so one stock that did not trade on the scoring
+  // date cannot relabel the whole column.
+  const headerDates = useMemo<HeaderDates>(
+    () => ({
+      price: mostCommon(rows.map((r) => r.price_at_scoring_asof)),
+      prior: mostCommon(rows.map((r) => r.prior_price_date)),
+    }),
+    [rows],
+  );
   const heldSet = useMemo(() => new Set(holdings), [holdings]);
 
   const ctx = useMemo(
@@ -87,6 +97,7 @@ export function RankTable({ rows, metrics, factors, history, scrollRef, tag, cla
                 key={c.key}
                 column={c}
                 isLast={i === columns.length - 1}
+                sub={c.subheader?.(headerDates) ?? null}
                 sorted={sortKey === c.key ? sortDir : 0}
                 onSort={() => !c.nosort && setSort(c.key)}
                 columns={columns}
@@ -163,8 +174,18 @@ function DefaultEmpty() {
   );
 }
 
+function mostCommon(values: (string | null | undefined)[]): string | null {
+  const counts = new Map<string, number>();
+  for (const v of values) if (v) counts.set(v, (counts.get(v) ?? 0) + 1);
+  let best: string | null = null;
+  let bestCount = 0;
+  for (const [v, n] of counts) if (n > bestCount) [best, bestCount] = [v, n];
+  return best;
+}
+
 interface HeaderProps {
   column: Column;
+  sub: string | null;
   isLast: boolean;
   sorted: number;
   onSort: () => void;
@@ -173,7 +194,7 @@ interface HeaderProps {
   setWidths: (widths: Record<string, number>) => void;
 }
 
-function HeaderCell({ column, isLast, sorted, onSort, columns, widths, setWidths }: HeaderProps) {
+function HeaderCell({ column, sub, isLast, sorted, onSort, columns, widths, setWidths }: HeaderProps) {
   const dragging = useRef<{ startX: number; startW: number; nextKey: string | null; nextW: number } | null>(null);
 
   const onPointerDown = (e: React.PointerEvent<HTMLSpanElement>) => {
@@ -223,6 +244,7 @@ function HeaderCell({ column, isLast, sorted, onSort, columns, widths, setWidths
     >
       {column.header}
       {sorted !== 0 && <span className="ar">{sorted < 0 ? "▼" : "▲"}</span>}
+      {sub && <span className="thsub">{sub}</span>}
       {!isLast && (
         <span
           className="rz"

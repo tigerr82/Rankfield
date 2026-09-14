@@ -2,7 +2,7 @@ import { useRef, type ReactNode, type RefObject } from "react";
 import { NavLink } from "react-router-dom";
 import type { ScoresMeta } from "../data/types";
 import { usePayload } from "../data/usePayload";
-import { weeksSince } from "../lib/format";
+import { fullDate, weeksSince } from "../lib/format";
 import { useApp, type Theme } from "../state/AppState";
 
 /**
@@ -70,7 +70,11 @@ export function AppHeader({ meta, coverage }: { meta?: ScoresMeta; coverage?: nu
       </nav>
       <div className="hdr-meta mono">
         {scored != null && <span title="Stocks with a Rankfield Score this month">{scored.toLocaleString()} scored</span>}
-        {meta && <span title="Scoring date - the last trading day of the prior month">{meta.scoring_date}</span>}
+        {meta && (
+          <span title="Scores and prices are both as of this date - the last trading day of the prior month. They update together at the next monthly run.">
+            as of {fullDate(meta.scoring_date)}
+          </span>
+        )}
         {meta?.first_run && (
           <span
             className="tag"

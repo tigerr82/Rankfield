@@ -4,7 +4,7 @@ import { usePayload } from "../data/usePayload";
 import { Shell, useScrollRef } from "../components/Shell";
 import { ScoreCell } from "../components/cells";
 import { cleanName } from "../components/columns";
-import { DASH, marketCap, metricValue, money, monthLabel, percent } from "../lib/format";
+import { DASH, fullDate, marketCap, metricValue, money, monthLabel, percent } from "../lib/format";
 import { stockOutcomes } from "../lib/analytics";
 import { displayComposite, isDefaultWeights } from "../lib/scoring";
 import { useApp } from "../state/AppState";
@@ -101,7 +101,15 @@ export function StockPage() {
                 : `official score ${row.composite?.toFixed(1) ?? DASH} at ${row.weights_version} weights — the session weighting is exploratory and is not stored`
             }
           />
-          <Stat label={`Price at ${row.price_at_scoring_asof}`} value={money(row.price)} sub={row.prior_price_date ? `${percent(row.price_change_pct)} vs ${money(row.prior_price)} on ${row.prior_price_date}` : "no prior scoring date — first run for this stock"} />
+          <Stat
+            label={`Price on ${fullDate(row.price_at_scoring_asof)}`}
+            value={money(row.price)}
+            sub={
+              row.prior_price_date
+                ? `${percent(row.price_change_pct)} since ${fullDate(row.prior_price_date)} (${money(row.prior_price)}) · updates monthly`
+                : "no prior scoring date — first run for this stock · updates monthly"
+            }
+          />
           <Stat
             label="Fundamentals as of"
             value={row.fundamentals_asof ?? DASH}

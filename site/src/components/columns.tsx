@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { HistoryPoint } from "../data/types";
 import type { RankedRow } from "../lib/scoring";
-import { DASH, marketCap, money } from "../lib/format";
+import { DASH, dayMonth, fullDate, marketCap, money, monthShort } from "../lib/format";
 import { DeltaCell, ScoreCell, Sparkline, StabilityCell, StarButton } from "./cells";
 
 export interface ColumnContext {
@@ -11,9 +11,17 @@ export interface ColumnContext {
   totalRows: number;
 }
 
+/** The price dates behind the rows on screen, for labelling column headers. */
+export interface HeaderDates {
+  price: string | null;
+  prior: string | null;
+}
+
 export interface Column {
   key: string;
   header: string;
+  /** A second, smaller header line - used to put the date on the price columns. */
+  subheader?: (dates: HeaderDates) => string | null;
   /** Full name for the column-visibility control and the header tooltip. */
   title: string;
   align: "l" | "r" | "c";
@@ -109,17 +117,26 @@ export const COLUMNS: Column[] = [
   {
     key: "price",
     header: "Price",
-    title: "Adjusted close at the scoring date",
+    // Prices are the close on the scoring date and move forward only at the next
+    // monthly run, so the date sits on the column itself rather than being left
+    // for the reader to assume "today".
+    title: "Closing price on the scoring date. Prices update once a month, at each scoring run - not daily.",
+    subheader: (d) => (d.price ? dayMonth(d.price) : null),
     align: "r",
     width: 62,
     cls: "mono",
     sortValue: (row) => row.price,
-    render: (row) => money(row.price),
+    render: (row) => (
+      <span title={`Close on ${fullDate(row.price_at_scoring_asof)} · updates at the next monthly run`}>
+        {money(row.price)}
+      </span>
+    ),
   },
   {
     key: "price_change_pct",
     header: "1-Mo %",
-    title: "Price change since the prior scoring date",
+    title: "Price change from the previous scoring date to this one",
+    subheader: (d) => (d.price && d.prior ? `${monthShort(d.prior)}→${monthShort(d.price)}` : null),
     align: "r",
     width: 66,
     sortValue: (row) => row.price_change_pct,
@@ -129,7 +146,7 @@ export const COLUMNS: Column[] = [
         suffix="%"
         title={
           row.prior_price_date
-            ? `vs ${money(row.prior_price)} on ${row.prior_price_date}`
+            ? `${money(row.prior_price)} on ${fullDate(row.prior_price_date)} → ${money(row.price)} on ${fullDate(row.price_at_scoring_asof)}`
             : "No prior scoring date yet - this is the first run for this stock"
         }
       />
