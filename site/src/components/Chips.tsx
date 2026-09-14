@@ -1,6 +1,6 @@
 import type { FactorSpec } from "../data/types";
 import { CHG_ANY, useApp, type Ranges } from "../state/AppState";
-import { isDefaultWeights } from "../lib/scoring";
+import { formatWeight, isDefaultWeights } from "../lib/scoring";
 import { Link } from "react-router-dom";
 
 /** Active filters as removable chips above the table, with one "clear all" —
@@ -20,7 +20,7 @@ export function Chips({ factors }: { factors: FactorSpec[] }) {
       {whatIf && (
         <span className="chip" style={{ borderColor: "var(--accent)" }}>
           <Link to="/weights" style={{ textDecoration: "none", color: "inherit" }}>
-            What-if weights: {factors.map((f) => `${weights[f.key]}`).join("/")} — exploratory, not saved
+            What-if weights: {factors.map((f) => formatWeight(weights[f.key])).join(" / ")} — exploratory, not saved
           </Link>
           <button type="button" onClick={resetWeights} aria-label="Reset to official weights">
             ×

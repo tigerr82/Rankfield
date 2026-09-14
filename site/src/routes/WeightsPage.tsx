@@ -3,7 +3,7 @@ import { usePayload } from "../data/usePayload";
 import { Shell, useScrollRef } from "../components/Shell";
 import { RankTable } from "../components/RankTable";
 import { TableSkeleton } from "../components/Skeleton";
-import { DEFAULT_WEIGHTS, isDefaultWeights, rankDisplacement, rankRows } from "../lib/scoring";
+import { DEFAULT_WEIGHTS, formatWeight, isDefaultWeights, rankDisplacement, rankRows } from "../lib/scoring";
 import { useApp } from "../state/AppState";
 import type { SegmentKey } from "../data/types";
 
@@ -41,8 +41,6 @@ export function WeightsPage() {
     );
   }
 
-  const total = Object.values(weights).reduce((a, b) => a + b, 0);
-
   return (
     <Shell scrollRef={scrollRef}>
       <div className="card">
@@ -66,13 +64,13 @@ export function WeightsPage() {
             <div className="wsl" key={factor.key}>
               <div className="top">
                 <span>{factor.label}</span>
-                <b>{weights[factor.key]}%</b>
+                <b>{formatWeight(weights[factor.key])}%</b>
               </div>
               <input
                 type="range"
                 min={0}
-                max={60}
-                step={5}
+                max={100}
+                step={1}
                 value={weights[factor.key]}
                 onChange={(e) => setWeight(factor.key, Number(e.target.value))}
                 aria-label={`${factor.label} weight`}
@@ -84,7 +82,9 @@ export function WeightsPage() {
           <button type="button" className="pillbtn" onClick={resetWeights}>
             Reset to {Object.values(DEFAULT_WEIGHTS).join("/")}
           </button>
-          <span className="mono">total {total}% — normalised automatically</span>
+          <span title="The difference is split equally across the other three. A weight that reaches 0 stops there and the rest absorb the remainder.">
+            Total always 100% — moving one weight shifts the other three equally
+          </span>
           <span>
             {isDefaultWeights(weights) ? (
               "Official weighting — ranking unchanged."

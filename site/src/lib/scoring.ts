@@ -45,7 +45,60 @@ export function isDefaultWeights(weights: Weights): boolean {
 }
 
 export function weightsEqual(a: Weights, b: Weights): boolean {
-  return FACTOR_ORDER.every((k) => (a[k] ?? 0) === (b[k] ?? 0));
+  // Rebalanced weights are fractional (a 10-point move shifts the other three by
+  // 3.33 each), so compare to the hundredth rather than exactly.
+  return FACTOR_ORDER.every((k) => Math.abs((a[k] ?? 0) - (b[k] ?? 0)) < 0.005);
+}
+
+/** "25" for whole weights, "21.7" otherwise. */
+export function formatWeight(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+/**
+ * Set one factor's weight and move the other three to keep the total at 100.
+ *
+ * The difference is split equally across the other factors. A factor that
+ * reaches 0 stops there - a weight cannot go negative - and the factors still
+ * above 0 absorb the rest, again equally. Arithmetic is done in hundredths of a
+ * percent so the total is exactly 100, and a leftover hundredth always goes to
+ * the same factor, so moving a slider away and back returns every weight to
+ * where it started.
+ */
+export function rebalanceWeights(weights: Weights, key: FactorKey, target: number): Weights {
+  const TOTAL = 10000;
+  const cents = (v: number) => Math.round((Number.isFinite(v) ? v : 0) * 100);
+  const next = {} as Record<FactorKey, number>;
+  for (const k of FACTOR_ORDER) next[k] = Math.max(0, cents(weights[k] ?? 0));
+  next[key] = Math.max(0, Math.min(TOTAL, cents(target)));
+
+  const others = FACTOR_ORDER.filter((k) => k !== key);
+  let remaining = TOTAL - next[key] - others.reduce((sum, k) => sum + next[k], 0);
+
+  while (remaining !== 0) {
+    const shrinking = remaining < 0;
+    const active = others.filter((k) => !shrinking || next[k] > 0);
+    if (!active.length) break;
+    const share = Math.trunc(remaining / active.length);
+    let leftover = remaining - share * active.length;
+    let moved = 0;
+    for (const k of active) {
+      let step = share;
+      if (leftover !== 0) {
+        step += Math.sign(leftover);
+        leftover -= Math.sign(leftover);
+      }
+      if (shrinking) step = Math.max(step, -next[k]);
+      next[k] += step;
+      moved += step;
+    }
+    remaining -= moved;
+    if (moved === 0) break;
+  }
+
+  const out = {} as Weights;
+  for (const k of FACTOR_ORDER) out[k] = next[k] / 100;
+  return out;
 }
 
 /**

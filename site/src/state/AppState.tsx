@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import type { FactorKey, SegmentKey } from "../data/types";
-import { DEFAULT_WEIGHTS, FACTOR_ORDER, type Weights } from "../lib/scoring";
+import { DEFAULT_WEIGHTS, FACTOR_ORDER, rebalanceWeights, type Weights } from "../lib/scoring";
 import { allEvents, currentHoldings, removeAll, toggle, type WatchEvent } from "../lib/portfolio";
 
 export type Mode = "basic" | "pro";
@@ -199,8 +199,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  // Moving one weight moves the other three equally, so the total is always 100.
   const setWeight = useCallback((key: FactorKey, value: number) => {
-    setWeights((prev) => ({ ...prev, [key]: value }));
+    setWeights((prev) => rebalanceWeights(prev, key, value));
   }, []);
   const resetWeights = useCallback(() => setWeights({ ...DEFAULT_WEIGHTS }), []);
 
