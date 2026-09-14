@@ -12,6 +12,21 @@ from datetime import date, timedelta
 from .util import parse_iso
 
 ANNUAL_MIN, ANNUAL_MAX = 330, 400
+
+# Only financial reports may supply a figure.
+#
+# Since 2023 the SEC's pay-versus-performance rule puts several years of company
+# net income into proxy statements (DEF 14A), XBRL-tagged - and often at the
+# wrong scale. G-III's FY2024 net income, $176,168,000 in its 10-K, arrives from
+# its 2026 proxy as 174,740. Because the most recently filed value for a period
+# wins, those proxies silently replaced audited 10-K figures for 26 scored
+# companies (Medtronic, FedEx, Arista among them): net income collapsed ~1000x,
+# return on assets flattened to zero, and their earnings looked perfectly stable.
+FINANCIAL_REPORT_FORMS = frozenset({
+    "10-K", "10-K/A", "10-KT", "10-KT/A",
+    "10-Q", "10-Q/A", "10-QT", "10-QT/A",
+    "20-F", "20-F/A", "40-F", "40-F/A",
+})
 QUARTER_MIN, QUARTER_MAX = 80, 100
 
 
@@ -72,6 +87,8 @@ class FactSet:
                     filed = f.get("filed")
                     if not filed or parse_iso(filed) > self.as_of:
                         continue  # not yet public at the scoring date
+                    if f.get("form") not in FINANCIAL_REPORT_FORMS:
+                        continue  # proxy statements and the like are not financial reports
                     out.append(
                         {
                             "concept": concept,

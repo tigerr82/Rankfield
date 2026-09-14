@@ -121,7 +121,7 @@ company, and JPMorgan legitimately has no gross margin.
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There has
-been two, both to the first month, before any comparison depended on it.
+been three, all to the first month, before any comparison depended on it.
 
 **2026-09 — the 2026-08 record was regenerated once.** Growth in profitability
 (dGPOA) subtracted a fiscal-year ratio from a trailing-twelve-month one, so the
@@ -152,6 +152,29 @@ Microsoft 46 -> 33, Alphabet 73 -> 66, Apple 61 -> 99 (1.8% revenue growth, prev
 lifted by its efficiency gain). Fourteen more stocks became scorable, because dGPOA is no
 longer dropped when ROIC is unknown. The August record was regenerated because it is the
 baseline every later month is compared against; the 1.0 version is preserved in git.
+
+
+**2026-09 — methodology 1.2, and the 2026-08 baseline recomputed under it.** Two defects
+put G-III Apparel first of 1,191, with revenue shrinking and earnings about to halve:
+
+- *The ROIC hurdle rewarded decline.* Below the hurdle the growth percentile was inverted
+  (100 - p), which punished value-destroying expansion but also turned the fastest-shrinking
+  companies into the best "growers". G-III, revenue falling 2.9% a year with ROIC at 8.8%
+  against a 9% hurdle, scored 88.6 on Growth; 148 companies with shrinking revenue scored 70
+  or more. Below the hurdle the score is now min(p, 100 - p): never above 50, faster growth
+  still penalised, shrinkage no longer rewarded. Methodology 1.1 had made this worse, because
+  with Growth reduced to a single metric nothing diluted the inversion.
+- *Proxy statements overwrote audited figures.* Pay-versus-performance tables in DEF 14A
+  filings carry XBRL-tagged net income, often at the wrong scale, and the most recently filed
+  value wins. For 26 scored companies (Medtronic, FedEx, Arista, G-III) net income arrived
+  ~1000x too small, return on assets flattened to zero, and earnings variability read as
+  perfectly stable. Figures now come only from 10-K, 10-Q, 20-F and 40-F reports and their
+  amendments.
+
+Effect: 1,331 of 1,368 rows re-ranked. G-III 1 -> 159 (Growth 88.6 -> 11.9, earnings
+variability 0.005% -> 5.3%). No company with shrinking revenue now scores 70+ on Growth
+(was 148), and none shows implausibly perfect earnings stability (was 11). In Technology:
+Adobe 7 -> 5, Microsoft 33 -> 26, Alphabet 66 -> 55. The 1.1 record is preserved in git.
 
 ---
 

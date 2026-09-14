@@ -196,3 +196,33 @@ class TestStructuralSignals:
         assert fs.quarters_filed == 0
         assert fs.files_domestic_forms is False
         assert fs.instant(["Assets"]) is None
+
+
+class TestOnlyFinancialReportsSupplyFigures:
+    """A proxy statement filed after the 10-K must not replace the audited figure.
+
+    Pay-versus-performance tables in DEF 14A filings carry XBRL-tagged net income,
+    often at the wrong scale. With "latest filed wins", G-III's net income arrived
+    ~1000x too small and its earnings looked perfectly stable.
+    """
+
+    def test_a_proxy_statement_cannot_replace_an_audited_annual_figure(self):
+        payload = facts(("NetIncomeLoss", "USD", [
+            q("2023-02-01", "2024-01-31", 176_168_000, "2024-03-25", form="10-K"),
+            q("2023-02-01", "2024-01-31", 174_740, "2026-05-05", form="DEF 14A"),
+        ]))
+        series = FactSet(payload, AS_OF).annual_series(["NetIncomeLoss"], 5)
+        assert [r["val"] for r in series] == [176_168_000]
+
+    def test_an_amended_annual_report_still_supersedes_the_original(self):
+        payload = facts(("NetIncomeLoss", "USD", [
+            q("2024-01-01", "2024-12-31", 100, "2025-02-15", form="10-K"),
+            q("2024-01-01", "2024-12-31", 90, "2025-06-01", form="10-K/A"),
+        ]))
+        assert FactSet(payload, AS_OF).annual_series(["NetIncomeLoss"], 5)[0]["val"] == 90
+
+    def test_a_period_reported_only_outside_financial_reports_resolves_nothing(self):
+        payload = facts(("NetIncomeLoss", "USD", [
+            q("2024-01-01", "2024-12-31", 5, "2025-04-01", form="DEF 14A"),
+        ]))
+        assert FactSet(payload, AS_OF).annual_series(["NetIncomeLoss"], 5) == []

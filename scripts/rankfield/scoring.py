@@ -146,9 +146,19 @@ def score_segment(
                 percentiles[i][key] = None
                 r["missing"].setdefault(key, "ROIC unavailable, so growth cannot be ROIC-conditioned")
             elif roic <= roic_hurdle:
-                # Expanding while destroying value: the percentile is inverted.
-                percentiles[i][key] = round(100.0 - p, 1)
-                bases[i][key] = bases[i].get(key, "sector") + "|inverted"
+                # Below the cost-of-capital hurdle growth is never rewarded: the
+                # score cannot exceed the midpoint, and faster growth scores
+                # lower, because growth funded below the cost of capital destroys
+                # value.
+                #
+                # Until methodology 1.2 this was a straight inversion, 100 - p,
+                # which also turned the fastest-SHRINKING companies into the best
+                # "growers": G-III, revenue falling 2.9% a year, scored 88.6 on
+                # Growth and ranked first of 1,191; 148 companies with shrinking
+                # revenue scored 70 or more. min(p, 100 - p) keeps the penalty on
+                # value-destroying expansion and removes the reward for decline.
+                percentiles[i][key] = round(min(p, 100.0 - p), 1)
+                bases[i][key] = bases[i].get(key, "sector") + "|below-hurdle"
 
     # ---- factors and composite
     scored, insufficient = [], []

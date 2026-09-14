@@ -129,8 +129,9 @@ METRICS: list[dict] = [
     # 10.5% revenue grower outscored 12.5% and 16.1% growers on "Growth".
     {"key": "rev_growth", "label": "Revenue Growth (3-yr CAGR)", "short": "Rev CAGR", "factor": "growth",
      "higher_better": True, "unit": "pct",
-     "formula": "Three-year compound annual growth rate of revenue. ROIC-conditioned: inverted where "
-                "ROIC is at or below the hurdle, so expansion that destroys value is not rewarded."},
+     "formula": "Three-year compound annual growth rate of revenue. ROIC-conditioned: at or below the "
+                "hurdle the score is capped at 50 and faster growth scores lower - value-destroying "
+                "expansion is never rewarded, and neither is shrinking."},
 
     {"key": "debt_equity", "label": "Debt / Equity", "short": "D/E", "factor": "health",
      "higher_better": False, "unit": "x",

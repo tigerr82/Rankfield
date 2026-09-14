@@ -72,9 +72,9 @@ export function RowExpansion({
                           SEG
                         </span>
                       )}
-                      {basis.includes("inverted") && (
-                        <span className="basis inv" title="ROIC is below the cost-of-capital hurdle, so growth is scored negatively — expanding while destroying value is not rewarded">
-                          INV
+                      {basis.includes("below-hurdle") && (
+                        <span className="basis inv" title="ROIC is at or below the cost-of-capital hurdle: growth cannot score above 50, and faster growth scores lower - value-destroying expansion is never rewarded">
+                          HURDLE
                         </span>
                       )}
                     </span>

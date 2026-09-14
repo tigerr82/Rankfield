@@ -1,7 +1,7 @@
 {
-  "version": "1.1",
+  "version": "1.2",
   "effective_from": "2026-08",
-  "note": "Official weights. Changing the weights or the factor composition MUST bump `version`; historical records keep the version that produced them and are not re-scored. 1.1 (2026-09): Growth is revenue growth alone; dGPOA moved to Quality. The 2026-08 baseline was regenerated under 1.1 before any comparison depended on it - see the README correction log.",
+  "note": "Official weights. Changing the weights or how factors are computed MUST bump `version`; historical records keep the version that produced them and are not re-scored. 1.1 (2026-09): Growth is revenue growth alone; dGPOA moved to Quality. 1.2 (2026-09): below the ROIC hurdle growth is capped at 50 (min(p, 100-p)) instead of inverted, and figures come only from financial reports, never proxy statements. The 2026-08 baseline was regenerated under each before any comparison depended on it - see the README correction log.",
   "weights": {
     "quality": 25,
     "growth": 25,

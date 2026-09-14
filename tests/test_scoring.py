@@ -185,18 +185,32 @@ class TestScoreSegmentEndToEnd:
         composites = [r["composite"] for r in result["scored"]]
         assert composites == sorted(composites, reverse=True)
 
-    def test_conditioning_lifts_sub_hurdle_names_off_the_bottom(self):
-        # A company below the ROIC hurdle has its growth percentile inverted, so
-        # the weakest grower among value-destroyers is no longer scored as the
-        # worst name overall. This deliberately breaks the naive assumption that
-        # the table is monotonic in the raw inputs.
+    def test_shrinking_below_the_hurdle_is_not_rewarded_as_growth(self):
+        # A straight inversion made the weakest grower among value-destroyers
+        # the best "grower" in the table. Below the hurdle growth is capped at the
+        # midpoint whichever way revenue moves.
         result = score_segment(self._rows(), weights=EQUAL, winsor=(5, 95), roic_hurdle=0.09,
                                min_cohort=8, coverage_threshold=0.7)
         by_ticker = {r["ticker"]: r for r in result["scored"]}
-        # T0 has the worst raw growth of all, yet its Growth factor is high
-        # because inversion rewards not expanding while destroying value.
-        assert by_ticker["T0"]["factors"]["growth"] > by_ticker["T5"]["factors"]["growth"]
-        assert by_ticker["T0"]["rank"] < by_ticker["T5"]["rank"]
+        # T0: the lowest revenue growth, ROIC under the hurdle.
+        assert by_ticker["T0"]["factors"]["growth"] <= 50
+        assert by_ticker["T0"]["factors"]["growth"] < by_ticker["T29"]["factors"]["growth"]
+
+    def test_fast_growth_below_the_hurdle_is_penalised(self):
+        rows = self._rows()
+        by = {r["ticker"]: r for r in rows}
+        by["T29"]["values"]["roic"] = 0.05   # fastest grower, now destroying value
+        result = score_segment(rows, weights=EQUAL, winsor=(5, 95), roic_hurdle=0.09,
+                               min_cohort=8, coverage_threshold=0.7)
+        top = next(r for r in result["scored"] + result["insufficient"] if r["ticker"] == "T29")
+        assert top["factors"]["growth"] <= 10
+
+    def test_no_growth_score_below_the_hurdle_exceeds_the_midpoint(self):
+        result = score_segment(self._rows(), weights=EQUAL, winsor=(5, 95), roic_hurdle=0.09,
+                               min_cohort=8, coverage_threshold=0.7)
+        for r in result["scored"]:
+            if "below-hurdle" in (r["bases"].get("rev_growth") or ""):
+                assert r["factors"]["growth"] <= 50
 
     def test_winsorization_ties_the_extremes_before_ranking(self):
         # 5/95 clipping is supposed to collapse the tail, so the very best names
@@ -216,11 +230,10 @@ class TestScoreSegmentEndToEnd:
                                min_cohort=8, coverage_threshold=0.7)
         by_ticker = {r["ticker"]: r for r in result["scored"]}
         # T0 has the lowest ROIC (5%, under the 9% hurdle) but growth metrics at
-        # the bottom of the cohort. Inversion turns its low growth percentile
-        # into a high one - it is not expanding while destroying value.
-        assert "inverted" in (by_ticker["T0"]["bases"]["rev_growth"] or "")
+        # the bottom of the cohort. Below the hurdle its growth score is capped.
+        assert "below-hurdle" in (by_ticker["T0"]["bases"]["rev_growth"] or "")
         # T29 clears the hurdle comfortably, so its percentile is used as-is.
-        assert "inverted" not in (by_ticker["T29"]["bases"]["rev_growth"] or "")
+        assert "below-hurdle" not in (by_ticker["T29"]["bases"]["rev_growth"] or "")
 
     def test_growth_drops_out_when_roic_is_unknown(self):
         rows = self._rows()
@@ -288,8 +301,8 @@ class TestFactorCompositionV11:
     def test_delta_gpoa_is_not_roic_conditioned(self):
         result = self._score(TestScoreSegmentEndToEnd()._rows())
         below_hurdle = next(r for r in result["scored"] if r["ticker"] == "T0")  # ROIC 5%
-        assert "inverted" not in (below_hurdle["bases"]["delta_gpoa"] or "")
-        assert "inverted" in (below_hurdle["bases"]["rev_growth"] or "")
+        assert "below-hurdle" not in (below_hurdle["bases"]["delta_gpoa"] or "")
+        assert "below-hurdle" in (below_hurdle["bases"]["rev_growth"] or "")
 
     def test_an_efficient_slow_grower_cannot_outscore_a_faster_grower_on_growth(self):
         rows = TestScoreSegmentEndToEnd()._rows()

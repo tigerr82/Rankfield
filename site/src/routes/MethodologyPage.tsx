@@ -133,7 +133,7 @@ export function MethodologyPage() {
           company expanding while destroying value is not rewarded for it.
         </p>
         <pre>{`if ROIC >  ${hurdle}% (hurdle):   growth percentile used as-is
-if ROIC <= ${hurdle}% (hurdle):   growth percentile inverted (100 - p)`}</pre>
+if ROIC <= ${hurdle}% (hurdle):   min(p, 100 - p)   (never above 50; faster growth scores lower)`}</pre>
         <p>
           A flat hurdle stands in for a company-specific cost of capital. That is a simplification,
           stated here rather than hidden. Where ROIC itself could not be computed, the growth metrics
@@ -142,6 +142,13 @@ if ROIC <= ${hurdle}% (hurdle):   growth percentile inverted (100 - p)`}</pre>
         </p>
 
         <h2>Point-in-time discipline</h2>
+        <p>
+          <b>Only financial reports supply figures</b> — annual and quarterly reports and their
+          amendments. Proxy statements are ignored: their pay-versus-performance tables repeat
+          several years of net income in XBRL, frequently at the wrong scale, and because the most
+          recently filed value wins they were overwriting audited figures with numbers a thousand
+          times too small.
+        </p>
         <p>
           EDGAR is a genuine point-in-time source, because every fact carries the date it was{" "}
           <code>filed</code>, the accession number of the filing, and the form type. Restatements
@@ -278,7 +285,15 @@ FCF/EV     = (Operating Cash Flow - Capital Expenditure) / EV`}</pre>
 
 then, after the percentile step:
   if ROIC >  hurdle:  percentile used as-is
-  if ROIC <= hurdle:  percentile inverted`}</pre>
+  if ROIC <= hurdle:  min(p, 100 - p)`}</pre>
+        <p>
+          <b>Below the hurdle, growth is capped rather than inverted, since methodology 1.2.</b> A
+          straight inversion (100 − p) punished value-destroying expansion as intended, but it also
+          turned the fastest-shrinking companies into the best &ldquo;growers&rdquo;: a company whose
+          revenue fell 2.9% a year scored 88.6 on Growth and ranked first overall. With min(p, 100 − p)
+          a company below the hurdle can never score above 50 on Growth, whichever way its revenue
+          moves.
+        </p>
         <p>
           <b>Growth is revenue growth alone, since methodology 1.1.</b> It was originally the
           average of revenue growth and the change in gross profitability (dGPOA). But dGPOA
