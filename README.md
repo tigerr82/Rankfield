@@ -17,8 +17,8 @@ runtime API calls, no server, no database — and no recurring cost.
 |---|---|
 | Listed on NYSE/NASDAQ | 6,856 |
 | Common stock, above $1B, one line per company | 2,266 |
-| Scored | **1,354** (1,177 operating · 154 financials & REITs · 23 pre-revenue) |
-| Routed to *Insufficient data* | 498 |
+| Scored | **1,368** (1,191 operating · 154 financials & REITs · 23 pre-revenue) |
+| Routed to *Insufficient data* | 484 |
 | Metric coverage across scored stocks | **94%** |
 | Cost | $0 |
 
@@ -121,7 +121,7 @@ company, and JPMorgan legitimately has no gross margin.
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There has
-been one.
+been two, both to the first month, before any comparison depended on it.
 
 **2026-09 — the 2026-08 record was regenerated once.** Growth in profitability
 (dGPOA) subtracted a fiscal-year ratio from a trailing-twelve-month one, so the
@@ -136,6 +136,22 @@ record depended on it. The original is preserved in git history at commit
 `fb17365~1`. This is the exception the rule tolerates: a defect in a metric,
 caught immediately. It is **not** licence to re-score history when the weights
 change - that remains forbidden, because it guarantees a flattering backtest.
+
+
+**2026-09 — methodology 1.1, and the 2026-08 baseline recomputed under it.** The Growth
+factor averaged revenue growth with dGPOA, but dGPOA measures efficiency, not growth: a
+company holding its asset base flat while selling a little more scored as a fast grower.
+Adobe, growing revenue 10.5% a year, ranked first in Technology and outscored Alphabet
+(12.5%) and Microsoft (16.1%) on "Growth". Growth is now revenue growth alone, ROIC-
+conditioned as before; dGPOA moved to Quality, where Quality-Minus-Junk places it, and is
+no longer inverted by the ROIC hurdle. Weights are unchanged at 25/25/25/25; the version
+moved to 1.1 because the factor composition changed.
+
+Effect on the baseline: 1,163 of 1,368 rows re-ranked. In Technology, Adobe 1 -> 7,
+Microsoft 46 -> 33, Alphabet 73 -> 66, Apple 61 -> 99 (1.8% revenue growth, previously
+lifted by its efficiency gain). Fourteen more stocks became scorable, because dGPOA is no
+longer dropped when ROIC is unknown. The August record was regenerated because it is the
+baseline every later month is compared against; the 1.0 version is preserved in git.
 
 ---
 

@@ -242,7 +242,10 @@ GPOA  = (Revenue - COGS) / Total Assets
 
 Earnings variability
   ROA_t   = Net Income_t / Total Assets_t     for the last 5 fiscal years
-  EarnVar = standard deviation of ROA_t       (lower is better, so inverted when scoring)`}</pre>
+  EarnVar = standard deviation of ROA_t       (lower is better, so inverted when scoring)
+
+Change in gross profitability
+  dGPOA   = GPOA_latest FY - GPOA_(3 fiscal years earlier)    (percentage points)`}</pre>
         <p>
           Mauboussin&apos;s full ROIC treatment — capitalised intangibles, operating-lease interest,
           excess-cash estimates — needs company-level judgment and cannot be automated reliably
@@ -271,12 +274,19 @@ FCF/EV     = (Operating Cash Flow - Capital Expenditure) / EV`}</pre>
         </p>
 
         <h3>Growth</h3>
-        <pre>{`dGPOA     = GPOA_t - GPOA_(t-3yr)     (a change in the ratio, not a growth rate)
-RevGrowth = 3-year revenue CAGR
+        <pre>{`RevGrowth = 3-year revenue CAGR
 
 then, after the percentile step:
   if ROIC >  hurdle:  percentile used as-is
   if ROIC <= hurdle:  percentile inverted`}</pre>
+        <p>
+          <b>Growth is revenue growth alone, since methodology 1.1.</b> It was originally the
+          average of revenue growth and the change in gross profitability (dGPOA). But dGPOA
+          measures efficiency, not growth: a company that holds its asset base flat while selling a
+          little more scores as a fast grower. In practice a 10.5% revenue grower outscored 12.5%
+          and 16.1% growers on &ldquo;Growth&rdquo;. dGPOA now sits in Quality, where
+          Quality-Minus-Junk places it, and is not ROIC-conditioned.
+        </p>
 
         <h3>Financial Health</h3>
         <pre>{`Debt/Equity     = Total Debt / Total Shareholders' Equity

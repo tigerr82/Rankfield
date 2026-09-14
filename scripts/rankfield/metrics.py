@@ -105,6 +105,13 @@ METRICS: list[dict] = [
      "higher_better": False, "unit": "pct",
      "formula": "Standard deviation of return on assets across the last five fiscal years. "
                 "Lower is better, so the percentile is inverted."},
+    # Moved from Growth in methodology 1.1. A rising gross-profits-to-assets ratio
+    # is a quality signal - the business extracting more from what it owns - which
+    # is where Asness et al.'s Quality-Minus-Junk places it. Not ROIC-conditioned.
+    {"key": "delta_gpoa", "label": "Change in Gross Profitability", "short": "dGPOA", "factor": "quality",
+     "higher_better": True, "unit": "pp",
+     "formula": "GPOA in the latest fiscal year minus GPOA three fiscal years earlier, in percentage "
+                "points - improving efficiency, not growth."},
 
     {"key": "ebit_ev", "label": "EBIT / EV", "short": "EBIT/EV", "factor": "valuation",
      "higher_better": True, "unit": "pct",
@@ -116,13 +123,14 @@ METRICS: list[dict] = [
      "higher_better": True, "unit": "pct",
      "formula": "(Operating cash flow - capital expenditure) / enterprise value."},
 
-    {"key": "delta_gpoa", "label": "Growth in Profitability", "short": "dGPOA", "factor": "growth",
-     "higher_better": True, "unit": "pp",
-     "formula": "GPOA today minus GPOA three fiscal years ago, in percentage points "
-                "(a change in the ratio, not a growth rate). ROIC-conditioned."},
+    # Growth is revenue growth alone. Until methodology 1.1 it was averaged with
+    # dGPOA, which measures efficiency rather than growth: a company holding its
+    # asset base flat while selling a little more scored as a fast grower, so a
+    # 10.5% revenue grower outscored 12.5% and 16.1% growers on "Growth".
     {"key": "rev_growth", "label": "Revenue Growth (3-yr CAGR)", "short": "Rev CAGR", "factor": "growth",
      "higher_better": True, "unit": "pct",
-     "formula": "Three-year compound annual growth rate of revenue. ROIC-conditioned."},
+     "formula": "Three-year compound annual growth rate of revenue. ROIC-conditioned: inverted where "
+                "ROIC is at or below the hurdle, so expansion that destroys value is not rewarded."},
 
     {"key": "debt_equity", "label": "Debt / Equity", "short": "D/E", "factor": "health",
      "higher_better": False, "unit": "x",

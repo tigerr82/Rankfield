@@ -128,10 +128,13 @@ def score_segment(
                 percentiles[i][key] = ranked[pos]
                 bases[i][key] = basis
 
-    # ---- growth is ROIC-conditioned, applied AFTER the percentile step
+    # ---- growth is ROIC-conditioned, applied AFTER the percentile step.
+    # The conditioned set is read from the registry rather than listed here, so
+    # moving a metric between factors cannot leave it inverted by mistake.
+    growth_keys = [m["key"] for m in METRICS if m["factor"] == "growth"]
     for i, r in enumerate(rows):
         roic = r["values"].get("roic")
-        for key in ("delta_gpoa", "rev_growth"):
+        for key in growth_keys:
             p = percentiles[i].get(key)
             if p is None:
                 continue

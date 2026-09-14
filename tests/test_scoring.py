@@ -257,3 +257,47 @@ class TestScoreSegmentEndToEnd:
         result = score_segment(self._rows(), weights=EQUAL, winsor=(5, 95), roic_hurdle=0.09,
                                min_cohort=8, coverage_threshold=0.7)
         assert [r["rank"] for r in result["scored"]] == list(range(1, len(result["scored"]) + 1))
+
+
+class TestFactorCompositionV11:
+    """Methodology 1.1: Growth is revenue growth alone; dGPOA is a Quality metric.
+
+    dGPOA measures efficiency, not growth. While it sat in Growth, a company that
+    held its assets flat while selling a little more outscored faster revenue
+    growers on "Growth" - Adobe at 10.5% beat Alphabet (12.5%) and Microsoft
+    (16.1%). These tests stop that composition coming back.
+    """
+
+    def test_growth_is_revenue_growth_alone(self):
+        from rankfield.metrics import METRICS
+        assert [m["key"] for m in METRICS if m["factor"] == "growth"] == ["rev_growth"]
+
+    def test_delta_gpoa_belongs_to_quality(self):
+        from rankfield.metrics import METRICS_BY_KEY
+        assert METRICS_BY_KEY["delta_gpoa"]["factor"] == "quality"
+
+    def _score(self, rows):
+        return score_segment(rows, weights=EQUAL, winsor=(5, 95), roic_hurdle=0.09,
+                             min_cohort=8, coverage_threshold=0.7)
+
+    def test_growth_factor_equals_the_revenue_growth_percentile(self):
+        result = self._score(TestScoreSegmentEndToEnd()._rows())
+        for r in result["scored"]:
+            assert r["factors"]["growth"] == r["percentiles"]["rev_growth"]
+
+    def test_delta_gpoa_is_not_roic_conditioned(self):
+        result = self._score(TestScoreSegmentEndToEnd()._rows())
+        below_hurdle = next(r for r in result["scored"] if r["ticker"] == "T0")  # ROIC 5%
+        assert "inverted" not in (below_hurdle["bases"]["delta_gpoa"] or "")
+        assert "inverted" in (below_hurdle["bases"]["rev_growth"] or "")
+
+    def test_an_efficient_slow_grower_cannot_outscore_a_faster_grower_on_growth(self):
+        rows = TestScoreSegmentEndToEnd()._rows()
+        by = {r["ticker"]: r for r in rows}
+        # Both clear the ROIC hurdle. T10 grows slower but has a huge efficiency
+        # gain; T20 grows faster while its gross profitability ratio falls.
+        by["T10"]["values"].update(rev_growth=0.105, delta_gpoa=0.40)
+        by["T20"]["values"].update(rev_growth=0.161, delta_gpoa=-0.20)
+        result = self._score(rows)
+        scored = {r["ticker"]: r for r in result["scored"]}
+        assert scored["T20"]["factors"]["growth"] > scored["T10"]["factors"]["growth"]
