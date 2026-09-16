@@ -15,6 +15,7 @@
     "winsorize_lo_pct": 5,
     "winsorize_hi_pct": 95,
     "roic_hurdle": 0.09,
+    "max_input_age_days": 300,
     "effective_tax_clamp": [
       0.0,
       0.35
@@ -28,6 +29,11 @@
       35,
       40
     ]
+  },
+  "drift": {
+    "warn_scored_drop_pct": 1,
+    "block_scored_drop_pct": 5,
+    "recently_abandoned_days": 450
   },
   "sanity": {
     "price_move_review_pct": 50

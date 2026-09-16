@@ -240,3 +240,116 @@ class TestDeltaGpoaIsLikeForLike:
         result = compute_metrics(fs, market_cap=5000.0)
         expected = _annual_gpoa(fs, 0) - _annual_gpoa(fs, 3)
         assert result["values"]["delta_gpoa"] == pytest.approx(expected)
+
+
+class TestAbandonedTags:
+    """A tag the filer stopped using must never supply a current figure.
+
+    The real cases: Microsoft's debt from a 2015 combined tag, Johnson & Johnson's
+    operating income from 2015, Deere's 2026 revenue less its 2018 cost of goods.
+    """
+
+    @staticmethod
+    def add(fs, concept, rows):
+        fs._facts["us-gaap"][concept] = {"units": {"USD": rows}}
+        fs._cache.clear()
+
+    @staticmethod
+    def annual(year, val):
+        return {"start": f"{year}-01-01", "end": f"{year}-12-31", "val": val,
+                "filed": f"{year + 1}-02-15", "form": "10-K", "accn": f"a{year}"}
+
+    def test_a_stale_combined_debt_tag_falls_through_to_current_components(self):
+        fs = build()
+        self.add(fs, "DebtLongtermAndShorttermCombinedAmount",
+                 [{"end": "2015-03-31", "val": 777.0, "filed": "2015-04-23", "form": "10-Q", "accn": "old"}])
+        value, how = total_debt(fs)
+        assert value == 400.0
+        assert how == "noncurrent+current+short"
+
+    def test_stale_operating_income_is_not_used_as_ebit(self):
+        fs = build(OperatingIncomeLoss=None)
+        self.add(fs, "OperatingIncomeLoss", [self.annual(2014, 9999.0)])
+        result = compute_metrics(fs, market_cap=5000.0)
+        assert result["provenance"]["ebit_source"] == "unresolved"
+        assert result["values"]["ebit_ev"] is None
+        assert {"concept": "OperatingIncomeLoss", "last_reported": "2014-12-31"} in result["provenance"]["stale_inputs"]
+        assert any("OperatingIncomeLoss" in note for note in result["notes"])
+
+    def test_stale_operating_income_falls_back_to_a_current_derivation(self):
+        fs = build(OperatingIncomeLoss=None)
+        self.add(fs, "OperatingIncomeLoss", [self.annual(2014, 9999.0)])
+        self.add(fs, "OperatingExpenses", [self.annual(2025, 200.0)])
+        result = compute_metrics(fs, market_cap=5000.0)
+        assert result["provenance"]["ebit_source"] == "derived: Rev - COGS - OpEx"
+        assert result["raw_inputs"]["ebit"] == pytest.approx(1000.0 - 600.0 - 200.0)
+
+    def test_current_revenue_is_never_netted_against_stale_cost_of_goods(self):
+        fs = build(CostOfGoodsAndServicesSold=None)
+        self.add(fs, "CostOfGoodsAndServicesSold", [self.annual(2018, 100.0)])
+        result = compute_metrics(fs, market_cap=5000.0)
+        assert result["values"]["gpoa"] is None
+        assert result["provenance"]["gross_profit_source"] == "unresolved"
+
+    def test_a_company_with_only_current_tags_flags_nothing(self):
+        result = run()
+        assert result["provenance"]["stale_inputs"] == []
+        assert result["provenance"]["unmapped_candidates"] == {}
+        assert not any("no longer reports" in note for note in result["notes"])
+
+
+class TestFallbackChains:
+    """What replaces a figure once an abandoned tag no longer supplies it."""
+
+    add = staticmethod(TestAbandonedTags.add)
+    annual = staticmethod(TestAbandonedTags.annual)
+
+    @staticmethod
+    def instant(end, val):
+        return {"end": end, "val": val, "filed": "2026-02-15", "form": "10-K", "accn": "x"}
+
+    def test_no_operating_income_line_uses_pretax_income_plus_interest(self):
+        # Johnson & Johnson, Lilly, Merck: straight from costs to pre-tax income.
+        fs = build(OperatingIncomeLoss=None)
+        self.add(fs, "InterestExpenseNonoperating", [self.annual(2025, 20.0)])
+        result = compute_metrics(fs, market_cap=5000.0)
+        assert result["provenance"]["ebit_source"] == "derived: pretax income + interest expense"
+        assert result["raw_inputs"]["ebit"] == pytest.approx(180.0 + 20.0)
+        assert result["values"]["roic"] is not None
+
+    def test_a_banks_deposit_interest_does_not_manufacture_ebit(self):
+        fs = build(OperatingIncomeLoss=None)
+        self.add(fs, "InterestExpenseOperating", [self.annual(2025, 900.0)])
+        result = compute_metrics(fs, market_cap=5000.0)
+        assert result["provenance"]["ebit_source"] == "unresolved"
+
+    def test_debt_moved_to_an_unsecured_notes_tag_is_found(self):
+        fs = build(LongTermDebtNoncurrent=None)
+        self.add(fs, "UnsecuredLongTermDebt", [self.instant("2025-12-31", 2481.0)])
+        assert total_debt(fs) == (2481.0, "noncurrent+current+short")
+
+    def test_a_company_whose_last_reported_debt_was_zero_has_no_debt(self):
+        # Palantir: last debt tag, 2021, value zero; nothing since.
+        fs = build(LongTermDebtNoncurrent=None)
+        self.add(fs, "LongTermDebtNoncurrent", [self.instant("2021-12-31", 0.0)])
+        assert total_debt(fs) == (0.0, "last-reported-zero")
+        assert compute_metrics(fs, market_cap=5000.0)["values"]["debt_equity"] == 0.0
+
+    def test_a_stale_non_zero_debt_is_not_assumed_to_be_zero(self):
+        # Ford: last standard debt tag 2020, non-zero; its debt is elsewhere now.
+        fs = build(LongTermDebtNoncurrent=None)
+        self.add(fs, "LongTermDebtNoncurrent", [self.instant("2020-12-31", 291.0)])
+        assert total_debt(fs) == (None, "unresolved")
+
+    def test_an_unresolved_input_names_the_tags_the_company_reports_instead(self):
+        fs = build(LongTermDebtNoncurrent=None)
+        self.add(fs, "OtherLongTermDebtNoncurrent", [self.instant("2025-12-31", 350.0)])
+        result = compute_metrics(fs, market_cap=5000.0)
+        assert result["raw_inputs"]["debt"] is None
+        assert result["provenance"]["unmapped_candidates"] == {"debt": ["OtherLongTermDebtNoncurrent"]}
+
+    def test_the_singular_service_spelling_of_cost_of_revenue_is_read(self):
+        fs = build(CostOfGoodsAndServicesSold=None)
+        self.add(fs, "CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization", [self.annual(2025, 600.0)])
+        result = compute_metrics(fs, market_cap=5000.0)
+        assert result["values"]["gpoa"] == pytest.approx((1000.0 - 600.0) / 2000.0)

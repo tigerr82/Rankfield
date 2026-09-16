@@ -17,8 +17,8 @@ runtime API calls, no server, no database — and no recurring cost.
 |---|---|
 | Listed on NYSE/NASDAQ | 6,856 |
 | Common stock, above $1B, one line per company | 2,266 |
-| Scored | **1,368** (1,191 operating · 154 financials & REITs · 23 pre-revenue) |
-| Routed to *Insufficient data* | 484 |
+| Scored | **1,376** (1,182 operating · 177 financials & REITs · 17 pre-revenue) |
+| Routed to *Insufficient data* | 476 |
 | Metric coverage across scored stocks | **94%** |
 | Cost | $0 |
 
@@ -50,6 +50,7 @@ scripts/                 Python batch jobs, run in this order
   fetch_fundamentals.py    SEC EDGAR XBRL, point-in-time         -> data/fundamentals.json
   compute_scores.py        winsorize -> percentile -> factors    -> data/scores_*.json, history/
   build_json.py            publish payloads to the site
+  check_drift.py           monthly data-drift gate (opens an issue; blocks on a collapse)
   run_all.py               all of the above, in order
   verify_fundamentals.py   print raw values for a sample, to eyeball before scaling
   test_split_handling.py   acceptance test: splits must not fake a monthly move
@@ -58,13 +59,15 @@ scripts/                 Python batch jobs, run in this order
     facts.py               point-in-time view over one company's XBRL facts
     metrics.py             the formula appendix, implemented
     scoring.py             segmentation, percentiles, composite, weight sweep
+    drift.py               month-over-month drift report and its issue text
 data/
   universe.json            ticker, name, sector, market cap, CIK
   scores_full.json         ranking + all sub-scores + provenance  (the paid-tier shape)
   scores_public.json       ranked list only                       (the free-tier shape)
   history/                 scores_YYYY-MM.json, append-only, never overwritten
   history_index.json       ticker -> [{month, composite, rank, price, factors}]
-  coverage_report.json     the funnel, and every unresolved metric with its reason
+  coverage_report.json     the funnel, every unresolved metric with its reason, every stale input ignored
+  drift_report.json        what changed since last month's run: lost metrics, abandoned tags, candidates
 site/                      React + Vite + TypeScript front end
   src/data/repository.ts   the single data-access module - no component fetches a URL
 .github/workflows/
@@ -120,8 +123,8 @@ company, and JPMorgan legitimately has no gross margin.
 
 ## Corrections to the record
 
-History is append-only, so any rewrite of a stored month is logged here. There has
-been three, all to the first month, before any comparison depended on it.
+History is append-only, so any rewrite of a stored month is logged here. There have
+been four, all to the first month, before any comparison depended on it.
 
 **2026-09 — the 2026-08 record was regenerated once.** Growth in profitability
 (dGPOA) subtracted a fiscal-year ratio from a trailing-twelve-month one, so the
@@ -176,6 +179,38 @@ variability 0.005% -> 5.3%). No company with shrinking revenue now scores 70+ on
 (was 148), and none shows implausibly perfect earnings stability (was 11). In Technology:
 Adobe 7 -> 5, Microsoft 33 -> 26, Alphabet 66 -> 55. The 1.1 record is preserved in git.
 
+
+**2026-09 — figures from abandoned XBRL tags, and the 2026-08 baseline recomputed.** EDGAR
+keeps every tag a company has ever used. Looking a tag up by priority returned its last value
+however old, so figures from years ago stood in for current ones: Microsoft's total debt was
+$31.8B from a 2015 10-Q (it is $40.3B), Johnson & Johnson's operating income dated from 2015,
+GE's from 2012, and Deere's gross profit subtracted 2018 cost of goods from 2026 revenue. 557
+of 1,368 scored companies carried at least one such figure, and 82 had a headline
+"fundamentals as of" date more than a year old.
+
+- *Freshness rule.* An input older than 300 days before the company's latest balance sheet is
+  treated as not reported; a trailing figure built from quarters must reach the latest quarter
+  (120 days). The latest balance sheet is the latest date at least five balance-sheet tags
+  share, so one abandoned tag cannot anchor it (Cinemark).
+- *Fallbacks the stale figures had been hiding.* Rejecting stale figures alone would have
+  removed 224 companies, Lilly and Johnson & Johnson among them. Companies with no
+  operating-income line now use pre-tax income plus interest expense; more debt tags are read
+  (convertible, senior and unsecured notes); a company whose last reported debt was exactly zero
+  and that tags none since has zero debt; two cost-of-revenue and capital-expenditure spellings
+  were added. Interest on bank deposits is deliberately not added back — it would give JPMorgan
+  an "EBIT" that means nothing.
+- *Not fixed, stated instead.* Where a company's current figure is not in SEC's standard data
+  at all — Ford's debt, Vertex's, most of Cinemark's statements — the metric is missing and the
+  company may land in *Insufficient data*. Before, those companies were ranked on figures up to a
+  decade old.
+
+Weights and factor definitions are unchanged, so the version stays 1.2. Effect: 1,260 of 1,268
+rows present in both versions re-ranked (operating median move 22 places); 100 left the ranking
+(Citigroup, American Express, Vertex, Ford) and 108 joined (Merck, Goldman Sachs, IBM, Pfizer,
+Shopify, Progressive). Deckers stays first; Microsoft 177 -> 164, TJX 271 -> 160, Deere
+832 -> 355, KLA 828 -> 473, Lilly 90 -> 182, Casey's 34 -> 393. No scored row now rests on
+fundamentals older than twelve months. The previous record is preserved in git.
+
 ---
 
 ## Configuration
@@ -184,18 +219,44 @@ Adobe 7 -> 5, Microsoft 33 -> 26, Alphabet 66 -> 55. The 1.1 record is preserved
 `version`; historical records keep the weights that produced them.
 
 `config/settings.json` — floors and thresholds: market-cap floor, liquidity floor, coverage
-threshold, minimum sector cohort, winsorization percentiles, the ROIC hurdle, and the weight
-sweep used for the stability indicator.
+threshold, minimum sector cohort, winsorization percentiles, the ROIC hurdle, the maximum age of
+an input (`max_input_age_days`), the drift thresholds, and the weight sweep used for the
+stability indicator.
+
+### Monthly data-drift check
+
+Companies move figures between XBRL tags. Measured over 2022–2026, about 1.6% of inputs a year
+switch tag and are absorbed by the fallback chains, and about 0.6% — roughly three inputs a month
+across the scored universe — move to a tag no chain reads. The freshness rule turns those into
+gaps, never into wrong numbers, but gaps accumulate if nobody looks.
+
+`compute_scores.py` writes `data/drift_report.json`: companies that left the ranking, metrics
+lost since last month (economic losses such as negative EBITDA are listed separately), tags
+companies recently stopped using, and for each the tags the company reports today that no list
+reads. In the monthly workflow `check_drift.py` then:
+
+- **warn** — anything to review: opens a GitHub issue with the tables, and publishes.
+- **block** — the scored universe fell by 5% or more (usually a taxonomy change): opens the
+  issue and stops before committing, so nothing is published until the lists are fixed.
+
+Fixing a warning is normally one line in a tag list in `scripts/rankfield/metrics.py`, plus a
+test.
 
 ---
 
 ## Known limitations, stated rather than hidden
 
-- **Large banks are unranked.** JPMorgan, Bank of America and Progressive resolve 2–3 of the
-  7 metrics applicable to the financials segment and land in *Insufficient data*. The four
+- **Large banks are unranked.** JPMorgan, Bank of America, Wells Fargo and Morgan Stanley
+  resolve 2 of the 8 metrics applicable to the financials segment and land in *Insufficient
+  data*. The four
   factors genuinely do not describe a bank; ranking one on three metrics would produce a
   number that looks like a judgement without being one. Sector-specific factor models are the
   fix, and they are a later enhancement, not a v1 claim.
+- **Some current figures are not in SEC's standard data.** Ford reports its debt split between
+  Ford and Ford Credit in a form the companyfacts API does not carry; Cinemark stopped tagging
+  its consolidated statements in standard form. Those metrics are missing, and such companies
+  can land in *Insufficient data*. Reading full filing documents would close the gap; it is not
+  done.
 - **Successor registrants lose their history.** ExxonMobil's ticker now maps to a newly created
   holding-company CIK with a single filing on record, so it fails the eight-filings test and is
   excluded with that reason named. Following predecessor CIKs is not automated.

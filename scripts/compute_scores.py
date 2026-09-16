@@ -27,6 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from rankfield.config import (
     DATA_DIR, HISTORY_DIR, ensure_dirs, load_settings, load_weights, read_json, write_json,
 )
+from rankfield.drift import build_drift_report
 from rankfield.metrics import FACTORS, METRICS
 from rankfield.scoring import SEGMENTS, classify_segment, rank_stability, score_segment
 from rankfield.util import last_day_of_prior_month, month_key
@@ -229,10 +230,11 @@ def main() -> int:
             "form": row["provenance"]["form"],
             # Only the derivation trail: the period, filing date, accession and
             # form are already flattened above, and two copies of one field are
-            # two things that can drift apart.
+            # two things that can drift apart. Stale inputs are listed once, in
+            # the coverage report, rather than in every row of every payload.
             "derivation": {
                 k: v for k, v in row["provenance"].items()
-                if k not in ("fundamentals_asof", "filed", "accn", "form")
+                if k not in ("fundamentals_asof", "filed", "accn", "form", "stale_inputs", "unmapped_candidates")
             },
             "notes": row["notes"],
             "weights_version": weights_cfg["version"],
@@ -339,11 +341,30 @@ def main() -> int:
             for seg in segments_out.values() for r in seg
             for key, reason in r["missing_reasons"].items()
         ],
+        # Figures rejected because they came from a tag the company abandoned
+        # (older than max_input_age_days before its latest balance sheet).
+        "stale_inputs_ignored": [
+            {"ticker": r["ticker"], **s}
+            for r in rows for s in r["provenance"].get("stale_inputs", [])
+        ],
         "price_review": prices.get("review", []),
         "price_failures": prices.get("failures", []),
         "fundamentals_failures": fundamentals.get("failures", []),
     }
     write_json(DATA_DIR / "coverage_report.json", coverage, compact=True)
+
+    # ---- month-over-month drift, gated in the workflow by check_drift.py
+    drift = build_drift_report(
+        scoring_date=scoring_date,
+        prior_scoring_date=prior_scoring_date,
+        scored_rows=[r for seg in segments_out.values() for r in seg],
+        prior_rows=[r for seg in prior["segments"].values() for r in seg] if prior else None,
+        eligible_rows=rows,
+        insufficient_rows=insufficient_out,
+        thresholds=settings["drift"],
+    )
+    write_json(DATA_DIR / "drift_report.json", drift)
+    print(f"  drift vs {month_key(prior_scoring_date)}: {drift['status']}")
 
     print(f"scores -> data/scores_full.json + data/scores_public.json")
     for stage in funnel:

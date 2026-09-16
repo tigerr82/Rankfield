@@ -31,6 +31,7 @@ concurrency:
 
 permissions:
   contents: write
+  issues: write   # the data-drift report opens an issue when there is something to review
 
 jobs:
   score:
@@ -99,6 +100,23 @@ jobs:
         env:
           RANKFIELD_USER_AGENT: ${{ secrets.RANKFIELD_USER_AGENT }}
         run: python scripts/test_split_handling.py
+
+      - name: Data drift check
+        id: drift
+        # Companies move figures to XBRL tags the pipeline does not read (~3
+        # inputs a month). A small loss opens an issue and still publishes; a
+        # collapse of the scored universe (usually a taxonomy change) fails here,
+        # so nothing below runs and nothing is committed.
+        run: python scripts/check_drift.py --issue-body "$RUNNER_TEMP/drift_issue.md"
+
+      - name: Open a drift issue
+        if: ${{ always() && !inputs.limit && (steps.drift.outputs.status == 'warn' || steps.drift.outputs.status == 'block') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "Data drift: $(date -u +%Y-%m) scoring run (${{ steps.drift.outputs.status }})" \
+            --body-file "$RUNNER_TEMP/drift_issue.md"
 
       - name: Commit data
         # A capped run is a validation run: it proves the credentials and the

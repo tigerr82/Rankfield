@@ -29,13 +29,39 @@ FINANCIAL_REPORT_FORMS = frozenset({
 })
 QUARTER_MIN, QUARTER_MAX = 80, 100
 
+# A figure older than this, counted back from the company's latest balance sheet,
+# is treated as not reported.
+#
+# EDGAR keeps every fact ever filed, including tags a company stopped using years
+# ago, and a lookup by tag priority used to return that tag's last value however
+# old it was. Microsoft's total debt resolved to $31.8B from a 2015 10-Q - a tag
+# it has not used since - instead of $40.3B from its 2026 10-K; Johnson & Johnson's
+# operating income dated from March 2015; Deere's gross profit was 2026 revenue
+# less 2018 cost of goods sold. 557 of 1,368 scored companies carried at least one
+# such figure. 300 days admits the oldest legitimate input - a figure tagged only
+# in the annual report, read three quarters into the next fiscal year - and
+# nothing a year stale.
+MAX_INPUT_AGE_DAYS = 300
+# A trailing figure stitched from quarters proves the company tags that line
+# quarterly, so it must reach the latest quarter (one quarter of slack for 52/53
+# week calendars and a late tag). H.B. Fuller's operating income stopped three
+# quarters before its latest 10-Q; 300 days would have let it through.
+MAX_QUARTERLY_LAG_DAYS = 120
+# The latest balance sheet is the latest date at least this many balance-sheet
+# tags share - not the date of one named tag. Cinemark stopped tagging
+# consolidated Assets in 2022 while filing full balance sheets since, which
+# anchored every age check to 2022.
+BALANCE_SHEET_MIN_TAGS = 5
+
 
 class FactSet:
-    def __init__(self, facts_json: dict, as_of: date):
+    def __init__(self, facts_json: dict, as_of: date, max_input_age_days: int = MAX_INPUT_AGE_DAYS):
         self.as_of = as_of
+        self.max_input_age_days = max_input_age_days
         self.entity = facts_json.get("entityName")
         self._facts = facts_json.get("facts") or {}
-        self._cache: dict[tuple, list[dict]] = {}
+        self._cache: dict[tuple, list] = {}
+        self._stale: dict[str, str] = {}
         self.forms: set[str] = set()
         self._quarters_filed = 0
         self._scan_forms()
@@ -68,6 +94,76 @@ class FactSet:
         """10-K/10-Q filers are period-on-period comparable; 20-F/40-F filers
         report on a different cadence and are not."""
         return bool({"10-K", "10-Q"} & self.forms)
+
+    # ---------------------------------------------------------- freshness
+
+    @property
+    def reference_end(self) -> date | None:
+        """Period end of the latest balance sheet on file at D: the date every
+        current input's age is measured from.
+
+        A balance-sheet date must predate the filing that reports it; that
+        discards typos such as H.B. Fuller's deferred-tax facts dated 2105.
+        """
+        key = ("reference_end",)
+        if key not in self._cache:
+            limit = self.as_of.isoformat()
+            tags_per_end: dict[str, set[str]] = defaultdict(set)
+            for concept, node in (self._facts.get("us-gaap") or {}).items():
+                for rows in (node.get("units") or {}).values():
+                    for f in rows:
+                        end, filed = f.get("end"), f.get("filed")
+                        if (f.get("start") or not end or not filed or f.get("val") is None
+                                or f.get("form") not in FINANCIAL_REPORT_FORMS
+                                or filed > limit or end > filed):
+                            continue
+                        tags_per_end[end].add(concept)
+            ends = [e for e, tags in tags_per_end.items() if len(tags) >= BALANCE_SHEET_MIN_TAGS]
+            self._cache[key] = [parse_iso(max(ends)) if ends else None]
+        return self._cache[key][0]
+
+    @property
+    def stale_inputs(self) -> list[dict]:
+        """Every figure rejected as too old, newest rejection per tag - the audit
+        trail for the coverage report."""
+        return [{"concept": c, "last_reported": e} for c, e in sorted(self._stale.items())]
+
+    def current_tags(self, pattern, *, exclude=frozenset(), noise=None, limit: int = 5) -> list[str]:
+        """US-GAAP tags this company reported for its latest period whose names
+        match `pattern` - largest value first. Used to suggest where a figure
+        went when the tag it used to live under stops resolving."""
+        ref = self.reference_end
+        if ref is None:
+            return []
+        sizes: dict[str, float] = {}
+        for concept, node in (self._facts.get("us-gaap") or {}).items():
+            if concept in exclude or not pattern.search(concept) or (noise and noise.search(concept)):
+                continue
+            for rows in (node.get("units") or {}).values():
+                for f in rows:
+                    if (f.get("val") and f.get("end") and f.get("filed")
+                            and f.get("form") in FINANCIAL_REPORT_FORMS
+                            and parse_iso(f["filed"]) <= self.as_of
+                            and abs((parse_iso(f["end"]) - ref).days) <= 10):
+                        sizes[concept] = max(sizes.get(concept, 0.0), abs(f["val"]))
+        return [c for c, _ in sorted(sizes.items(), key=lambda kv: -kv[1])[:limit]]
+
+    def _fresh(self, fact: dict | None, anchor: date | None = None, max_age: int | None = None) -> dict | None:
+        """The fact, unless it is too old to describe `anchor` (by default the
+        latest balance sheet), in which case the caller sees nothing and falls
+        through to its next resolution path."""
+        if fact is None:
+            return None
+        anchor = anchor or self.reference_end
+        if anchor is None:
+            return fact  # no balance sheet on file to measure an age against
+        max_age = self.max_input_age_days if max_age is None else min(max_age, self.max_input_age_days)
+        if parse_iso(fact["end"]) >= anchor - timedelta(days=max_age):
+            return fact
+        concept = fact.get("concept") or "?"
+        if fact["end"] > self._stale.get(concept, ""):
+            self._stale[concept] = fact["end"]
+        return None
 
     # ------------------------------------------------------------ lookups
 
@@ -150,10 +246,11 @@ class FactSet:
     # ------------------------------------------------------- derived views
 
     def instant(self, concepts: list[str], on_or_before: date | None = None) -> dict | None:
-        """Latest balance-sheet value at or before a date."""
+        """Latest balance-sheet value at or before a date - or None when the
+        latest value on file is too old to describe that date."""
         limit = (on_or_before or self.as_of).isoformat()
         rows = [f for f in self.instants(concepts) if f["end"] <= limit and f["val"] is not None]
-        return rows[-1] if rows else None
+        return self._fresh(rows[-1], on_or_before) if rows else None
 
     def instant_near(self, concepts: list[str], target: str, tolerance_days: int = 45) -> dict | None:
         """Balance-sheet value closest to a target period end, for pairing a
@@ -187,6 +284,10 @@ class FactSet:
             if out and abs((parse_iso(out[-1]["end"]) - parse_iso(f["end"])).days) < 200:
                 continue
             out.append(f)
+        # A series whose newest year is stale belongs to an abandoned tag: its
+        # "latest" year is not the company's latest year, so none of it is usable.
+        if out and self._fresh(out[0]) is None:
+            return []
         return out[:count]
 
     def ttm(self, concepts: list[str]) -> dict | None:
@@ -237,7 +338,8 @@ class FactSet:
             # the fallback below would otherwise be described differently, and
             # this label is shown to users as provenance.
             stitched_from_one_annual = len(used) == 1 and covered >= ANNUAL_MIN
-            return {
+            max_age = None if stitched_from_one_annual else MAX_QUARTERLY_LAG_DAYS
+            return self._fresh({
                 "val": total,
                 "start": min(f["start"] for f in used),
                 "end": latest_end,
@@ -246,7 +348,7 @@ class FactSet:
                 "form": newest["form"],
                 "concept": used[0]["concept"],
                 "basis": "fy" if stitched_from_one_annual else "ttm",
-            }
+            }, max_age=max_age)
         annual = self.annual_series(concepts, 1)
         if annual:
             return {**annual[0], "basis": "fy"}

@@ -277,7 +277,17 @@ FCF/EV     = (Operating Cash Flow - Capital Expenditure) / EV`}</pre>
           and availability. Market cap comes from the universe file, not from EDGAR. EBIT is rarely
           tagged directly, so operating income is used and, where absent, derived as revenue less
           cost of revenue less operating expenses — operating income approximates EBIT because it
-          excludes non-operating items.
+          excludes non-operating items. Companies that present no operating-income line at all
+          (Johnson &amp; Johnson, Lilly, Merck) use pre-tax income plus interest expense, the textbook
+          EBIT.
+        </p>
+        <p>
+          <b>Only current figures are used.</b> EDGAR keeps every tag a company has ever reported,
+          including ones it abandoned years ago. Any input older than 300 days before the company's
+          latest balance sheet is treated as not reported, and the next source in the chain is
+          tried. Without this rule Microsoft's debt was read from a 2015 filing and Deere's gross
+          profit subtracted 2018 costs from 2026 revenue. Where no debt tag is current and the last
+          one reported was exactly zero, debt is zero; any other gap stays a gap.
         </p>
 
         <h3>Growth</h3>

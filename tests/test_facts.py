@@ -226,3 +226,113 @@ class TestOnlyFinancialReportsSupplyFigures:
             q("2024-01-01", "2024-12-31", 5, "2025-04-01", form="DEF 14A"),
         ]))
         assert FactSet(payload, AS_OF).annual_series(["NetIncomeLoss"], 5) == []
+
+
+class TestAbandonedTagsAreNotCurrent:
+    """EDGAR keeps every tag a filer ever used, so a tag's latest value can be a decade old.
+
+    Microsoft's combined-debt tag stops in March 2015; its debt has been reported
+    under other tags since. Read by priority, the 2015 figure stood in for 2026.
+    """
+
+    @staticmethod
+    def balance_sheet(end, filed, form="10-Q"):
+        """A full balance sheet: the reference date needs several tags sharing it."""
+        return tuple(
+            (concept, "USD", [instant(end, 1000, filed, form=form)])
+            for concept in ("Assets", "AssetsCurrent", "Liabilities", "LiabilitiesCurrent", "StockholdersEquity")
+        )
+
+    BALANCE_SHEET = balance_sheet.__func__("2026-06-30", "2026-07-30")
+
+    def test_an_abandoned_tag_does_not_stand_in_for_todays_value(self):
+        payload = facts(*self.BALANCE_SHEET, ("DebtLongtermAndShorttermCombinedAmount", "USD", [
+            instant("2015-03-31", 31_800, "2015-04-23"),
+        ]))
+        fs = FactSet(payload, AS_OF)
+        assert fs.instant(["DebtLongtermAndShorttermCombinedAmount"]) is None
+        assert fs.stale_inputs == [
+            {"concept": "DebtLongtermAndShorttermCombinedAmount", "last_reported": "2015-03-31"}
+        ]
+
+    def test_a_tag_still_in_use_is_returned_and_nothing_is_flagged(self):
+        payload = facts(*self.BALANCE_SHEET, ("LongTermDebtNoncurrent", "USD", [
+            instant("2026-06-30", 31_067, "2026-07-30"),
+        ]))
+        fs = FactSet(payload, AS_OF)
+        assert fs.instant(["LongTermDebtNoncurrent"])["val"] == 31_067
+        assert fs.stale_inputs == []
+
+    def test_a_trailing_figure_from_an_abandoned_tag_is_none(self):
+        payload = facts(*self.BALANCE_SHEET, ("OperatingIncomeLoss", "USD", [
+            q("2014-01-01", "2014-12-28", 20_000, "2015-02-20", form="10-K"),
+        ]))
+        assert FactSet(payload, AS_OF).ttm(["OperatingIncomeLoss"]) is None
+
+    def test_an_annual_only_figure_three_quarters_old_is_still_current(self):
+        # June fiscal year, tagged only in the 10-K; the latest balance sheet is Q3.
+        payload = facts(
+            *self.balance_sheet("2026-03-31", "2026-05-01"),
+            ("DepreciationDepletionAndAmortization", "USD", [
+                q("2024-07-01", "2025-06-30", 50, "2025-08-20", form="10-K"),
+            ]),
+        )
+        ttm = FactSet(payload, AS_OF).ttm(["DepreciationDepletionAndAmortization"])
+        assert ttm["val"] == 50
+        assert ttm["basis"] == "fy"
+
+    def test_an_annual_series_ending_in_an_abandoned_tag_is_empty(self):
+        payload = facts(*self.BALANCE_SHEET, ("GrossProfit", "USD", [
+            q(f"{y}-01-01", f"{y}-12-31", 100, f"{y + 1}-02-15", form="10-K") for y in (2016, 2017, 2018, 2019)
+        ]))
+        assert FactSet(payload, AS_OF).annual_series(["GrossProfit"], 5) == []
+
+    def test_a_prior_year_lookup_is_judged_against_its_own_date(self):
+        payload = facts(*self.BALANCE_SHEET, ("LongTermDebtNoncurrent", "USD", [
+            instant("2016-06-30", 90, "2016-07-30"),
+            instant("2025-06-30", 500, "2025-07-30"),
+        ]))
+        fs = FactSet(payload, AS_OF)
+        assert fs.instant(["LongTermDebtNoncurrent"], on_or_before=date(2025, 6, 30))["val"] == 500
+        assert fs.instant(["LongTermDebtNoncurrent"], on_or_before=date(2024, 6, 30)) is None
+        # a year older than the 2026-06-30 balance sheet: not today's debt
+        assert fs.instant(["LongTermDebtNoncurrent"]) is None
+
+    def test_the_reference_date_survives_an_abandoned_assets_tag(self):
+        # Cinemark: consolidated Assets last tagged 2022, full balance sheets since.
+        payload = facts(
+            ("Assets", "USD", [instant("2022-09-30", 900, "2022-11-01")]),
+            *[(c, "USD", [instant("2026-03-31", 10, "2026-05-01")])
+              for c in ("Goodwill", "AssetsCurrent", "LiabilitiesCurrent", "LongTermDebtFairValue", "InventoryNet")],
+            ("OperatingIncomeLoss", "USD", [q("2021-07-01", "2022-06-30", 50, "2022-08-05", form="10-K")]),
+        )
+        fs = FactSet(payload, AS_OF)
+        assert fs.reference_end == date(2026, 3, 31)
+        assert fs.ttm(["OperatingIncomeLoss"]) is None
+
+    def test_a_balance_sheet_dated_after_its_own_filing_is_a_typo(self):
+        # H.B. Fuller tags some deferred-tax facts as of 2105.
+        payload = facts(
+            *self.balance_sheet("2026-05-30", "2026-06-25"),
+            *[(c, "USD", [instant("2105-11-28", 1, "2026-01-20", form="10-K")])
+              for c in ("DeferredTaxAssetsNet", "DeferredTaxAssetsGross", "DeferredIncomeTaxLiabilities",
+                        "DeferredTaxAssetsLiabilitiesNet", "PercentageOfLIFOInventory")],
+        )
+        assert FactSet(payload, AS_OF).reference_end == date(2026, 5, 30)
+
+    def test_a_quarterly_figure_that_stopped_three_quarters_ago_is_stale(self):
+        # H.B. Fuller: operating income tagged quarterly until August 2025,
+        # latest 10-Q May 2026. A 300-day allowance is for annual-only figures.
+        quarters = [("2024-09-01", "2024-11-30"), ("2024-12-01", "2025-03-01"),
+                    ("2025-03-02", "2025-05-31"), ("2025-06-01", "2025-08-30")]
+        payload = facts(
+            *self.balance_sheet("2026-05-30", "2026-06-25"),
+            ("OperatingIncomeLoss", "USD", [q(s, e, 25, "2025-09-25") for s, e in quarters]),
+        )
+        fs = FactSet(payload, AS_OF)
+        assert fs.ttm(["OperatingIncomeLoss"]) is None
+        assert fs.stale_inputs == [{"concept": "OperatingIncomeLoss", "last_reported": "2025-08-30"}]
+
+    def test_without_a_balance_sheet_there_is_nothing_to_measure_age_against(self):
+        payload = facts(("Revenues", "USD", [q("2014-01-01", "2014-12-31", 7, "2015-02-15", form="10-K")]))
+        assert FactSet(payload, AS_OF).ttm(["Revenues"])["val"] == 7

@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+import re
+
 from .facts import FactSet
 from .util import mean, parse_iso, safe_div, stdev
 
@@ -38,6 +40,8 @@ COGS = [
     "CostOfGoodsAndServicesSoldExcludingDepreciationDepletionAndAmortization",
     "CostOfRevenueExcludingDepreciationDepletionAndAmortization",
     "CostOfGoodsSoldExcludingDepreciationDepletionAndAmortization",
+    # The taxonomy's singular "Service" spelling; Casey's and PSEG moved to it.
+    "CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization",
 ]
 GROSS_PROFIT = ["GrossProfit"]
 OPERATING_INCOME = ["OperatingIncomeLoss"]
@@ -48,6 +52,10 @@ PRETAX_INCOME = [
     "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
     "IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic",
 ]
+# Interest on borrowings only. InterestExpenseOperating is deliberately absent:
+# for a bank it is interest paid on deposits - the cost of its product - and
+# adding it back would manufacture an "EBIT" for JPMorgan that means nothing.
+INTEREST_EXPENSE = ["InterestExpense", "InterestExpenseNonoperating", "InterestExpenseDebt", "InterestAndDebtExpense"]
 INCOME_TAX = ["IncomeTaxExpenseBenefit", "IncomeTaxExpenseBenefitContinuingOperations"]
 NET_INCOME = ["NetIncomeLoss", "ProfitLoss", "NetIncomeLossAvailableToCommonStockholdersBasic"]
 DEPRECIATION_AMORT = [
@@ -64,6 +72,8 @@ CAPEX = [
     "PaymentsToAcquirePropertyPlantAndEquipment",
     "PaymentsToAcquireProductiveAssets",
     "PaymentsForCapitalImprovements",
+    "PaymentsToAcquireOtherPropertyPlantAndEquipment",
+    "PaymentsToAcquireOtherProductiveAssets",
 ]
 ASSETS = ["Assets"]
 ASSETS_CURRENT = ["AssetsCurrent"]
@@ -83,11 +93,47 @@ CASH = [
     "CashAndDueFromBanks",
 ]
 DEBT_COMBINED = ["DebtLongtermAndShorttermCombinedAmount"]
-DEBT_LT_NONCURRENT = ["LongTermDebtNoncurrent", "LongTermDebtAndCapitalLeaseObligations"]
-DEBT_LT_CURRENT = ["LongTermDebtCurrent", "LongTermDebtAndCapitalLeaseObligationsCurrent"]
+# Within each list the first tag that resolves a period wins, so the later
+# entries - where companies put convertible, unsecured and senior notes when they
+# stop using the general tags (Cadence, Palo Alto Networks, Cloudflare) - fill
+# gaps without double counting.
+DEBT_LT_NONCURRENT = [
+    "LongTermDebtNoncurrent", "LongTermDebtAndCapitalLeaseObligations",
+    "UnsecuredLongTermDebt", "ConvertibleDebtNoncurrent", "SecuredLongTermDebt", "LongTermNotesPayable",
+]
+DEBT_LT_CURRENT = [
+    "LongTermDebtCurrent", "LongTermDebtAndCapitalLeaseObligationsCurrent",
+    "ConvertibleDebtCurrent", "SeniorNotesCurrent", "NotesPayableCurrent", "UnsecuredDebtCurrent",
+    "SecuredDebtCurrent", "LoansPayableCurrent",
+]
 DEBT_SHORT = ["ShortTermBorrowings", "OtherShortTermBorrowings", "CommercialPaper"]
-DEBT_LT_TOTAL = ["LongTermDebt"]
+DEBT_LT_TOTAL = [
+    "LongTermDebt",
+    "SeniorNotes", "UnsecuredDebt", "SecuredDebt", "ConvertibleDebt", "NotesPayable", "LoansPayable",
+    "DebtAndCapitalLeaseObligations",
+]
+ALL_DEBT = DEBT_COMBINED + DEBT_LT_NONCURRENT + DEBT_LT_CURRENT + DEBT_SHORT + DEBT_LT_TOTAL
 EPS_DILUTED = ["EarningsPerShareDiluted", "EarningsPerShareBasicAndDiluted", "EarningsPerShareBasic"]
+
+# Every tag some list above reads, and the name patterns used to spot a tag a
+# company has moved to that none of them reads yet.
+KNOWN_TAGS = frozenset(
+    tag for name, value in list(globals().items())
+    if name.isupper() and isinstance(value, list) for tag in value if isinstance(tag, str)
+)
+CANDIDATE_FAMILIES = {
+    "debt": re.compile(r"(Debt|Notes|Borrowing|LoansPayable|CommercialPaper)"),
+    "operating_income": re.compile(r"(OperatingIncome|InterestExpense)"),
+    "cost_of_revenue": re.compile(r"^Costs?Of"),
+    "capex": re.compile(r"^PaymentsToAcquire"),
+    "operating_cash_flow": re.compile(r"^NetCashProvidedByUsedInOperating"),
+}
+CANDIDATE_NOISE = re.compile(
+    r"(Receivable|Proceeds|Repayment|FairValue|Maturit|Unamortized|Discount|Premium|Securities|"
+    r"Investment|Extinguishment|Covenant|Rate|Weighted|Number|Face|Principal|Increase|Decrease|"
+    r"Gain|Loss|Allowance|Capacity|Guarantee|Instrument|Business|Intangible|Marketable|"
+    r"Share|Compensation|InterestExpenseOperating|Deposits)"
+)
 
 # ------------------------------------------------------------- the registry
 # `factor` groups metrics for display and weighting; `higher_better` sets the
@@ -173,6 +219,10 @@ def total_debt(fs: FactSet, on_or_before=None):
     Returns (value, how) so the resolution path is auditable in the coverage
     report - filers disagree about whether `LongTermDebt` includes the current
     portion, and that disagreement is worth recording rather than hiding.
+
+    A tag the filer has abandoned resolves to None in `FactSet.instant`, so a
+    combined tag last used in 2015 falls through to today's components instead
+    of standing in for today's debt.
     """
     combined = _val(fs.instant(DEBT_COMBINED, on_or_before))
     if combined is not None:
@@ -188,6 +238,20 @@ def total_debt(fs: FactSet, on_or_before=None):
     partial = _sum_present(lt_current, short)
     if partial is not None:
         return partial, "current+short-only"
+    # No debt tag is current. If the last one the company ever reported said
+    # zero, it has simply stopped tagging a line it no longer has (Palantir,
+    # Arista, Copart). A non-zero last value proves nothing about today, so that
+    # stays unresolved rather than being guessed.
+    limit = (on_or_before or fs.as_of).isoformat()
+    last = []
+    for concept in ALL_DEBT:
+        rows = [f for f in fs.instants([concept]) if f["end"] <= limit and f["val"] is not None]
+        if rows:
+            last.append(rows[-1])
+    if last:
+        newest = max(f["end"] for f in last)
+        if all(f["val"] == 0 for f in last if f["end"] == newest):
+            return 0.0, "last-reported-zero"
     return None, "unresolved"
 
 
@@ -217,6 +281,15 @@ def _ebit(fs: FactSet):
     costs = fs.ttm(COSTS_AND_EXPENSES)
     if revenue and costs and None not in (revenue["val"], costs["val"]):
         return revenue["val"] - costs["val"], revenue, "derived: Rev - CostsAndExpenses"
+    # Many large companies present no operating-income line at all - Johnson &
+    # Johnson, Lilly, Merck, Pfizer, TJX - and go straight to pre-tax income.
+    # Pre-tax income plus interest expense is the textbook EBIT. Interest is
+    # often tagged only in the annual report, so it may come from the last
+    # fiscal year while pre-tax income is trailing; both must still be current.
+    pretax = fs.ttm(PRETAX_INCOME)
+    interest = fs.ttm(INTEREST_EXPENSE)
+    if pretax and interest and None not in (pretax["val"], interest["val"]):
+        return pretax["val"] + interest["val"], pretax, "derived: pretax income + interest expense"
     return None, revenue, "unresolved"
 
 
@@ -442,6 +515,29 @@ def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) ->
     else:
         absent = [k for k, v in z_inputs.items() if v is None]
         missing["altman_z"] = "missing " + ", ".join(absent)
+
+    # Name every figure rejected as stale, so a metric missing because the filer
+    # abandoned a tag can be told apart from one it never reported.
+    provenance["stale_inputs"] = fs.stale_inputs
+    # For each input that did not resolve, the tags this company reports today
+    # that no list here reads - the candidates the monthly drift report puts in
+    # front of a person, so a tag switch costs a one-line change, not a search.
+    unresolved_families = [
+        family for family, value in (
+            ("debt", debt), ("operating_income", ebit), ("cost_of_revenue", gross_profit),
+            ("capex", capex), ("operating_cash_flow", ocf),
+        ) if value is None
+    ]
+    provenance["unmapped_candidates"] = {
+        family: tags for family in unresolved_families
+        if (tags := fs.current_tags(CANDIDATE_FAMILIES[family], exclude=KNOWN_TAGS, noise=CANDIDATE_NOISE))
+    }
+    if fs.stale_inputs:
+        notes.append(
+            "Ignored figures from tags this company no longer reports under: "
+            + ", ".join(f"{s['concept']} (last reported {s['last_reported']})" for s in fs.stale_inputs)
+            + "."
+        )
 
     return {
         "values": values,

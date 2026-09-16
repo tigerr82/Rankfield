@@ -1,0 +1,408 @@
+{
+ "scoring_date": "2026-08-31",
+ "prior_scoring_date": "2026-07-31",
+ "thresholds": {
+  "warn_scored_drop_pct": 1,
+  "block_scored_drop_pct": 5,
+  "recently_abandoned_days": 450
+ },
+ "scored_now": 1376,
+ "recently_abandoned_tags": [
+  {
+   "ticker": "AIT",
+   "concept": "DebtLongtermAndShorttermCombinedAmount",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "BBIO",
+   "concept": "LongTermDebtNoncurrent",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "BBT",
+   "concept": "InterestExpense",
+   "last_reported": "2025-12-31",
+   "candidates": {
+    "operating_income": [
+     "InterestExpenseBorrowings"
+    ]
+   }
+  },
+  {
+   "ticker": "BBT",
+   "concept": "ShortTermBorrowings",
+   "last_reported": "2025-06-30",
+   "candidates": {
+    "operating_income": [
+     "InterestExpenseBorrowings"
+    ]
+   }
+  },
+  {
+   "ticker": "CCL",
+   "concept": "CostOfRevenue",
+   "last_reported": "2025-08-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "CNOB",
+   "concept": "InterestExpense",
+   "last_reported": "2025-12-31",
+   "candidates": {
+    "debt": [
+     "FederalHomeLoanBankAdvancesGeneralDebtObligationsDisclosuresCollateralPledged1",
+     "FederalHomeLoanBankAdvancesGeneralDebtObligationsDisclosuresAmountOfAvailableUnusedFunds",
+     "SubordinatedDebt",
+     "InterestExpenseBorrowings"
+    ],
+    "operating_income": [
+     "InterestExpenseBorrowings"
+    ]
+   }
+  },
+  {
+   "ticker": "DOC",
+   "concept": "CostOfGoodsAndServicesSold",
+   "last_reported": "2025-09-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "EME",
+   "concept": "DebtAndCapitalLeaseObligations",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "ESE",
+   "concept": "OperatingIncomeLoss",
+   "last_reported": "2025-12-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "FERG",
+   "concept": "CostOfGoodsAndServicesSold",
+   "last_reported": "2025-07-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "FERG",
+   "concept": "DepreciationDepletionAndAmortization",
+   "last_reported": "2025-07-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "FERG",
+   "concept": "GrossProfit",
+   "last_reported": "2025-07-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "FERG",
+   "concept": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+   "last_reported": "2025-07-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "FERG",
+   "concept": "IncomeTaxExpenseBenefit",
+   "last_reported": "2025-07-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "FERG",
+   "concept": "NetCashProvidedByUsedInOperatingActivities",
+   "last_reported": "2025-07-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "FERG",
+   "concept": "NetIncomeLoss",
+   "last_reported": "2025-07-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "FERG",
+   "concept": "OperatingIncomeLoss",
+   "last_reported": "2025-07-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "FERG",
+   "concept": "PaymentsToAcquireProductiveAssets",
+   "last_reported": "2025-07-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "FERG",
+   "concept": "Revenues",
+   "last_reported": "2025-07-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "FNF",
+   "concept": "InterestExpense",
+   "last_reported": "2025-06-30",
+   "candidates": {
+    "operating_income": [
+     "LiabilityForFuturePolicyBenefitInterestExpense"
+    ]
+   }
+  },
+  {
+   "ticker": "FOXA",
+   "concept": "LongTermDebtCurrent",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "FTI",
+   "concept": "CostOfRevenue",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "FUL",
+   "concept": "OperatingIncomeLoss",
+   "last_reported": "2025-08-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "GSBD",
+   "concept": "IncomeTaxExpenseBenefit",
+   "last_reported": "2025-09-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "HAPN",
+   "concept": "DepreciationDepletionAndAmortization",
+   "last_reported": "2025-09-30",
+   "candidates": {
+    "cost_of_revenue": [
+     "CostOfGoodsAndServicesSoldDepreciationAndAmortization"
+    ]
+   }
+  },
+  {
+   "ticker": "HOPE",
+   "concept": "InterestExpense",
+   "last_reported": "2025-12-31",
+   "candidates": {
+    "operating_income": [
+     "InterestExpenseFederalHomeLoanBankAndFederalReserveBankAdvancesLongTerm",
+     "InterestExpenseOtherLongTermDebt"
+    ]
+   }
+  },
+  {
+   "ticker": "JKHY",
+   "concept": "LongTermDebtCurrent",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "MSFT",
+   "concept": "CommercialPaper",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "NUVB",
+   "concept": "CostOfGoodsAndServicesSold",
+   "last_reported": "2025-09-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "NUVB",
+   "concept": "GrossProfit",
+   "last_reported": "2025-09-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "OXY",
+   "concept": "CostOfGoodsAndServicesSold",
+   "last_reported": "2025-09-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "PECO",
+   "concept": "InterestExpenseNonoperating",
+   "last_reported": "2025-06-30",
+   "candidates": {
+    "operating_income": [
+     "OtherOperatingIncome"
+    ],
+    "cost_of_revenue": [
+     "CostOfGoodsAndServicesSoldDepreciationAndAmortization"
+    ],
+    "capex": [
+     "PaymentsToAcquireCommercialRealEstate",
+     "PaymentsToAcquireRealEstate",
+     "PaymentsToAcquireInterestInJointVenture"
+    ]
+   }
+  },
+  {
+   "ticker": "PGY",
+   "concept": "AssetsCurrent",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "PGY",
+   "concept": "LiabilitiesCurrent",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "PGY",
+   "concept": "SecuredDebtCurrent",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "PGY",
+   "concept": "SecuredLongTermDebt",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "PR",
+   "concept": "LongTermDebtCurrent",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "RDN",
+   "concept": "CostOfGoodsAndServicesSold",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "RGEN",
+   "concept": "ConvertibleDebtNoncurrent",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "RYN",
+   "concept": "PaymentsToAcquireProductiveAssets",
+   "last_reported": "2025-09-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "SBET",
+   "concept": "CostOfRevenue",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "SBET",
+   "concept": "GrossProfit",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "SEIC",
+   "concept": "Assets",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "SEIC",
+   "concept": "Liabilities",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "SLG",
+   "concept": "IncomeTaxExpenseBenefit",
+   "last_reported": "2025-09-30",
+   "candidates": {
+    "capex": [
+     "PaymentsToAcquireCommercialRealEstate"
+    ]
+   }
+  },
+  {
+   "ticker": "SNEX",
+   "concept": "OperatingIncomeLoss",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "SWX",
+   "concept": "CostOfGoodsAndServicesSold",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "TMC",
+   "concept": "ShortTermBorrowings",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "UBSI",
+   "concept": "InterestExpense",
+   "last_reported": "2025-12-31",
+   "candidates": {
+    "operating_income": [
+     "InterestExpenseLongTermDebt",
+     "NoninterestIncomeOtherOperatingIncome",
+     "InterestExpenseShortTermBorrowings"
+    ]
+   }
+  },
+  {
+   "ticker": "UFPT",
+   "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "UI",
+   "concept": "LongTermDebtNoncurrent",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "VLO",
+   "concept": "PaymentsToAcquireProductiveAssets",
+   "last_reported": "2025-09-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "VRDN",
+   "concept": "LongTermDebtCurrent",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "WOLF",
+   "concept": "NetIncomeLoss",
+   "last_reported": "2025-06-29",
+   "candidates": {}
+  },
+  {
+   "ticker": "WOLF",
+   "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
+   "last_reported": "2025-06-29",
+   "candidates": {}
+  },
+  {
+   "ticker": "Z",
+   "concept": "DebtLongtermAndShorttermCombinedAmount",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  }
+ ],
+ "status": "baseline",
+ "scored_prior": null,
+ "scored_change_pct": null,
+ "dropped_out": [],
+ "metrics_lost": [],
+ "metrics_lost_economic": [],
+ "metrics_lost_by_metric": {}
+}

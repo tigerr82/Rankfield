@@ -50,6 +50,7 @@ def main() -> int:
         per_sec=settings["http"]["sec_rate_limit_per_sec"],
     )
     tax_clamp = tuple(settings["scoring"]["effective_tax_clamp"])
+    max_input_age = settings["scoring"]["max_input_age_days"]
 
     out: dict[str, dict] = {}
     failures: list[dict] = []
@@ -68,7 +69,7 @@ def main() -> int:
             with lock:
                 failures.append({"ticker": ticker, "reason": "no XBRL facts on file"})
             return
-        fs = FactSet(raw, as_of)
+        fs = FactSet(raw, as_of, max_input_age_days=max_input_age)
         result = compute_metrics(fs, market_cap=listing.get("market_cap"), tax_clamp=tax_clamp)
         revenue = fs.ttm(REVENUE)
         record = {
