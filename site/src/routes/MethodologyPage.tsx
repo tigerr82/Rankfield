@@ -291,11 +291,31 @@ FCF/EV     = (Operating Cash Flow - Capital Expenditure) / EV`}</pre>
         </p>
 
         <h3>Growth</h3>
-        <pre>{`RevGrowth = 3-year revenue CAGR
+        <pre>{`RevGrowth = annual growth rate of the trend line through
+            3 years of trailing-12-month revenue, one point per quarter
+            (fallback: 3-fiscal-year CAGR)
 
 then, after the percentile step:
   if ROIC >  hurdle:  percentile used as-is
   if ROIC <= hurdle:  min(p, 100 - p)`}</pre>
+        <p>
+          <b>Growth is current to the latest quarter, since methodology 1.3.</b> Completed fiscal
+          years alone lag by up to a year: on the 31 August 2026 scoring date Micron&apos;s latest
+          annual report covered the year to August 2025, so a three-year CAGR measured from the
+          previous memory-cycle peak read 6.7% while trailing revenue had grown from $37B to $90B.
+          A trend line through every quarter is also less sensitive than a CAGR to whether its first
+          year was a peak or a trough. The fiscal-year CAGR remains the fallback where the quarterly
+          history is too short (under nine points), too small (a revenue base under $50M), or
+          disagrees with the restated annual report — quarterly comparatives are not restated after
+          a spin-off, so GE&apos;s quarters before GE Vernova describe a different company.
+        </p>
+        <p>
+          <b>Revenue is the total, since methodology 1.3.</b> Companies often tag both total revenue
+          and the part of it that comes from contracts with customers. Taking the first tag by
+          priority read the subset: $0.19B instead of $2.09B for Green Plains, $3.7B instead of
+          $16.4B for United Rentals, whose rental income is lease revenue. The largest of the nested
+          revenue tags is now used.
+        </p>
         <p>
           <b>Below the hurdle, growth is capped rather than inverted, since methodology 1.2.</b> A
           straight inversion (100 − p) punished value-destroying expansion as intended, but it also

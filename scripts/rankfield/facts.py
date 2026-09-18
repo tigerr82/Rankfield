@@ -211,21 +211,36 @@ class FactSet:
                 best[key] = f
         return best
 
+    # Tag lists whose members nest rather than substitute - total revenue
+    # contains revenue from contracts with customers - so for a period the
+    # largest value is the total. Registered by the metric layer. By priority,
+    # Green Plains resolved to its $0.19B contracts subset instead of $2.09B
+    # total revenue, United Rentals to $3.7B instead of $16.4B (rental income is
+    # lease revenue, outside the contracts tag), 71 companies in all.
+    LARGEST_WINS: set[tuple[str, ...]] = set()
+
     def durations(self, concepts: list[str]) -> list[dict]:
         """Duration facts, merged across the tag priority list per period.
 
         Higher-priority tags win a period; lower-priority tags only fill periods
         the higher ones never reported. This handles filers that switched tags
-        mid-history without abandoning the priority order.
+        mid-history without abandoning the priority order. For a nested list
+        (LARGEST_WINS) the largest value reported for the period wins instead.
         """
         key = ("dur", tuple(concepts))
         if key in self._cache:
             return self._cache[key]
+        largest = tuple(concepts) in self.LARGEST_WINS
         merged: dict[tuple, dict] = {}
         for concept in concepts:
             rows = [f for f in self._observations(concept) if f.get("start") and f.get("end")]
             for period, fact in self._latest_per_period(rows).items():
-                merged.setdefault(period, fact)
+                current = merged.get(period)
+                if current is None:
+                    merged[period] = fact
+                elif (largest and fact["val"] is not None
+                      and (current["val"] is None or fact["val"] > current["val"])):
+                    merged[period] = fact
         out = sorted(merged.values(), key=lambda f: (f["end"], f["start"]))
         self._cache[key] = out
         return out

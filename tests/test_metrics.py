@@ -298,6 +298,90 @@ class TestAbandonedTags:
         assert not any("no longer reports" in note for note in result["notes"])
 
 
+class TestRevenueGrowthTrend:
+    """Growth must be current to the latest quarter, and must not be read from a subset tag."""
+
+    @staticmethod
+    def quarters(concept, start_year, values, filed_year=2026):
+        rows, (y, m) = [], (start_year, 1)
+        for v in values:
+            end_month = m + 2
+            last_day = {3: 31, 6: 30, 9: 30, 12: 31}[end_month]
+            rows.append({"start": f"{y}-{m:02d}-01", "end": f"{y}-{end_month:02d}-{last_day}", "val": v,
+                         "filed": f"{filed_year}-08-01", "form": "10-Q", "accn": "q"})
+            m += 3
+            if m > 12:
+                y, m = y + 1, 1
+        return rows
+
+    def test_steady_growth_reads_as_its_rate(self):
+        # 14 quarters growing 10% a year, ending with the Q2 2026 balance sheet
+        values = [1e9 * 1.1 ** (i / 4) for i in range(14)]
+        fs = build()
+        TestAbandonedTags.add(fs, "Revenues", self.quarters("Revenues", 2023, values))
+        for concept in ("Assets", "AssetsCurrent", "Liabilities", "LiabilitiesCurrent", "StockholdersEquity"):
+            fs._facts["us-gaap"][concept]["units"]["USD"].append(
+                {"end": "2026-06-30", "val": 2000.0, "filed": "2026-08-01", "form": "10-Q", "accn": "q"})
+        fs._cache.clear()
+        result = compute_metrics(fs, market_cap=5000.0)
+        assert result["provenance"]["growth_source"] == "3-year quarterly trend"
+        assert result["values"]["rev_growth"] == pytest.approx(0.10, abs=0.005)
+
+    def test_a_surge_after_the_last_fiscal_year_is_seen(self):
+        # Micron: flat for two years, then revenue quadruples inside the current fiscal year
+        values = [5e9] * 10 + [8e9, 13e9, 24e9, 41e9]
+        fs = build()
+        TestAbandonedTags.add(fs, "Revenues", self.quarters("Revenues", 2023, values))
+        for concept in ("Assets", "AssetsCurrent", "Liabilities", "LiabilitiesCurrent", "StockholdersEquity"):
+            fs._facts["us-gaap"][concept]["units"]["USD"].append(
+                {"end": "2026-06-30", "val": 2000.0, "filed": "2026-08-01", "form": "10-Q", "accn": "q"})
+        fs._cache.clear()
+        assert compute_metrics(fs, market_cap=5000.0)["values"]["rev_growth"] > 0.3
+
+    def test_quarters_that_disagree_with_the_restated_annual_report_fall_back(self):
+        # GE: quarters before a spin-off still carry the old company
+        values = [16e9] * 4 + [8e9] * 10
+        rows = self.quarters("Revenues", 2023, values)
+        # the 10-Ks restate every year on the post-spin basis
+        for year in (2022, 2023, 2024, 2025):
+            rows.append({"start": f"{year}-01-01", "end": f"{year}-12-31", "val": 32e9, "filed": "2026-02-01",
+                         "form": "10-K", "accn": "k"})
+        fs = build()
+        TestAbandonedTags.add(fs, "Revenues", rows)
+        for concept in ("Assets", "AssetsCurrent", "Liabilities", "LiabilitiesCurrent", "StockholdersEquity"):
+            fs._facts["us-gaap"][concept]["units"]["USD"].append(
+                {"end": "2026-06-30", "val": 2000.0, "filed": "2026-08-01", "form": "10-Q", "accn": "q"})
+        fs._cache.clear()
+        result = compute_metrics(fs, market_cap=5000.0)
+        assert result["provenance"]["growth_source"].startswith("3-fiscal-year CAGR (quarters disagree")
+        assert result["values"]["rev_growth"] == pytest.approx(0.0)   # flat on the restated basis
+
+    def test_a_full_year_tagged_as_a_quarter_is_ignored(self):
+        from rankfield.metrics import quarterly_revenue
+        rows = self.quarters("Revenues", 2025, [5e9, 5e9, 5e9, 5e9])
+        rows.append({"start": "2025-10-01", "end": "2025-12-31", "val": 20e9, "filed": "2026-02-01",
+                     "form": "10-K", "accn": "k"})   # the 10-K's full year, in a quarter's context
+        rows.append({"start": "2025-01-01", "end": "2025-12-31", "val": 20e9, "filed": "2026-02-01",
+                     "form": "10-K", "accn": "k"})
+        fs = build()
+        TestAbandonedTags.add(fs, "Revenues", rows)
+        assert dict(quarterly_revenue(fs))[date(2025, 12, 31)] == 5e9
+
+    def test_without_quarterly_history_the_annual_cagr_is_kept(self):
+        result = run()   # the fixture company tags annual figures only
+        assert result["provenance"]["growth_source"].startswith("3-fiscal-year CAGR")
+        # fixture revenue: 1000 in 2025, 850 in 2022
+        assert result["values"]["rev_growth"] == pytest.approx((1000 / 850) ** (1 / 3) - 1)
+
+    def test_revenue_is_the_total_not_the_contracts_subset(self):
+        # Green Plains: $2.09B total revenue, $0.19B of it from contracts with customers
+        fs = build()
+        TestAbandonedTags.add(fs, "RevenueFromContractWithCustomerExcludingAssessedTax",
+                              [TestAbandonedTags.annual(2025, 190.0)])
+        from rankfield.metrics import REVENUE
+        assert fs.ttm(REVENUE)["val"] == 1000.0   # the fixture's total Revenues
+
+
 class TestFallbackChains:
     """What replaces a figure once an abandoned tag no longer supplies it."""
 

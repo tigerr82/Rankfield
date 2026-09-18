@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+import math
 import re
 
 from .facts import FactSet
@@ -28,6 +29,7 @@ REVENUE = [
     "SalesRevenueGoodsNet",
     "RevenuesNetOfInterestExpense",
 ]
+FactSet.LARGEST_WINS.add(tuple(REVENUE))  # the revenue tags nest: take the total
 COGS = [
     "CostOfGoodsAndServicesSold",
     "CostOfRevenue",
@@ -173,11 +175,14 @@ METRICS: list[dict] = [
     # dGPOA, which measures efficiency rather than growth: a company holding its
     # asset base flat while selling a little more scored as a fast grower, so a
     # 10.5% revenue grower outscored 12.5% and 16.1% growers on "Growth".
-    {"key": "rev_growth", "label": "Revenue Growth (3-yr CAGR)", "short": "Rev CAGR", "factor": "growth",
+    {"key": "rev_growth", "label": "Revenue Growth (3-yr trend)", "short": "Rev trend", "factor": "growth",
      "higher_better": True, "unit": "pct",
-     "formula": "Three-year compound annual growth rate of revenue. ROIC-conditioned: at or below the "
-                "hurdle the score is capped at 50 and faster growth scores lower - value-destroying "
-                "expansion is never rewarded, and neither is shrinking."},
+     "formula": "Annual growth rate of the trend line through the last three years of trailing-twelve-"
+                "month revenue, one point per quarter - current to the latest 10-Q. Where the quarterly "
+                "history cannot support it (under nine points, a base below $50M, or quarters that "
+                "disagree with the restated annual report), the three-fiscal-year CAGR. ROIC-conditioned: "
+                "at or below the hurdle the score is capped at 50 and faster growth scores lower - "
+                "value-destroying expansion is never rewarded, and neither is shrinking."},
 
     {"key": "debt_equity", "label": "Debt / Equity", "short": "D/E", "factor": "health",
      "higher_better": False, "unit": "x",
@@ -324,6 +329,71 @@ def _annual_gpoa(fs: FactSet, years_back: int):
     return safe_div(target["val"] - cogs["val"], assets["val"])
 
 
+TREND_YEARS = 3
+TREND_MIN_POINTS = 9            # quarterly TTM points inside the window
+TREND_MIN_BASE = 50_000_000     # below this, growth off a near-zero base is noise
+RESTATEMENT_TOLERANCE = 0.05    # quarters vs the restated annual report
+
+
+def quarterly_revenue(fs: FactSet) -> list[tuple]:
+    """(quarter end, 3-month revenue), reported quarters preferred over those
+    derived from year-to-date figures. A 3-month fact carrying the full-year
+    figure for the same date - L3Harris and NiSource tag their annual revenue
+    that way in the 10-K - is a tagging error and is dropped."""
+    facts = [f for f in fs.durations(REVENUE) if f["val"] is not None]
+    annual: dict[str, list[float]] = {}
+    for f in facts:
+        if 330 <= (parse_iso(f["end"]) - parse_iso(f["start"])).days <= 400:
+            annual.setdefault(f["end"], []).append(f["val"])
+    best: dict[str, tuple] = {}
+    for f in facts + FactSet._synthesize_tails(facts):
+        if not 80 <= (parse_iso(f["end"]) - parse_iso(f["start"])).days <= 100:
+            continue
+        if not f.get("synthetic") and any(abs(f["val"] - a) <= 0.01 * abs(a) for a in annual.get(f["end"], [])):
+            continue
+        rank = (not f.get("synthetic"), f["filed"])
+        if f["end"] not in best or rank > best[f["end"]][0]:
+            best[f["end"]] = (rank, f)
+    return sorted((parse_iso(end), entry[1]["val"]) for end, entry in best.items())
+
+
+def revenue_trend(fs: FactSet) -> tuple[float | None, str | None]:
+    """Annual growth rate of the least-squares trend of log TTM revenue over
+    the last three years, one point per quarter. Returns (value, None) or
+    (None, why it could not be computed)."""
+    ref = fs.reference_end
+    q = quarterly_revenue(fs)
+    ttm = [(q[i][0], sum(v for _, v in q[i - 3:i + 1]))
+           for i in range(3, len(q)) if (q[i][0] - q[i - 3][0]).days <= 300]
+    if not ttm or ref is None or (ref - ttm[-1][0]).days > 120:
+        return None, "no current quarterly revenue series"
+    end = ttm[-1][0]
+    points = [(e, v) for e, v in ttm if (end - e).days <= 365 * TREND_YEARS + 30]
+    if len(points) < TREND_MIN_POINTS:
+        return None, f"only {len(points)} quarterly points"
+    if any(v <= 0 for _, v in points):
+        return None, "non-positive revenue in the window"
+    if points[0][1] < TREND_MIN_BASE:
+        return None, "revenue base under $50M"
+    # Quarterly comparatives are not restated after a spin-off or disposal; the
+    # annual report restates three years. Every fiscal year whose quarters feed
+    # the window must agree with its annual figure, or the quarters describe a
+    # different company (GE before and after GE Vernova).
+    first_quarter_used = points[0][0] - timedelta(days=280)
+    for fy in fs.annual_series(REVENUE, 5):
+        fy_end = parse_iso(fy["end"])
+        if fy_end < first_quarter_used or not fy["val"]:
+            continue
+        inside = [v for e, v in q if fy_end - timedelta(days=355) < e <= fy_end + timedelta(days=10)]
+        if len(inside) == 4 and abs(sum(inside) - fy["val"]) > RESTATEMENT_TOLERANCE * abs(fy["val"]):
+            return None, "quarters disagree with the restated annual report"
+    xs = [(e - points[0][0]).days / 365.25 for e, _ in points]
+    ys = [math.log(v) for _, v in points]
+    mx, my = mean(xs), mean(ys)
+    slope = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sum((x - mx) ** 2 for x in xs)
+    return math.exp(slope) - 1, None
+
+
 def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) -> dict:
     """Raw metric values plus provenance for one company.
 
@@ -465,14 +535,26 @@ def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) ->
     else:
         missing["delta_gpoa"] = "fewer than 4 fiscal years of revenue/COGS/assets"
 
-    revenues = fs.annual_series(REVENUE, 4)
-    if len(revenues) >= 4 and revenues[3]["val"] and revenues[3]["val"] > 0 and revenues[0]["val"] is not None:
-        ratio = revenues[0]["val"] / revenues[3]["val"]
-        values["rev_growth"] = (ratio ** (1 / 3)) - 1 if ratio > 0 else None
-        if values["rev_growth"] is None:
-            missing["rev_growth"] = "revenue turned negative"
+    # Growth is the trend of trailing revenue, current to the latest quarter.
+    # Completed fiscal years alone lag by up to a year: scored on 31 August 2026,
+    # Micron's latest 10-K covered the year to August 2025, so its three-year
+    # CAGR (peak FY2022 to FY2025) read 6.7% while trailing revenue had grown
+    # from $37B to $90B. The annual CAGR remains the fallback.
+    trend, trend_reason = revenue_trend(fs)
+    if trend is not None:
+        values["rev_growth"] = trend
+        provenance["growth_source"] = "3-year quarterly trend"
     else:
-        missing["rev_growth"] = "fewer than 4 fiscal years of revenue"
+        provenance["growth_source"] = f"3-fiscal-year CAGR ({trend_reason})"
+        revenues = fs.annual_series(REVENUE, 4)
+        if len(revenues) >= 4 and revenues[3]["val"] and revenues[3]["val"] > 0 and revenues[0]["val"] is not None:
+            ratio = revenues[0]["val"] / revenues[3]["val"]
+            values["rev_growth"] = (ratio ** (1 / 3)) - 1 if ratio > 0 else None
+            if values["rev_growth"] is None:
+                missing["rev_growth"] = "revenue turned negative"
+        else:
+            missing["rev_growth"] = f"no quarterly trend ({trend_reason}) and fewer than 4 fiscal years of revenue"
+            provenance["growth_source"] = f"unresolved ({trend_reason})"
 
     # --------------------------------------------------- Financial Health
     if debt is None:

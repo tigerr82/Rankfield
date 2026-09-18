@@ -17,8 +17,8 @@ runtime API calls, no server, no database — and no recurring cost.
 |---|---|
 | Listed on NYSE/NASDAQ | 6,856 |
 | Common stock, above $1B, one line per company | 2,266 |
-| Scored | **1,376** (1,182 operating · 177 financials & REITs · 17 pre-revenue) |
-| Routed to *Insufficient data* | 476 |
+| Scored | **1,381** (1,186 operating · 178 financials & REITs · 17 pre-revenue) |
+| Routed to *Insufficient data* | 471 |
 | Metric coverage across scored stocks | **94%** |
 | Cost | $0 |
 
@@ -124,7 +124,7 @@ company, and JPMorgan legitimately has no gross margin.
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There have
-been four, all to the first month, before any comparison depended on it.
+been five, all to the first month, before any comparison depended on it.
 
 **2026-09 — the 2026-08 record was regenerated once.** Growth in profitability
 (dGPOA) subtracted a fiscal-year ratio from a trailing-twelve-month one, so the
@@ -211,6 +211,32 @@ Shopify, Progressive). Deckers stays first; Microsoft 177 -> 164, TJX 271 -> 160
 832 -> 355, KLA 828 -> 473, Lilly 90 -> 182, Casey's 34 -> 393. No scored row now rests on
 fundamentals older than twelve months. The previous record is preserved in git.
 
+
+**2026-09 — methodology 1.3, and the 2026-08 baseline recomputed under it.** Two defects in
+revenue, found because Micron scored 37 on Growth while its revenue more than doubled:
+
+- *Growth lagged by up to a year.* It was the CAGR of three completed fiscal years. On the
+  31 August scoring date Micron's latest 10-K covered the year to August 2025, and its base year
+  was the previous memory-cycle peak, so it read 6.7% while trailing revenue had grown from $37B
+  to $90B. For 79% of companies the last fiscal year ends more than six months before the latest
+  balance sheet. Growth is now the annual rate of the trend line through three years of
+  trailing-twelve-month revenue, one point per quarter. The fiscal-year CAGR is the fallback when
+  there are fewer than nine points, when the revenue base is under $50M, or when the quarters
+  disagree with the restated annual report by more than 5% — quarterly comparatives are not
+  restated after a spin-off or disposal (GE, AppLovin, Philip Morris among 61 companies).
+  Full-year figures tagged in a quarter's context (L3Harris, NiSource) are discarded.
+- *Revenue was sometimes a subset.* With both total revenue and revenue from contracts with
+  customers tagged, priority picked the subset: Green Plains $0.19B instead of $2.09B (its
+  "growth" read +34% while revenue shrank ~17% a year), United Rentals $3.7B instead of $16.4B,
+  ADM $25B instead of $82B. The tags nest, so the largest now wins. Trailing revenue changed for
+  128 companies.
+
+Weights are unchanged; the version moved to 1.3 because the Growth input changed. Effect: 1,317
+of 1,376 rows re-ranked (operating median move 22 places); five companies became scorable.
+Micron 256 -> 30 (third in Technology), Teradyne 482 -> 197, Alphabet 307 -> 261, Green Plains
+30 -> 482, Microsoft 164 -> 185, GE 357 -> 373 (annual fallback); Deckers stays first. The 1.2
+record is preserved in git.
+
 ---
 
 ## Configuration
@@ -257,6 +283,10 @@ test.
   its consolidated statements in standard form. Those metrics are missing, and such companies
   can land in *Insufficient data*. Reading full filing documents would close the gap; it is not
   done.
+- **Hedged producers' revenue includes derivative gains and losses.** Natural-gas producers
+  such as CNX report hedging results inside revenue, so revenue swings with gas prices and
+  hedge marks (CNX: $1.3B, $3.4B, $1.3B, $2.2B in 2022–2025). Any growth measure on that line —
+  CAGR or trend — is dominated by the hedge book, not by the business.
 - **Successor registrants lose their history.** ExxonMobil's ticker now maps to a newly created
   holding-company CIK with a single filing on record, so it fails the eight-filings test and is
   excluded with that reason named. Following predecessor CIKs is not automated.
