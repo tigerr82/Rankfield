@@ -267,12 +267,11 @@ main {
   color: var(--ink-3);
 }
 /* The table tabs are the primary choice: a touch larger than the controls that refine them. */
-.seg.segtabs button { font-size: var(--t-body); font-weight: 600; padding: 6px 12px; }
-.tbsep { width: 1px; height: 22px; background: var(--line-2); }
-/* A list of what could not be ranked, not a fourth table: quieter than the tabs. */
-.pillbtn.quiet { border-style: dashed; color: var(--ink-3); }
-.pillbtn.quiet .mono { opacity: 0.8; }
-.pillbtn.quiet.on { border-style: solid; color: var(--on-accent); }
+.seg.segtabs button { font-size: var(--t-body); font-weight: 600; padding: 6px 12px; white-space: nowrap; }
+/* Insufficient data: in the segment group, but a list of what could not be
+   ranked rather than a ranking - so a dashed divider and quieter text. */
+.seg button.aside { border-left-style: dashed; }
+.seg button.aside:not(.on) { color: var(--ink-3); }
 .railtoggle {
   flex: none;
   width: 26px;

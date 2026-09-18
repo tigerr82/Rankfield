@@ -1,5 +1,5 @@
 import { useRef, type ReactNode, type RefObject } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import type { ScoresMeta } from "../data/types";
 import { usePayload } from "../data/usePayload";
 import { fullDate, weeksSince } from "../lib/format";
@@ -48,7 +48,10 @@ const THEMES: [Theme, string, string][] = [
 ];
 
 export function AppHeader({ meta, coverage }: { meta?: ScoresMeta; coverage?: number }) {
-  const { theme, setTheme } = useApp();
+  const { theme, setTheme, mode, setMode } = useApp();
+  // Basic/Pro decides which columns and filters the rankings show, so it sits
+  // in the header - page-level, easy to find - and only where it has an effect.
+  const onRankings = useLocation().pathname === "/";
   const scored = meta
     ? Object.entries(meta.counts).filter(([k]) => k !== "insufficient").reduce((a, [, v]) => a + v, 0)
     : null;
@@ -68,6 +71,31 @@ export function AppHeader({ meta, coverage }: { meta?: ScoresMeta; coverage?: nu
         <NavLink to="/methodology">Methodology</NavLink>
         <NavLink to="/coverage">Coverage</NavLink>
       </nav>
+      {onRankings && (
+        <span className="tbgroup">
+          <span className="tblabel">View</span>
+          <div className="seg modeseg" role="group" aria-label="Detail level">
+            <button
+              type="button"
+              className={mode === "basic" ? "on" : ""}
+              aria-pressed={mode === "basic"}
+              onClick={() => setMode("basic")}
+              title="The essentials: company, sector, cap, price, 1-month change and the Rankfield Score"
+            >
+              Basic
+            </button>
+            <button
+              type="button"
+              className={mode === "pro" ? "on" : ""}
+              aria-pressed={mode === "pro"}
+              onClick={() => setMode("pro")}
+              title="Adds the four factor scores, rank change, score trend and rank stability, and their filters"
+            >
+              Pro
+            </button>
+          </div>
+        </span>
+      )}
       <div className="hdr-meta mono">
         {scored != null && <span title="Stocks with a Rankfield Score this month">{scored.toLocaleString()} scored</span>}
         {meta && (

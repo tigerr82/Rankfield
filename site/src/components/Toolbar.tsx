@@ -39,13 +39,15 @@ const SORTS: { key: string; dir: 1 | -1; label: string; title: string }[] = [
 ];
 
 /**
- * Two rows that read as one sentence: WHICH table, how much of it to SHOW,
- * then how to SORT it. The scope switch sits next to the table tabs and names
- * the selected table ("All operating · 1,186"), because "All stocks" beside a
- * segment tab read as all 1,381 scored stocks when it meant one table's.
+ * Two rows that read as one sentence: which SEGMENT, how much of it to SHOW,
+ * then how to SORT it. The scope switch sits next to the segments and names
+ * the selected one ("All operating · 1,186"), because "All stocks" beside a
+ * segment tab read as all 1,381 scored stocks when it meant one segment's.
+ * Basic/Pro is not a filter - it changes the whole page - so it lives in the
+ * app header (AppHeader), not here.
  */
 export function Toolbar({ segmentsMeta, counts, shown, total, scopeCounts }: Props) {
-  const { mode, setMode, query, setQuery, sortKey, sortDir, setSort, segment, setSegment,
+  const { query, setQuery, sortKey, sortDir, setSort, segment, setSegment,
           scope, setScope, railCollapsed, toggleRail } = useApp();
   const ref = useRef<HTMLDivElement | null>(null);
   useToolbarHeight(ref);
@@ -70,20 +72,35 @@ export function Toolbar({ segmentsMeta, counts, shown, total, scopeCounts }: Pro
           {railCollapsed ? "»" : "«"}
         </button>
 
-        <div className="seg segtabs" role="group" aria-label="Which table">
-          {segmentsMeta.map((meta) => (
+        <span className="tbgroup">
+          <span className="tblabel">Segment</span>
+          <div className="seg segtabs" role="group" aria-label="Segment">
+            {segmentsMeta.map((meta) => (
+              <button
+                key={meta.key}
+                type="button"
+                className={segment === meta.key ? "on" : ""}
+                aria-pressed={segment === meta.key}
+                onClick={() => setSegment(meta.key as SegmentKey)}
+                title={`${meta.label} — ranked separately, never against the other segments`}
+              >
+                {shortLabel(meta.label)} <span className="mono">{(counts[meta.key] ?? 0).toLocaleString()}</span>
+              </button>
+            ))}
+            {/* In the same group, so the four read as one choice; set apart only
+                by a dashed divider and quieter text, because it lists what could
+                not be ranked rather than ranking anything. */}
             <button
-              key={meta.key}
               type="button"
-              className={segment === meta.key ? "on" : ""}
-              aria-pressed={segment === meta.key}
-              onClick={() => setSegment(meta.key as SegmentKey)}
-              title={`${meta.label} — a separate table, never ranked against the others`}
+              className={`aside${segment === "insufficient" ? " on" : ""}`}
+              aria-pressed={segment === "insufficient"}
+              onClick={() => setSegment("insufficient")}
+              title="Stocks that resolved too few metrics to rank — unranked, not low-ranked"
             >
-              {shortLabel(meta.label)} <span className="mono">{(counts[meta.key] ?? 0).toLocaleString()}</span>
+              Insufficient data <span className="mono">{(counts.insufficient ?? 0).toLocaleString()}</span>
             </button>
-          ))}
-        </div>
+          </div>
+        </span>
 
         {ranked && scopeCounts && (
           <span className="tbgroup">
@@ -113,26 +130,11 @@ export function Toolbar({ segmentsMeta, counts, shown, total, scopeCounts }: Pro
           </span>
         )}
 
-        {/* Not a ranked table - a list of what could not be ranked - so it sits
-            apart from the three tables and takes no Show or Sort controls. */}
-        <span className="tbgroup">
-          <span className="tbsep" aria-hidden="true" />
-          <button
-            type="button"
-            className={`pillbtn quiet${segment === "insufficient" ? " on" : ""}`}
-            aria-pressed={segment === "insufficient"}
-            onClick={() => setSegment("insufficient")}
-            title="Stocks that resolved too few metrics to rank — unranked, not low-ranked"
-          >
-            Insufficient data <span className="mono">· {(counts.insufficient ?? 0).toLocaleString()}</span>
-          </button>
-        </span>
-
         <span className="count">
           {ranked ? (
             <>
               {shown.toLocaleString()} of {total.toLocaleString()} {noun}
-              <span className="countsub"> · {scoredTotal.toLocaleString()} scored across {segmentsMeta.length} tables</span>
+              <span className="countsub"> · {scoredTotal.toLocaleString()} scored across {segmentsMeta.length} segments</span>
             </>
           ) : (
             <>{shown.toLocaleString()} unranked · too few metrics resolved</>
@@ -170,15 +172,6 @@ export function Toolbar({ segmentsMeta, counts, shown, total, scopeCounts }: Pro
           onChange={(e) => setQuery(e.target.value)}
           aria-label="Search by ticker or company name"
         />
-
-        <div className="seg modeseg" role="group" aria-label="Detail level">
-          <button type="button" className={mode === "basic" ? "on" : ""} onClick={() => setMode("basic")}>
-            Basic
-          </button>
-          <button type="button" className={mode === "pro" ? "on" : ""} onClick={() => setMode("pro")}>
-            Pro
-          </button>
-        </div>
       </div>
     </div>
   );
