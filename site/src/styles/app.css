@@ -106,19 +106,10 @@ header.app {
   color: var(--ink);
   cursor: default;
 }
-/* Stats and the page-wide switches, right-aligned; when the window is too
-   narrow for one line they wrap as a block and stay on the right. */
-.hdr-right {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 6px 18px;
-}
 /* View and Theme: a clear gap so the two switches never read as one. */
 .hdr-controls { display: flex; align-items: center; gap: 18px; }
 .hdr-meta {
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 12px;

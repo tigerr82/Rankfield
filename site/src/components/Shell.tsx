@@ -71,76 +71,74 @@ export function AppHeader({ meta, coverage }: { meta?: ScoresMeta; coverage?: nu
         <NavLink to="/methodology">Methodology</NavLink>
         <NavLink to="/coverage">Coverage</NavLink>
       </nav>
-      <div className="hdr-right">
-        <div className="hdr-meta mono">
-          {scored != null && <span title="Stocks with a Rankfield Score this month">{scored.toLocaleString()} scored</span>}
-          {meta && (
-            <span title="Scores and prices are both as of this date - the last trading day of the prior month. They update together at the next monthly run.">
-              as of {fullDate(meta.scoring_date)}
-            </span>
-          )}
-          {meta?.first_run && (
-            <span
-              className="tag"
-              title="The first scoring run: there is no prior month yet, so change columns show a dash (never 0%) until the next monthly run."
-            >
-              First run
-            </span>
-          )}
-          {coverage != null && (
-            <span title="Share of applicable metrics resolved across every scored stock">
-              {Math.round(coverage * 100)}% coverage
-            </span>
-          )}
-        </div>
-        {/* The two page-wide switches sit together at the right, each with its
-            own label and a clear gap, so neither reads as part of the other. */}
-        <div className="hdr-controls">
-          {onRankings && (
-            <span className="tbgroup">
-              <span className="tblabel">View</span>
-              <div className="seg modeseg" role="group" aria-label="Detail level">
-                <button
-                  type="button"
-                  className={mode === "basic" ? "on" : ""}
-                  aria-pressed={mode === "basic"}
-                  onClick={() => setMode("basic")}
-                  title="The essentials: company, sector, cap, price, 1-month change and the Rankfield Score"
-                >
-                  Basic
-                </button>
-                <button
-                  type="button"
-                  className={mode === "pro" ? "on" : ""}
-                  aria-pressed={mode === "pro"}
-                  onClick={() => setMode("pro")}
-                  title="Adds the four factor scores, rank change, score trend and rank stability, and their filters"
-                >
-                  Pro
-                </button>
-              </div>
-            </span>
-          )}
+      {/* The two page-wide switches sit together straight after the navigation,
+          each with its own label and a clear gap, so neither reads as part of the other. */}
+      <div className="hdr-controls">
+        {onRankings && (
           <span className="tbgroup">
-            <span className="tblabel">Theme</span>
-            {/* All three themes visible at once, rather than one button that
-                cycles through options you cannot see. */}
-            <div className="seg themeseg" role="group" aria-label="Theme">
-              {THEMES.map(([key, label, hint]) => (
-                <button
-                  key={key}
-                  type="button"
-                  className={theme === key ? "on" : ""}
-                  aria-pressed={theme === key}
-                  onClick={() => setTheme(key)}
-                  title={hint}
-                >
-                  {label}
-                </button>
-              ))}
+            <span className="tblabel">View</span>
+            <div className="seg modeseg" role="group" aria-label="Detail level">
+              <button
+                type="button"
+                className={mode === "basic" ? "on" : ""}
+                aria-pressed={mode === "basic"}
+                onClick={() => setMode("basic")}
+                title="The essentials: company, sector, cap, price, 1-month change and the Rankfield Score"
+              >
+                Basic
+              </button>
+              <button
+                type="button"
+                className={mode === "pro" ? "on" : ""}
+                aria-pressed={mode === "pro"}
+                onClick={() => setMode("pro")}
+                title="Adds the four factor scores, rank change, score trend and rank stability, and their filters"
+              >
+                Pro
+              </button>
             </div>
           </span>
-        </div>
+        )}
+        <span className="tbgroup">
+          <span className="tblabel">Theme</span>
+          {/* All three themes visible at once, rather than one button that
+              cycles through options you cannot see. */}
+          <div className="seg themeseg" role="group" aria-label="Theme">
+            {THEMES.map(([key, label, hint]) => (
+              <button
+                key={key}
+                type="button"
+                className={theme === key ? "on" : ""}
+                aria-pressed={theme === key}
+                onClick={() => setTheme(key)}
+                title={hint}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </span>
+      </div>
+      <div className="hdr-meta mono">
+        {scored != null && <span title="Stocks with a Rankfield Score this month">{scored.toLocaleString()} scored</span>}
+        {meta && (
+          <span title="Scores and prices are both as of this date - the last trading day of the prior month. They update together at the next monthly run.">
+            as of {fullDate(meta.scoring_date)}
+          </span>
+        )}
+        {meta?.first_run && (
+          <span
+            className="tag"
+            title="The first scoring run: there is no prior month yet, so change columns show a dash (never 0%) until the next monthly run."
+          >
+            First run
+          </span>
+        )}
+        {coverage != null && (
+          <span title="Share of applicable metrics resolved across every scored stock">
+            {Math.round(coverage * 100)}% coverage
+          </span>
+        )}
       </div>
     </header>
   );
