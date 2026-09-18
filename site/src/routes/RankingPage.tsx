@@ -95,6 +95,19 @@ export function RankingPage() {
       />
       <Chips factors={scores.factors} />
 
+      {/* Above every segment, Insufficient data included: the portfolio is the
+          user's, so switching tabs or filtering the table never hides it. */}
+      <PortfolioSection
+        segments={scores.segments}
+        metrics={scores.metrics}
+        factors={scores.factors}
+        history={history.tickers}
+        scrollRef={scrollRef}
+        official={scores.meta.weights}
+        windowStart={scores.meta.prior_scoring_date}
+        windowEnd={scores.meta.scoring_date}
+      />
+
       {app.segment === "insufficient" ? (
         <InsufficientTable
           rows={scores.insufficient}
@@ -103,16 +116,6 @@ export function RankingPage() {
         />
       ) : (
         <>
-          <PortfolioSection
-            universe={segmentRows}
-            metrics={scores.metrics}
-            factors={scores.factors}
-            history={history.tickers}
-            scrollRef={scrollRef}
-            official={scores.meta.weights}
-            windowStart={scores.meta.prior_scoring_date}
-            windowEnd={scores.meta.scoring_date}
-          />
           {/* Names the table and the scope, so the heading always says what the rows are. */}
           <div className="mainlabel">
             {segmentTitle(scores.segments_meta, app.segment)} ·{" "}

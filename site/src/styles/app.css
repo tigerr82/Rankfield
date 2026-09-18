@@ -438,6 +438,8 @@ tbody tr:hover td.stick, tbody tr.open td.stick { background: var(--accent-soft)
   padding: 0 2px;
   margin-left: 4px;
 }
+/* The portfolio's segment tag replaces the exchange: which table a holding is ranked in. */
+.exch.segtag { color: var(--accent); border-color: var(--accent); font-weight: 600; letter-spacing: 0.04em; }
 .nm { color: var(--ink); font-size: 12.3px; }
 .sec { color: var(--ink-2); font-size: 12px; }
 

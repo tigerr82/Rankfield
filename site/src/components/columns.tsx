@@ -9,7 +9,16 @@ export interface ColumnContext {
   toggleHolding: (ticker: string) => void;
   history: Record<string, HistoryPoint[]>;
   totalRows: number;
+  /** Tag each ticker with its segment - set by the portfolio when it holds
+   *  stocks from more than one, since each is ranked within its own. */
+  showSegment?: boolean;
 }
+
+const SEGMENT_TAGS: Record<string, [string, string]> = {
+  operating: ["OPR", "Ranked within Operating companies"],
+  financials: ["FIN", "Ranked within Financials & REITs"],
+  pre_revenue: ["PRE", "Ranked within Pre-revenue / biotech"],
+};
 
 /** The price dates behind the rows on screen, for labelling column headers. */
 export interface HeaderDates {
@@ -77,10 +86,16 @@ export const COLUMNS: Column[] = [
     cls: "stick",
     locked: true,
     sortValue: (row) => row.ticker,
-    render: (row) => (
+    render: (row, ctx) => (
       <>
         <span className="tk">{row.ticker}</span>
-        <span className="exch">{row.exchange}</span>
+        {ctx.showSegment && SEGMENT_TAGS[row.segment] ? (
+          <span className="exch segtag" title={SEGMENT_TAGS[row.segment][1]}>
+            {SEGMENT_TAGS[row.segment][0]}
+          </span>
+        ) : (
+          <span className="exch">{row.exchange}</span>
+        )}
       </>
     ),
   },

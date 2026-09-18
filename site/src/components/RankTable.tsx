@@ -22,9 +22,11 @@ interface Props {
   tag: string;
   className?: string;
   emptyState?: React.ReactNode;
+  /** Tag tickers with their segment (the portfolio, when it spans segments). */
+  showSegment?: boolean;
 }
 
-export function RankTable({ rows, metrics, factors, history, scrollRef, tag, className, emptyState }: Props) {
+export function RankTable({ rows, metrics, factors, history, scrollRef, tag, className, emptyState, showSegment }: Props) {
   const { mode, hiddenColumns, widths, setWidths, sortKey, sortDir, setSort, holdings, toggleHolding } = useApp();
   const [open, setOpen] = useState<string | null>(null);
   const columns = useMemo(() => activeColumns(mode, hiddenColumns), [mode, hiddenColumns]);
@@ -46,8 +48,9 @@ export function RankTable({ rows, metrics, factors, history, scrollRef, tag, cla
       toggleHolding,
       history,
       totalRows: rows.length,
+      showSegment,
     }),
-    [heldSet, toggleHolding, history, rows.length],
+    [heldSet, toggleHolding, history, rows.length, showSegment],
   );
 
   // Flatten rows and any open expansion into one item list so the virtualizer
