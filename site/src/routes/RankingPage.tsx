@@ -1,12 +1,12 @@
 import { useMemo } from "react";
-import type { InsufficientRow, ScoresPayload, SegmentKey, StockRow } from "../data/types";
+import type { InsufficientRow, ScoresPayload, SegmentKey, SegmentMeta, StockRow } from "../data/types";
 import { usePayload } from "../data/usePayload";
 import { Chips } from "../components/Chips";
 import { FilterRail } from "../components/FilterRail";
 import { PortfolioSection } from "../components/PortfolioSection";
 import { RankTable } from "../components/RankTable";
 import { Shell, useScrollRef } from "../components/Shell";
-import { Toolbar } from "../components/Toolbar";
+import { Toolbar, segmentNoun } from "../components/Toolbar";
 import { TableSkeleton } from "../components/Skeleton";
 import { cleanName } from "../components/columns";
 import { dayMonth, marketCap, monthShort, percent } from "../lib/format";
@@ -113,7 +113,12 @@ export function RankingPage() {
             windowStart={scores.meta.prior_scoring_date}
             windowEnd={scores.meta.scoring_date}
           />
-          {app.holdings.length > 0 && <div className="mainlabel">All stocks</div>}
+          {/* Names the table and the scope, so the heading always says what the rows are. */}
+          <div className="mainlabel">
+            {segmentTitle(scores.segments_meta, app.segment)} ·{" "}
+            {app.scope === "top_decile" ? "Top 10% per sector" : "All"}{" "}
+            <span className="mono">({visible.length.toLocaleString()})</span>
+          </div>
           <RankTable
             rows={visible}
             metrics={scores.metrics}
@@ -121,14 +126,14 @@ export function RankingPage() {
             history={history.tickers}
             scrollRef={scrollRef}
             tag="main"
-            emptyState={<EmptyResult scope={app.scope} />}
+            emptyState={<EmptyResult scope={app.scope} noun={segmentNoun(app.segment)} />}
           />
           {app.scope === "top_decile" && visible.length > 0 && (
             <p className="note" style={{ margin: "10px 18px 0", maxWidth: "80ch" }}>
               Showing the top decile within each sector ({visible.length} of {ranked.length} scored
-              stocks in this segment). A global top-N would be dominated by whichever sectors score
+              stocks in this table). A global top-N would be dominated by whichever sectors score
               high on absolute metrics and can erase entire sectors, so the default cut is
-              per-sector. Switch to “All stocks” in the toolbar to see every one.
+              per-sector. Switch to “All {segmentNoun(app.segment)}” in the toolbar to see every one.
             </p>
           )}
         </>
@@ -138,15 +143,20 @@ export function RankingPage() {
   );
 }
 
-function EmptyResult({ scope }: { scope: string }) {
+function EmptyResult({ scope, noun }: { scope: string; noun: string }) {
   return (
     <div className="emptyq">
       <strong>No stocks match the current filters.</strong>
       {scope === "top_decile"
-        ? "You are viewing the top 10% of each sector — switch to “All stocks”, or clear a filter."
+        ? `You are viewing the top 10% of each sector — switch to “All ${noun}”, or clear a filter.`
         : "Try clearing a filter or widening a score range."}
     </div>
   );
+}
+
+/** The selected table's full name for the heading, e.g. "Operating companies". */
+function segmentTitle(meta: SegmentMeta[], segment: string): string {
+  return meta.find((m) => m.key === segment)?.label ?? segment;
 }
 
 function InsufficientTable({
@@ -167,7 +177,10 @@ function InsufficientTable({
   });
   return (
     <>
-      <p className="note" style={{ margin: "12px 18px 0", maxWidth: "82ch" }}>
+      <div className="mainlabel">
+        Insufficient data · unranked <span className="mono">({shown.length.toLocaleString()})</span>
+      </div>
+      <p className="note" style={{ margin: "0 18px", maxWidth: "82ch" }}>
         These stocks resolved too few of their applicable metrics to be scored. They are{" "}
         <b>unranked, not low-ranked</b> — a stock scored on three of eleven metrics would carry a
         number that looks like a judgement and is not one. Each row names what was missing and why.

@@ -227,10 +227,10 @@ main {
 
 .toolbar {
   display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  flex-wrap: wrap;
-  padding: 11px 18px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px 18px;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
   position: sticky;
@@ -256,6 +256,23 @@ main {
 }
 .pillbtn:hover { background: var(--accent-soft); color: var(--ink); }
 .pillbtn.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+/* Rows of the toolbar: which table / show / count, then sort / search / mode. */
+.tbrow { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
+.tblabel {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+/* The table tabs are the primary choice: a touch larger than the controls that refine them. */
+.seg.segtabs button { font-size: var(--t-body); font-weight: 600; padding: 6px 12px; }
+.tbsep { width: 1px; height: 22px; background: var(--line-2); }
+/* A list of what could not be ranked, not a fourth table: quieter than the tabs. */
+.pillbtn.quiet { border-style: dashed; color: var(--ink-3); }
+.pillbtn.quiet .mono { opacity: 0.8; }
+.pillbtn.quiet.on { border-style: solid; color: var(--on-accent); }
 .railtoggle {
   flex: none;
   width: 26px;
@@ -289,6 +306,7 @@ main {
 .themeseg button { padding: 4px 9px; }
 .seg.modeseg button { font-weight: 600; letter-spacing: 0.02em; }
 .count { margin-left: auto; font-family: var(--font-mono); font-size: var(--t-small); color: var(--ink-3); }
+.count .countsub { opacity: 0.75; }
 .search {
   font-family: var(--font-ui);
   font-size: var(--t-body);
@@ -616,7 +634,7 @@ tr.exp:hover td { background: var(--surface-2); }
 .pfwrap { margin: 0; border-color: var(--line-2); box-shadow: none; }
 .pfwrap thead th { background: var(--accent-soft); }
 .mainlabel {
-  margin: 14px 18px 6px;
+  margin: 12px 18px 6px;
   font-family: var(--font-ui);
   font-size: var(--t-lead);
   font-weight: 700;
@@ -776,3 +794,6 @@ footer.pf a { color: var(--ink-2); }
   tr.exp td { display: block; }
   .twrap { margin: 10px 10px 0; }
 }
+
+/* A label and the control it names wrap as one unit, never split across lines. */
+.tbgroup { display: inline-flex; align-items: center; gap: var(--s-2); }
