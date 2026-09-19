@@ -124,7 +124,7 @@ company, and JPMorgan legitimately has no gross margin.
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There have
-been eight, all to the first month, before any comparison depended on it.
+been nine, all to the first month, before any comparison depended on it.
 
 **2026-09 — the 2026-08 record was regenerated once.** Growth in profitability
 (dGPOA) subtracted a fiscal-year ratio from a trailing-twelve-month one, so the
@@ -296,6 +296,29 @@ the June 10-Qs of five companies, filed in late July and so inside the point-in-
 Corning, Capital One, American Tower, Expand Energy and Ares Capital. The baseline now uses the
 fresh download (Corning 596 -> 466, Expand Energy 255 -> 82; 34 other rows moved more than three
 places). Committed regenerations now always fetch fresh (`fetch_fundamentals.py --no-cache`).
+
+
+**2026-09 — methodology 1.6: Growth sees the latest year, and the 2026-08 baseline recomputed
+under it.** The two top-ranked consumer-staples names were Cal-Maine and BellRing, both with
+falling shares. Every metric was a level or a multi-year change, so none saw the direction of the
+latest year: Cal-Maine's quarterly operating income went from $636M to a loss as egg prices
+normalised, and its three-year revenue trend still read +13% after a 32% fall in the latest year.
+Across the operating universe the direction of operating income over the year ranked +0.24 with
+the year's share-price move; the composite, which could not see it, ranked -0.02.
+
+- *New Growth metric:* the latest year's change in operating income - four times the median of
+  the last four quarters' year-on-year change, over average total assets. The median stops one
+  impairment or settlement quarter from setting it; the asset scale stops a near-zero base from
+  turning a small change into a huge percentage. Not applied to pre-revenue companies, and its
+  absence never drops a company below coverage.
+- *Revenue growth capped by the latest year:* if trailing revenue fell against the twelve months
+  before, growth is at most that fall (127 companies).
+
+Weights are unchanged; the version moved to 1.6 because the Growth factor gained a metric.
+Effect: operating median rank move 35 places; 21 of the default view's names changed. Cal-Maine
+20 -> 365, InterDigital 17 -> 325, BellRing 30 -> 170; AppLovin 54 -> 38, Micron 21 -> 18;
+Deckers stays first. The price correlation is same-period evidence, not a forecast, and the score
+still does not use price. The 1.5 record is preserved in git.
 
 ---
 

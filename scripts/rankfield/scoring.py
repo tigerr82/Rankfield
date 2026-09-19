@@ -81,7 +81,11 @@ def applicable_metrics(rows: list[dict], *, min_resolution: float = 0.40) -> tup
     total = len(rows) or 1
     resolution = {}
     keys = []
+    segment = rows[0].get("segment") if rows else None
     for m in METRICS:
+        if segment in m.get("not_for_segments", ()):
+            resolution[m["key"]] = 0.0
+            continue
         n = sum(1 for r in rows if r["values"].get(m["key"]) is not None)
         resolution[m["key"]] = round(n / total, 3)
         if n / total >= min_resolution:
@@ -163,7 +167,11 @@ def score_segment(
     # ---- factors and composite
     scored, insufficient = [], []
     for i, r in enumerate(rows):
-        applicable = [k for k in metric_keys]
+        # A coverage-optional metric counts toward coverage only where it
+        # resolved, so its absence never drops a company that the other ten
+        # metrics can score.
+        applicable = [k for k in metric_keys
+                      if not METRICS_BY_KEY[k].get("coverage_optional") or percentiles[i].get(k) is not None]
         resolved = [k for k in applicable if percentiles[i].get(k) is not None]
         coverage = len(resolved) / len(applicable) if applicable else 0.0
 

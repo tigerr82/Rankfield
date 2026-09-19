@@ -281,9 +281,11 @@ class TestFactorCompositionV11:
     (16.1%). These tests stop that composition coming back.
     """
 
-    def test_growth_is_revenue_growth_alone(self):
+    def test_growth_is_revenue_growth_and_the_latest_years_operating_income(self):
+        # 1.1 made Growth revenue growth alone; 1.6 adds the direction of operating
+        # income over the latest year. dGPOA must never return to it.
         from rankfield.metrics import METRICS
-        assert [m["key"] for m in METRICS if m["factor"] == "growth"] == ["rev_growth"]
+        assert [m["key"] for m in METRICS if m["factor"] == "growth"] == ["rev_growth", "op_inc_change"]
 
     def test_delta_gpoa_belongs_to_quality(self):
         from rankfield.metrics import METRICS_BY_KEY

@@ -70,8 +70,10 @@ def run(market_cap=5000.0, **overrides):
 
 class TestHealthyBaseline:
     def test_a_complete_company_resolves_every_metric(self):
+        # The fixture files annual reports only; the operating-income change needs
+        # quarters and is covered by TestOperatingIncomeChange.
         result = run()
-        unresolved = [k for k in METRIC_KEYS if result["values"][k] is None]
+        unresolved = [k for k in METRIC_KEYS if result["values"][k] is None and k != "op_inc_change"]
         assert unresolved == [], f"unexpectedly missing: {unresolved} ({result['missing']})"
 
     def test_values_are_in_plausible_ranges(self):
@@ -600,3 +602,35 @@ class TestEarningsVariabilityAroundTheTrend:
 
     def test_flat_earnings_are_stable(self):
         assert type(self).measure([0.176, 0.176, 0.176, 0.176, 0.176]) == pytest.approx(0.0, abs=1e-12)
+
+
+
+class TestOperatingIncomeChange:
+    """1.6: the latest year's direction of profit, and growth capped by a falling year."""
+
+    company = TestCurrentToTheLatestQuarter.company
+    QUARTER_ENDS = TestCurrentToTheLatestQuarter.QUARTER_ENDS
+
+    def test_collapsing_operating_income_reads_as_a_decline(self):
+        # Cal-Maine's shape: operating income falling hard over the last four quarters
+        fs = self.company(OperatingIncomeLoss=lambda i: 150.0 if i < 18 else 150.0 - 60.0 * (i - 17))
+        result = compute_metrics(fs, market_cap=5000.0)
+        assert result["values"]["op_inc_change"] < -0.1
+
+    def test_one_bad_quarter_cannot_set_it_alone(self):
+        # a single impairment quarter among steady ones: the median ignores it
+        fs = self.company(OperatingIncomeLoss=lambda i: -2000.0 if i == len(self.QUARTER_ENDS) - 1 else 150.0)
+        assert compute_metrics(fs, market_cap=5000.0)["values"]["op_inc_change"] == pytest.approx(0.0, abs=1e-9)
+
+    def test_revenue_growth_is_capped_when_the_latest_year_shrank(self):
+        # three years of growth, then a 30% fall in the latest year
+        fs = self.company(Revenues=lambda i: 1e9 * 1.05 ** i if i < 18 else 7e8)
+        result = compute_metrics(fs, market_cap=5000.0)
+        assert result["values"]["rev_growth"] < 0
+        assert "capped by the latest year" in result["provenance"]["growth_source"]
+
+    def test_it_is_not_applied_to_pre_revenue_companies(self):
+        from rankfield.scoring import applicable_metrics
+        rows = [{"segment": "pre_revenue", "values": {"op_inc_change": -0.1, "earn_var": 0.2}} for _ in range(5)]
+        keys, _ = applicable_metrics(rows)
+        assert "op_inc_change" not in keys and "earn_var" in keys

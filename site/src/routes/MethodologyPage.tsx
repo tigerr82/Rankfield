@@ -318,10 +318,27 @@ FCF/EV     = (Operating Cash Flow - Capital Expenditure) / EV`}</pre>
         <pre>{`RevGrowth = annual growth rate of the trend line through
             3 years of trailing-12-month revenue, one point per quarter
             (fallback: 3-fiscal-year CAGR)
+            capped: if revenue fell in the latest twelve months, at most that fall
 
-then, after the percentile step:
+OpIncChange = 4 x median of the last 4 quarters' operating income change
+              against the same quarter a year earlier, / average total assets
+
+then, after the percentile step (both metrics):
   if ROIC >  hurdle:  percentile used as-is
   if ROIC <= hurdle:  min(p, 100 - p)`}</pre>
+        <p>
+          <b>Growth sees the latest year, since methodology 1.6.</b> Every other metric is a level or
+          a change over several years, so a business whose profits were collapsing now could still rank
+          near the top: Cal-Maine&apos;s quarterly operating income went from $636M to a loss as egg
+          prices normalised while it ranked 20th, and its three-year revenue trend still read +13%
+          after a 32% fall in the latest year. Growth now adds the latest year&apos;s change in operating
+          income - the median of four quarterly year-on-year changes, so one impairment or one-off
+          cannot set it, scaled by assets so a near-zero base cannot turn a small change into a huge
+          percentage - and revenue growth can be no higher than the latest year&apos;s fall. Across the
+          operating universe the direction of operating income over the year ranked +0.24 with the
+          year&apos;s share-price move. That is same-period evidence, not a forecast; the score still
+          does not use price.
+        </p>
         <p>
           <b>Growth is current to the latest quarter, since methodology 1.3.</b> Completed fiscal
           years alone lag by up to a year: on the 31 August 2026 scoring date Micron&apos;s latest

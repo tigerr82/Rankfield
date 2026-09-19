@@ -429,6 +429,12 @@
   },
   {
    "ticker": "WOLF",
+   "concept": "OperatingIncomeLoss",
+   "last_reported": "2025-06-29",
+   "candidates": {}
+  },
+  {
+   "ticker": "WOLF",
    "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
    "last_reported": "2025-06-29",
    "candidates": {}

@@ -194,7 +194,23 @@ METRICS: list[dict] = [
                 "history cannot support it (under nine points, a base below $50M, or quarters that "
                 "disagree with the restated annual report), the three-fiscal-year CAGR. ROIC-conditioned: "
                 "at or below the hurdle the score is capped at 50 and faster growth scores lower - "
-                "value-destroying expansion is never rewarded, and neither is shrinking."},
+                "value-destroying expansion is never rewarded, and neither is shrinking. Capped by the "
+                "latest year: if trailing-twelve-month revenue fell against the twelve months before, "
+                "growth is at most that decline."},
+    # Since methodology 1.6. Every other metric is a level or a multi-year change,
+    # so a business whose profits were collapsing right now could still rank at the
+    # top: Cal-Maine's quarterly operating income went from $636M to a $59M loss as
+    # egg prices normalised while it ranked 20th. Across the operating universe the
+    # direction of operating income over the last year ranked +0.24 with the
+    # year's share-price move; the score, which could not see it, ranked -0.02.
+    {"key": "op_inc_change", "label": "Operating Income Change (latest year)", "short": "OpInc chg",
+     "factor": "growth", "higher_better": True, "unit": "pp",
+     "not_for_segments": ["pre_revenue"], "coverage_optional": True,
+     "formula": "Four times the median of the last four quarters' change in operating income against the "
+                "same quarter a year earlier, over average total assets - the latest year's direction of "
+                "profit, one bad or one-off quarter unable to set it alone. Each quarter and its year-ago "
+                "comparative come from the latest filing, so restatements cannot mix bases. ROIC-"
+                "conditioned like all Growth metrics. Not applied to pre-revenue companies."},
 
     {"key": "debt_equity", "label": "Debt / Equity", "short": "D/E", "factor": "health",
      "higher_better": False, "unit": "x",
@@ -449,6 +465,45 @@ def revenue_trend(fs: FactSet) -> tuple[float | None, str | None]:
     if not quarters_match_annual(fs, q, REVENUE, points[0][0] - timedelta(days=280)):
         return None, "quarters disagree with the restated annual report"
     return math.exp(_slope_per_year(points, math.log)) - 1, None
+
+
+def revenue_latest_year_change(fs: FactSet) -> float | None:
+    """Trailing-twelve-month revenue against the twelve months before, from the
+    same quarterly series as the trend; None where there is no current series."""
+    ttm = ttm_points(quarterly_revenue(fs))
+    if len(ttm) < 5 or fs.reference_end is None or (fs.reference_end - ttm[-1][0]).days > 120:
+        return None
+    end, now = ttm[-1]
+    prior = [v for e, v in ttm if 350 <= (end - e).days <= 380]
+    return (now - prior[-1]) / prior[-1] if prior and prior[-1] > 0 else None
+
+
+def operating_income_change(fs: FactSet) -> tuple[float | None, str]:
+    """The latest year's direction of operating income: four times the median
+    of the last four quarters' change against the same quarter a year earlier,
+    over average total assets. The median keeps one quarter - an impairment, a
+    settlement - from setting it; scaling by assets keeps a near-zero base from
+    turning a small change into +900%."""
+    ref = fs.reference_end
+    q = quarterly_series(fs, OPERATING_INCOME)
+    if not q or ref is None or (ref - q[-1][0]).days > 120:
+        return None, "no current quarterly operating income"
+    changes = []
+    for end, value in q[-4:]:
+        prior = [v for e, v in q if 355 <= (end - e).days <= 375]
+        if not prior:
+            return None, f"no year-ago comparative for the quarter ending {end}"
+        changes.append(value - prior[-1])
+    if len(changes) < 4:
+        return None, "fewer than four quarters of operating income"
+    since = q[-8][0] if len(q) >= 8 else q[0][0]
+    if not quarters_match_annual(fs, q, OPERATING_INCOME, since):
+        return None, "quarters disagree with the restated annual report"
+    now, year_ago = _assets_at(fs, q[-1][0]), _assets_at(fs, q[-1][0] - timedelta(days=365))
+    if not now or not year_ago or now + year_ago <= 0:
+        return None, "total assets unavailable at the quarter ends"
+    middle = sorted(changes)[1:3]          # the median of four
+    return 4 * (middle[0] + middle[1]) / 2 / ((now + year_ago) / 2), ""
 
 
 def gpoa_trend(fs: FactSet) -> tuple[float | None, str | None]:
@@ -758,6 +813,21 @@ def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) ->
         else:
             missing["rev_growth"] = f"no quarterly trend ({trend_reason}) and fewer than 4 fiscal years of revenue"
             provenance["growth_source"] = f"unresolved ({trend_reason})"
+
+    # A three-year trend can read a collapse as growth: Cal-Maine's revenue peaked
+    # with egg prices and fell 32% in the latest year, yet the line through three
+    # years still rose 13%. When the latest year shrank, growth is at most that.
+    latest_year = revenue_latest_year_change(fs)
+    if values["rev_growth"] is not None and latest_year is not None and latest_year < values["rev_growth"] \
+            and latest_year < 0:
+        values["rev_growth"] = latest_year
+        provenance["growth_source"] += f"; capped by the latest year ({latest_year:+.1%})"
+
+    change, change_reason = operating_income_change(fs)
+    if change is not None:
+        values["op_inc_change"] = change
+    else:
+        missing["op_inc_change"] = change_reason
 
     # --------------------------------------------------- Financial Health
     if debt is None:
