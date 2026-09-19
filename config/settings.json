@@ -7,6 +7,7 @@
     "market_cap_floor_usd": 1000000000,
     "adv_dollar_floor": 5000000,
     "min_quarters_filed": 8,
+    "max_report_age_days": 200,
     "coverage_threshold": 0.7,
     "min_sector_cohort": 12,
     "segment_metric_applicability": 0.4

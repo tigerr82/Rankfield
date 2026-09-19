@@ -437,3 +437,142 @@ class TestFallbackChains:
         self.add(fs, "CostOfGoodsAndServiceExcludingDepreciationDepletionAndAmortization", [self.annual(2025, 600.0)])
         result = compute_metrics(fs, market_cap=5000.0)
         assert result["values"]["gpoa"] == pytest.approx((1000.0 - 600.0) / 2000.0)
+
+
+class TestCurrentToTheLatestQuarter:
+    """Methodology 1.4: no metric may rest on a fiscal year when newer quarters exist."""
+
+    QUARTER_ENDS = [(y, m, d) for y in range(2021, 2027) for m, d in ((3, 31), (6, 30), (9, 30), (12, 31))
+                    if (y, m) <= (2026, 6)]
+
+    def company(self, **quarterly):
+        """The fixture company plus quarterly series and a balance sheet at every quarter end."""
+        fs = build()
+        gaap = fs._facts["us-gaap"]
+        for concept, fn in quarterly.items():
+            rows = []
+            for i, (y, m, d) in enumerate(self.QUARTER_ENDS):
+                start_m = m - 2
+                rows.append({"start": f"{y}-{start_m:02d}-01", "end": f"{y}-{m:02d}-{d}", "val": fn(i),
+                             "filed": "2026-08-01", "form": "10-Q", "accn": "q"})
+            gaap[concept] = {"units": {"USD": rows}}
+        for concept in ("Assets", "AssetsCurrent", "Liabilities", "LiabilitiesCurrent", "StockholdersEquity"):
+            base = gaap[concept]["units"]["USD"][-1]["val"]
+            for y, m, d in self.QUARTER_ENDS:
+                gaap[concept]["units"]["USD"].append(
+                    {"end": f"{y}-{m:02d}-{d}", "val": base, "filed": "2026-08-01", "form": "10-Q", "accn": "q"})
+        fs._cache.clear()
+        return fs
+
+    def test_rising_gross_profitability_reads_as_an_improvement(self):
+        # Micron's shape: gross margin climbing over the last quarters
+        fs = self.company(Revenues=lambda i: 1000.0,
+                          CostOfGoodsAndServicesSold=lambda i: 700.0 - 15.0 * i)
+        result = compute_metrics(fs, market_cap=5000.0)
+        assert result["provenance"]["delta_gpoa_source"] == "3-year quarterly trend"
+        assert result["values"]["delta_gpoa"] > 0.2
+
+    def test_steady_earnings_have_no_variability(self):
+        fs = self.company(NetIncomeLoss=lambda i: 35.0)
+        result = compute_metrics(fs, market_cap=5000.0)
+        assert result["provenance"]["earn_var_source"] == "5 twelve-month windows to the latest quarter"
+        assert result["values"]["earn_var"] == pytest.approx(0.0, abs=1e-12)
+
+    def test_the_latest_year_counts_in_earnings_variability(self):
+        # a surge inside the current fiscal year must raise variability
+        fs = self.company(NetIncomeLoss=lambda i: 35.0 if i < 20 else 400.0)
+        assert compute_metrics(fs, market_cap=5000.0)["values"]["earn_var"] > 0.05
+
+    def test_without_quarterly_history_the_fiscal_year_versions_are_kept(self):
+        result = run()
+        assert result["provenance"]["delta_gpoa_source"].startswith("fiscal years")
+        assert result["provenance"]["earn_var_source"].startswith("5 fiscal years")
+
+
+class TestDebtFromTheLatestBalanceSheet:
+    @staticmethod
+    def instant(end, val):
+        return {"end": end, "val": val, "filed": "2026-08-01", "form": "10-Q", "accn": "q"}
+
+    def test_a_newer_component_path_beats_an_older_combined_figure(self):
+        # Lilly: combined debt tagged in the 10-K, components in every 10-Q
+        fs = build()
+        fs._facts["us-gaap"]["DebtLongtermAndShorttermCombinedAmount"] = {
+            "units": {"USD": [self.instant("2025-12-31", 777.0)]}}
+        fs._facts["us-gaap"]["LongTermDebtNoncurrent"]["units"]["USD"].append(self.instant("2026-06-30", 880.0))
+        fs._cache.clear()
+        assert total_debt(fs) == (880.0, "noncurrent+current+short")
+
+    def test_on_the_same_date_the_combined_figure_still_wins(self):
+        fs = build()
+        fs._facts["us-gaap"]["DebtLongtermAndShorttermCombinedAmount"] = {
+            "units": {"USD": [self.instant("2025-12-31", 777.0)]}}
+        fs._cache.clear()
+        assert total_debt(fs) == (777.0, "combined-tag")
+
+    def test_a_newer_current_portion_alone_never_replaces_long_term_debt(self):
+        # Air Products: long-term debt only in the 10-K; a current portion is not total debt
+        fs = build(LongTermDebtNoncurrent=None)
+        fs._facts["us-gaap"]["LongTermDebt"] = {"units": {"USD": [self.instant("2025-12-31", 800.0)]}}
+        fs._facts["us-gaap"]["LongTermDebtCurrent"] = {"units": {"USD": [self.instant("2026-06-30", 50.0)]}}
+        fs._cache.clear()
+        assert total_debt(fs) == (800.0, "longtermdebt+short")
+
+    def test_a_newer_partial_tag_does_not_replace_an_older_total(self):
+        # TeraWulf: convertible notes alone ($1.1B, June) vs total long-term debt ($3.1B, March)
+        fs = build()
+        fs._facts["us-gaap"]["LongTermDebtNoncurrent"]["units"]["USD"].append(self.instant("2026-03-31", 3060.0))
+        fs._facts["us-gaap"]["ConvertibleDebt"] = {"units": {"USD": [self.instant("2026-06-30", 1102.0)]}}
+        fs._cache.clear()
+        assert total_debt(fs) == (3060.0, "noncurrent+current+short")
+
+
+    def test_a_newer_smaller_total_is_a_repayment_not_a_partial_tag(self):
+        # CSW Industrials: long-term debt $95M in June 2025 after repaying; an older $872M figure is superseded
+        fs = build()
+        fs._facts["us-gaap"]["LongTermDebt"] = {"units": {"USD": [self.instant("2025-12-31", 872.0)]}}
+        fs._facts["us-gaap"]["LongTermDebtNoncurrent"]["units"]["USD"].append(self.instant("2026-06-30", 95.0))
+        fs._cache.clear()
+        assert total_debt(fs) == (95.0, "noncurrent+current+short")
+
+
+class TestGrossProfitabilityGuards:
+    company = TestCurrentToTheLatestQuarter.company
+    QUARTER_ENDS = TestCurrentToTheLatestQuarter.QUARTER_ENDS
+
+    def test_quarters_that_contradict_the_annual_gross_profit_fall_back(self):
+        # Asbury: the early quarters tag a sliver of cost of sales
+        fs = self.company(Revenues=lambda i: 250.0, CostOfGoodsAndServicesSold=lambda i: 10.0 if i < 12 else 150.0)
+        gaap = fs._facts["us-gaap"]
+        for year in (2022, 2023, 2024, 2025):
+            gaap["Revenues"]["units"]["USD"].append(
+                {"start": f"{year}-01-01", "end": f"{year}-12-31", "val": 1000.0, "filed": "2026-02-01", "form": "10-K", "accn": "k"})
+            gaap["CostOfGoodsAndServicesSold"]["units"]["USD"].append(
+                {"start": f"{year}-01-01", "end": f"{year}-12-31", "val": 600.0, "filed": "2026-02-01", "form": "10-K", "accn": "k"})
+        fs._cache.clear()
+        result = compute_metrics(fs, market_cap=5000.0)
+        assert result["provenance"]["delta_gpoa_source"].startswith("fiscal years (quarters disagree")
+
+
+class TestFiscalYearGrossProfitabilityFallback:
+    def test_a_cost_tag_that_changes_meaning_leaves_the_metric_missing(self):
+        # Asbury: 2022 cost of sales tagged as a small component, 2025 as the full figure
+        fs = build(Revenues=1e9, CostOfGoodsAndServicesSold=6e8, Assets=2e9)
+        rows = fs._facts["us-gaap"]["CostOfGoodsAndServicesSold"]["units"]["USD"]
+        for row in rows:
+            if row["end"].startswith(("2021", "2022")):
+                row["val"] = 3e7
+        fs._cache.clear()
+        result = compute_metrics(fs, market_cap=5000.0)
+        assert result["values"]["delta_gpoa"] is None
+        assert "not comparable" in result["missing"]["delta_gpoa"]
+
+    def test_a_near_zero_revenue_company_keeps_its_wild_margins(self):
+        # Pulse Biosciences: margins of -1606% then -54% are real while revenue is tiny
+        fs = build()
+        rows = fs._facts["us-gaap"]["CostOfGoodsAndServicesSold"]["units"]["USD"]
+        for row in rows:
+            if row["end"].startswith(("2021", "2022")):
+                row["val"] = 30.0
+        fs._cache.clear()
+        assert compute_metrics(fs, market_cap=5000.0)["values"]["delta_gpoa"] is not None

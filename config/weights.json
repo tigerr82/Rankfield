@@ -1,7 +1,7 @@
 {
-  "version": "1.3",
+  "version": "1.4",
   "effective_from": "2026-08",
-  "note": "Official weights. Changing the weights or how factors are computed MUST bump `version`; historical records keep the version that produced them and are not re-scored. 1.1 (2026-09): Growth is revenue growth alone; dGPOA moved to Quality. 1.2 (2026-09): below the ROIC hurdle growth is capped at 50 (min(p, 100-p)) instead of inverted, and figures come only from financial reports, never proxy statements. 1.3 (2026-09): Growth is the three-year trend of quarterly trailing revenue (annual CAGR as the fallback), and revenue is the largest of the nested revenue tags rather than the first by priority. The 2026-08 baseline was regenerated under each before any comparison depended on it - see the README correction log.",
+  "note": "Official weights. Changing the weights or how factors are computed MUST bump `version`; historical records keep the version that produced them and are not re-scored. 1.1 (2026-09): Growth is revenue growth alone; dGPOA moved to Quality. 1.2 (2026-09): below the ROIC hurdle growth is capped at 50 (min(p, 100-p)) instead of inverted, and figures come only from financial reports, never proxy statements. 1.3 (2026-09): Growth is the three-year trend of quarterly trailing revenue (annual CAGR as the fallback), and revenue is the largest of the nested revenue tags rather than the first by priority. 1.4 (2026-09): the change in gross profitability and earnings variability are current to the latest quarter (quarterly trailing windows, fiscal years as the fallback); debt comes from the most recent balance sheet that reports it; a company whose latest report is over 200 days old is not scored. The 2026-08 baseline was regenerated under each before any comparison depended on it - see the README correction log.",
   "weights": {
     "quality": 25,
     "growth": 25,

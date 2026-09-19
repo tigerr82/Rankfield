@@ -232,15 +232,23 @@ class FactSet:
             return self._cache[key]
         largest = tuple(concepts) in self.LARGEST_WINS
         merged: dict[tuple, dict] = {}
+        candidates: dict[tuple, list[dict]] = defaultdict(list)
         for concept in concepts:
             rows = [f for f in self._observations(concept) if f.get("start") and f.get("end")]
             for period, fact in self._latest_per_period(rows).items():
-                current = merged.get(period)
-                if current is None:
-                    merged[period] = fact
-                elif (largest and fact["val"] is not None
-                      and (current["val"] is None or fact["val"] > current["val"])):
-                    merged[period] = fact
+                if largest:
+                    candidates[period].append(fact)
+                else:
+                    merged.setdefault(period, fact)
+        # Nested tags: the largest - but only among the tags of the most recent
+        # filing to report the period. A tag last reported before a restatement
+        # describes a different company: Crane NXT's 2022 "Revenues" ($3.4B) is
+        # pre-separation Crane, while its restated 2022 is $1.3B.
+        for period, facts in candidates.items():
+            valued = [f for f in facts if f["val"] is not None] or facts
+            newest = max(f["filed"] for f in valued)
+            merged[period] = max((f for f in valued if f["filed"] == newest),
+                                 key=lambda f: f["val"] if f["val"] is not None else float("-inf"))
         out = sorted(merged.values(), key=lambda f: (f["end"], f["start"]))
         self._cache[key] = out
         return out

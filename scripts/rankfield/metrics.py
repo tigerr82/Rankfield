@@ -114,6 +114,12 @@ DEBT_LT_TOTAL = [
     "SeniorNotes", "UnsecuredDebt", "SecuredDebt", "ConvertibleDebt", "NotesPayable", "LoansPayable",
     "DebtAndCapitalLeaseObligations",
 ]
+PARTIAL_DEBT_RATIO = 0.75
+# The fallback tags that can hold one class of debt rather than all of it.
+DEBT_COMPONENT_TAGS = frozenset({
+    "UnsecuredLongTermDebt", "ConvertibleDebtNoncurrent", "SecuredLongTermDebt", "LongTermNotesPayable",
+    "SeniorNotes", "UnsecuredDebt", "SecuredDebt", "ConvertibleDebt", "NotesPayable", "LoansPayable",
+})
 ALL_DEBT = DEBT_COMBINED + DEBT_LT_NONCURRENT + DEBT_LT_CURRENT + DEBT_SHORT + DEBT_LT_TOTAL
 EPS_DILUTED = ["EarningsPerShareDiluted", "EarningsPerShareBasicAndDiluted", "EarningsPerShareBasic"]
 
@@ -151,15 +157,18 @@ METRICS: list[dict] = [
      "formula": "(Revenue - COGS) / total assets (Novy-Marx)."},
     {"key": "earn_var", "label": "Earnings Variability", "short": "EarnVar", "factor": "quality",
      "higher_better": False, "unit": "pct",
-     "formula": "Standard deviation of return on assets across the last five fiscal years. "
-                "Lower is better, so the percentile is inverted."},
+     "formula": "Standard deviation of return on assets over five years: twelve-month earnings ending at "
+                "the latest quarter and at each anniversary before it, each over total assets at the same "
+                "date (fallback: the last five fiscal years). Lower is better, so the percentile is inverted."},
     # Moved from Growth in methodology 1.1. A rising gross-profits-to-assets ratio
     # is a quality signal - the business extracting more from what it owns - which
     # is where Asness et al.'s Quality-Minus-Junk places it. Not ROIC-conditioned.
     {"key": "delta_gpoa", "label": "Change in Gross Profitability", "short": "dGPOA", "factor": "quality",
      "higher_better": True, "unit": "pp",
-     "formula": "GPOA in the latest fiscal year minus GPOA three fiscal years earlier, in percentage "
-                "points - improving efficiency, not growth."},
+     "formula": "Three-year change in gross profits over assets, from the trend line through every "
+                "quarter (twelve-month gross profit over total assets at the same quarter end), in "
+                "percentage points - improving efficiency, not growth. Fallback: the latest fiscal year "
+                "minus the fiscal year three years earlier."},
 
     {"key": "ebit_ev", "label": "EBIT / EV", "short": "EBIT/EV", "factor": "valuation",
      "higher_better": True, "unit": "pct",
@@ -229,17 +238,38 @@ def total_debt(fs: FactSet, on_or_before=None):
     combined tag last used in 2015 falls through to today's components instead
     of standing in for today's debt.
     """
-    combined = _val(fs.instant(DEBT_COMBINED, on_or_before))
-    if combined is not None:
-        return combined, "combined-tag"
-    lt_noncurrent = _val(fs.instant(DEBT_LT_NONCURRENT, on_or_before))
+    combined = fs.instant(DEBT_COMBINED, on_or_before)
+    noncurrent = fs.instant(DEBT_LT_NONCURRENT, on_or_before)
+    lt_total = fs.instant(DEBT_LT_TOTAL, on_or_before)
     lt_current = _val(fs.instant(DEBT_LT_CURRENT, on_or_before))
     short = _val(fs.instant(DEBT_SHORT, on_or_before))
-    if lt_noncurrent is not None:
-        return _sum_present(lt_noncurrent, lt_current, short), "noncurrent+current+short"
-    lt_total = _val(fs.instant(DEBT_LT_TOTAL, on_or_before))
-    if lt_total is not None:
-        return _sum_present(lt_total, short), "longtermdebt+short"
+    # Every path that includes long-term debt, as (date, priority, value, name).
+    # The most recent balance sheet wins and priority only breaks ties: a
+    # combined-debt figure from the 10-K must not stand in for the components in
+    # a newer 10-Q (Lilly, UnitedHealth, Verizon read their December debt at the
+    # end of June). A current-portion-only path is never "complete", so it stays
+    # the last resort however recent - it would drop the long-term debt.
+    complete = []
+    if _val(combined) is not None:
+        complete.append((combined["end"], 0, combined["val"], "combined-tag", combined["concept"]))
+    if _val(noncurrent) is not None:
+        complete.append((noncurrent["end"], 1, _sum_present(noncurrent["val"], lt_current, short),
+                         "noncurrent+current+short", noncurrent["concept"]))
+    if _val(lt_total) is not None:
+        complete.append((lt_total["end"], 2, _sum_present(lt_total["val"], short), "longtermdebt+short",
+                         lt_total["concept"]))
+    if complete:
+        # Newest first. A total tag always wins - a smaller newer total is a
+        # repayment (CSW Industrials went from $166M to nothing in 2024). A
+        # component tag far below an older total is a part standing in for the
+        # whole: TeraWulf's June 2026 convertible notes ($1.1B) against its March
+        # total ($3.1B), so the older total is kept.
+        ordered = sorted(complete, key=lambda c: (c[0], -c[1]), reverse=True)
+        for i, (_, _, value, how, concept) in enumerate(ordered):
+            if concept in DEBT_COMPONENT_TAGS and any(
+                    value < PARTIAL_DEBT_RATIO * older[2] for older in ordered[i + 1:]):
+                continue
+            return value, how
     partial = _sum_present(lt_current, short)
     if partial is not None:
         return partial, "current+short-only"
@@ -335,12 +365,12 @@ TREND_MIN_BASE = 50_000_000     # below this, growth off a near-zero base is noi
 RESTATEMENT_TOLERANCE = 0.05    # quarters vs the restated annual report
 
 
-def quarterly_revenue(fs: FactSet) -> list[tuple]:
-    """(quarter end, 3-month revenue), reported quarters preferred over those
+def quarterly_series(fs: FactSet, concepts: list[str]) -> list[tuple]:
+    """(quarter end, 3-month value), reported quarters preferred over those
     derived from year-to-date figures. A 3-month fact carrying the full-year
     figure for the same date - L3Harris and NiSource tag their annual revenue
     that way in the 10-K - is a tagging error and is dropped."""
-    facts = [f for f in fs.durations(REVENUE) if f["val"] is not None]
+    facts = [f for f in fs.durations(concepts) if f["val"] is not None]
     annual: dict[str, list[float]] = {}
     for f in facts:
         if 330 <= (parse_iso(f["end"]) - parse_iso(f["start"])).days <= 400:
@@ -357,14 +387,50 @@ def quarterly_revenue(fs: FactSet) -> list[tuple]:
     return sorted((parse_iso(end), entry[1]["val"]) for end, entry in best.items())
 
 
+def quarterly_revenue(fs: FactSet) -> list[tuple]:
+    return quarterly_series(fs, REVENUE)
+
+
+def ttm_points(q: list[tuple]) -> list[tuple]:
+    """(quarter end, trailing-twelve-month sum) wherever four consecutive quarters exist."""
+    return [(q[i][0], sum(v for _, v in q[i - 3:i + 1]))
+            for i in range(3, len(q)) if (q[i][0] - q[i - 3][0]).days <= 300]
+
+
+def quarters_match_annual(fs: FactSet, q: list[tuple], concepts: list[str], since) -> bool:
+    """Quarterly comparatives are not restated after a spin-off or disposal; the
+    annual report restates three years. Every fiscal year from `since` must agree
+    with the sum of its quarters, or the quarters describe a different company
+    (GE before and after GE Vernova)."""
+    for fy in fs.annual_series(concepts, 5):
+        fy_end = parse_iso(fy["end"])
+        if fy_end < since or not fy["val"]:
+            continue
+        inside = [v for e, v in q if fy_end - timedelta(days=355) < e <= fy_end + timedelta(days=10)]
+        if len(inside) == 4 and abs(sum(inside) - fy["val"]) > RESTATEMENT_TOLERANCE * abs(fy["val"]):
+            return False
+    return True
+
+
+def _slope_per_year(points: list[tuple], transform=lambda v: v) -> float:
+    xs = [(e - points[0][0]).days / 365.25 for e, _ in points]
+    ys = [transform(v) for _, v in points]
+    mx, my = mean(xs), mean(ys)
+    return sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sum((x - mx) ** 2 for x in xs)
+
+
+def _assets_at(fs: FactSet, when) -> float | None:
+    fact = fs.instant_near(ASSETS, when.isoformat(), tolerance_days=10)
+    return fact["val"] if fact and fact["val"] else None
+
+
 def revenue_trend(fs: FactSet) -> tuple[float | None, str | None]:
     """Annual growth rate of the least-squares trend of log TTM revenue over
     the last three years, one point per quarter. Returns (value, None) or
     (None, why it could not be computed)."""
     ref = fs.reference_end
     q = quarterly_revenue(fs)
-    ttm = [(q[i][0], sum(v for _, v in q[i - 3:i + 1]))
-           for i in range(3, len(q)) if (q[i][0] - q[i - 3][0]).days <= 300]
+    ttm = ttm_points(q)
     if not ttm or ref is None or (ref - ttm[-1][0]).days > 120:
         return None, "no current quarterly revenue series"
     end = ttm[-1][0]
@@ -375,23 +441,110 @@ def revenue_trend(fs: FactSet) -> tuple[float | None, str | None]:
         return None, "non-positive revenue in the window"
     if points[0][1] < TREND_MIN_BASE:
         return None, "revenue base under $50M"
-    # Quarterly comparatives are not restated after a spin-off or disposal; the
-    # annual report restates three years. Every fiscal year whose quarters feed
-    # the window must agree with its annual figure, or the quarters describe a
-    # different company (GE before and after GE Vernova).
-    first_quarter_used = points[0][0] - timedelta(days=280)
-    for fy in fs.annual_series(REVENUE, 5):
-        fy_end = parse_iso(fy["end"])
-        if fy_end < first_quarter_used or not fy["val"]:
+    # every fiscal year whose quarters feed the window, including the three
+    # quarters before it that the first trailing point reaches back to
+    if not quarters_match_annual(fs, q, REVENUE, points[0][0] - timedelta(days=280)):
+        return None, "quarters disagree with the restated annual report"
+    return math.exp(_slope_per_year(points, math.log)) - 1, None
+
+
+def gpoa_trend(fs: FactSet) -> tuple[float | None, str | None]:
+    """Change in gross profitability over three years, current to the latest
+    quarter: the least-squares trend of TTM gross profit over total assets at
+    the same quarter end, one point per quarter, expressed as the three-year
+    change. Numerator and denominator always share a date, so the calendar
+    artifact that once made Alphabet's decline read -13.4pp cannot return."""
+    ref = fs.reference_end
+    revenue_q = quarterly_revenue(fs)
+    cogs_q = dict(quarterly_series(fs, COGS))
+    gross = [(e, v - cogs_q[e]) for e, v in revenue_q if e in cogs_q]
+    via_cogs = len(gross) >= TREND_MIN_POINTS + 3
+    if not via_cogs:
+        gross = quarterly_series(fs, GROSS_PROFIT)
+    ttm = ttm_points(gross)
+    if not ttm or ref is None or (ref - ttm[-1][0]).days > 120:
+        return None, "no current quarterly gross profit"
+    end = ttm[-1][0]
+    points = []
+    for e, gp in ttm:
+        if (end - e).days <= 365 * TREND_YEARS + 30:
+            assets = _assets_at(fs, e)
+            if assets and assets > 0:
+                points.append((e, gp / assets))
+    if len(points) < TREND_MIN_POINTS:
+        return None, f"only {len(points)} quarterly points"
+    # A quarter whose gross profit is several times its assets is a tagging
+    # error (Calumet and Smurfit Westrock each have a near-zero assets figure).
+    if any(abs(v) > 3 for _, v in points):
+        return None, "implausible quarterly figures"
+    since = points[0][0] - timedelta(days=280)
+    if not quarters_match_annual(fs, revenue_q, REVENUE, since) or (
+            via_cogs and not quarters_match_annual(fs, sorted(cogs_q.items()), COGS, since)):
+        return None, "quarters disagree with the restated annual report"
+    # The twelve-month gross profit at each fiscal year end must equal the annual
+    # report's. Asbury's early quarters tag a small part of cost of sales, so its
+    # quarterly "gross profit" was nearly its revenue while the 10-K said 17%.
+    ttm_at = dict(ttm)
+    revenues = {f["end"]: f["val"] for f in fs.annual_series(REVENUE, 5)}
+    annual_cogs = {f["end"]: f["val"] for f in fs.annual_series(COGS, 5)}
+    annual_gp = {f["end"]: f["val"] for f in fs.annual_series(GROSS_PROFIT, 5)}
+    for fy_end_iso, revenue in revenues.items():
+        fy_end = parse_iso(fy_end_iso)
+        if fy_end < since or not revenue:
             continue
-        inside = [v for e, v in q if fy_end - timedelta(days=355) < e <= fy_end + timedelta(days=10)]
-        if len(inside) == 4 and abs(sum(inside) - fy["val"]) > RESTATEMENT_TOLERANCE * abs(fy["val"]):
+        expected = (revenue - annual_cogs[fy_end_iso]) if via_cogs and fy_end_iso in annual_cogs \
+            else annual_gp.get(fy_end_iso)
+        quarterly = next((v for e, v in ttm_at.items() if abs((e - fy_end).days) <= 10), None)
+        if expected is not None and quarterly is not None and abs(quarterly - expected) > RESTATEMENT_TOLERANCE * abs(revenue):
             return None, "quarters disagree with the restated annual report"
-    xs = [(e - points[0][0]).days / 365.25 for e, _ in points]
-    ys = [math.log(v) for _, v in points]
-    mx, my = mean(xs), mean(ys)
-    slope = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sum((x - mx) ** 2 for x in xs)
-    return math.exp(slope) - 1, None
+    return _slope_per_year(points) * TREND_YEARS, None
+
+
+def roa_variability(fs: FactSet) -> tuple[float | None, str | None]:
+    """Standard deviation of return on assets over five years, current to the
+    latest quarter: five non-overlapping twelve-month windows ending at the
+    latest quarter and at each anniversary before it, each divided by total
+    assets at its own end. Fiscal years alone ended up to a year before the
+    scoring date for 80% of companies."""
+    ref = fs.reference_end
+    ttm = ttm_points(quarterly_series(fs, NET_INCOME))
+    if not ttm or ref is None or (ref - ttm[-1][0]).days > 120:
+        return None, "no current quarterly earnings"
+    end = ttm[-1][0]
+    roas = []
+    for k in range(5):
+        target = end - timedelta(days=round(365.25 * k))
+        near = [(abs((e - target).days), e, v) for e, v in ttm if abs((e - target).days) <= 20]
+        if not near:
+            return None, f"no twelve-month earnings ending near {target}"
+        _, e, v = min(near)
+        assets = _assets_at(fs, e)
+        if not assets or assets <= 0:
+            return None, f"no balance sheet at {e}"
+        roas.append(v / assets)
+    return stdev(roas), None
+
+
+MAX_MARGIN_SWING = 0.5
+
+
+def _annual_revenue(fs: FactSet, years_back: int) -> float:
+    revenues = fs.annual_series(REVENUE, 6)
+    return revenues[years_back]["val"] or 0.0 if len(revenues) > years_back else 0.0
+
+
+def _annual_gross_margin(fs: FactSet, years_back: int) -> float | None:
+    """Gross margin in the fiscal year `years_back` years ago, cost and revenue
+    matched on period end - the comparability check behind the dGPOA fallback."""
+    revenues = fs.annual_series(REVENUE, 6)
+    if len(revenues) <= years_back or not revenues[years_back]["val"]:
+        return None
+    target = revenues[years_back]
+    cogs = next((f for f in fs.annual_series(COGS, 6)
+                 if abs((parse_iso(f["end"]) - parse_iso(target["end"])).days) <= 20), None)
+    if cogs is None:
+        return None
+    return (target["val"] - cogs["val"]) / target["val"]
 
 
 def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) -> dict:
@@ -468,17 +621,25 @@ def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) ->
     else:
         missing["gpoa"] = "gross profit or total assets unavailable"
 
-    net_income_years = fs.annual_series(NET_INCOME, 5)
-    roas = []
-    for row in net_income_years:
-        a = fs.instant_near(ASSETS, row["end"])
-        r = safe_div(row["val"], _val(a)) if a else None
-        if r is not None:
-            roas.append(r)
-    if len(roas) >= 5:
-        values["earn_var"] = stdev(roas)
+    # Current to the latest quarter where the quarterly history supports it;
+    # otherwise the five completed fiscal years, as before methodology 1.4.
+    variability, variability_reason = roa_variability(fs)
+    if variability is not None:
+        values["earn_var"] = variability
+        provenance["earn_var_source"] = "5 twelve-month windows to the latest quarter"
     else:
-        missing["earn_var"] = f"fewer than 5 fiscal years of earnings ({len(roas)})"
+        net_income_years = fs.annual_series(NET_INCOME, 5)
+        roas = []
+        for row in net_income_years:
+            a = fs.instant_near(ASSETS, row["end"])
+            r = safe_div(row["val"], _val(a)) if a else None
+            if r is not None:
+                roas.append(r)
+        if len(roas) >= 5:
+            values["earn_var"] = stdev(roas)
+            provenance["earn_var_source"] = f"5 fiscal years ({variability_reason})"
+        else:
+            missing["earn_var"] = f"fewer than 5 fiscal years of earnings ({len(roas)})"
 
     # ------------------------------------------------------------ Value
     ev = None
@@ -528,12 +689,32 @@ def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) ->
     # decline read -13.4pp instead of -2.5pp. Microsoft, whose fiscal year ends
     # in June, was unaffected, which is what identified the artifact: the
     # distortion tracked the fiscal calendar, not the business.
-    gpoa_now = _annual_gpoa(fs, 0)
-    gpoa_then = _annual_gpoa(fs, 3)
-    if gpoa_now is not None and gpoa_then is not None:
-        values["delta_gpoa"] = gpoa_now - gpoa_then
+    #
+    # Since methodology 1.4 the primary measure is the quarterly trend, whose
+    # every point pairs a twelve-month gross profit with the balance sheet at
+    # the same date - like-for-like, and current. The fiscal-year comparison is
+    # the fallback. On fiscal years alone Micron read -3.0pp (peak FY2022 to
+    # FY2025) while its gross margin rose from 56% to 85% over three quarters.
+    trend, trend_reason = gpoa_trend(fs)
+    if trend is not None:
+        values["delta_gpoa"] = trend
+        provenance["delta_gpoa_source"] = "3-year quarterly trend"
     else:
-        missing["delta_gpoa"] = "fewer than 4 fiscal years of revenue/COGS/assets"
+        gpoa_now = _annual_gpoa(fs, 0)
+        gpoa_then = _annual_gpoa(fs, 3)
+        margins = (_annual_gross_margin(fs, 0), _annual_gross_margin(fs, 3))
+        if gpoa_now is None or gpoa_then is None:
+            missing["delta_gpoa"] = "fewer than 4 fiscal years of revenue/COGS/assets"
+        elif None not in margins and abs(margins[0] - margins[1]) > MAX_MARGIN_SWING \
+                and _annual_revenue(fs, 0) >= TREND_MIN_BASE and _annual_revenue(fs, 3) >= TREND_MIN_BASE:
+            # A gross margin that moves 50+ points in three years is a change of
+            # cost tag, not of business: Asbury's 2022 cost of sales is tagged as a
+            # $0.9B component (a "94% margin" car dealer), its 2025 as $14.9B.
+            missing["delta_gpoa"] = (f"cost of revenue not comparable across fiscal years "
+                                     f"(gross margin {margins[1]:.0%} then {margins[0]:.0%})")
+        else:
+            values["delta_gpoa"] = gpoa_now - gpoa_then
+            provenance["delta_gpoa_source"] = f"fiscal years ({trend_reason})"
 
     # Growth is the trend of trailing revenue, current to the latest quarter.
     # Completed fiscal years alone lag by up to a year: scored on 31 August 2026,
@@ -601,6 +782,7 @@ def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) ->
     # Name every figure rejected as stale, so a metric missing because the filer
     # abandoned a tag can be told apart from one it never reported.
     provenance["stale_inputs"] = fs.stale_inputs
+    provenance["latest_balance_sheet"] = fs.reference_end.isoformat() if fs.reference_end else None
     # For each input that did not resolve, the tags this company reports today
     # that no list here reads - the candidates the monthly drift report puts in
     # front of a person, so a tag switch costs a one-line change, not a search.

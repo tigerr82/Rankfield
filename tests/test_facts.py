@@ -336,3 +336,31 @@ class TestAbandonedTagsAreNotCurrent:
     def test_without_a_balance_sheet_there_is_nothing_to_measure_age_against(self):
         payload = facts(("Revenues", "USD", [q("2014-01-01", "2014-12-31", 7, "2015-02-15", form="10-K")]))
         assert FactSet(payload, AS_OF).ttm(["Revenues"])["val"] == 7
+
+
+class TestNestedRevenueTags:
+    """Revenue tags nest, so the largest is the total - within one filing, never across a restatement."""
+
+    def fs(self, *entries):
+        FactSet.LARGEST_WINS.add(("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues"))
+        return FactSet(facts(*entries), AS_OF)
+
+    def test_the_total_beats_the_contracts_subset_in_the_same_filing(self):
+        # Green Plains: $2.09B total, $0.19B of it from contracts with customers
+        fs = self.fs(
+            ("RevenueFromContractWithCustomerExcludingAssessedTax", "USD",
+             [q("2025-01-01", "2025-12-31", 190, "2026-02-20", form="10-K")]),
+            ("Revenues", "USD", [q("2025-01-01", "2025-12-31", 2090, "2026-02-20", form="10-K")]),
+        )
+        rows = fs.durations(["RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues"])
+        assert [r["val"] for r in rows] == [2090]
+
+    def test_a_restated_period_is_not_overridden_by_an_older_filings_total(self):
+        # Crane NXT: 2022 restated to $1.3B after the separation; the old $3.4B is pre-separation Crane
+        fs = self.fs(
+            ("RevenueFromContractWithCustomerExcludingAssessedTax", "USD",
+             [q("2022-01-01", "2022-12-31", 1300, "2025-02-20", form="10-K")]),
+            ("Revenues", "USD", [q("2022-01-01", "2022-12-31", 3400, "2023-02-20", form="10-K")]),
+        )
+        rows = fs.durations(["RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues"])
+        assert [r["val"] for r in rows] == [1300]

@@ -6,7 +6,7 @@
   "block_scored_drop_pct": 5,
   "recently_abandoned_days": 450
  },
- "scored_now": 1381,
+ "scored_now": 1380,
  "recently_abandoned_tags": [
   {
    "ticker": "AIT",
@@ -41,6 +41,12 @@
    }
   },
   {
+   "ticker": "BYD",
+   "concept": "LongTermDebt",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
    "ticker": "CCL",
    "concept": "CostOfRevenue",
    "last_reported": "2025-08-31",
@@ -61,6 +67,12 @@
      "InterestExpenseBorrowings"
     ]
    }
+  },
+  {
+   "ticker": "CR",
+   "concept": "LongTermDebtCurrent",
+   "last_reported": "2025-06-30",
+   "candidates": {}
   },
   {
    "ticker": "DOC",
@@ -169,6 +181,12 @@
    "candidates": {}
   },
   {
+   "ticker": "GFF",
+   "concept": "LongTermDebt",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
    "ticker": "GSBD",
    "concept": "IncomeTaxExpenseBenefit",
    "last_reported": "2025-09-30",
@@ -199,6 +217,18 @@
    "ticker": "JKHY",
    "concept": "LongTermDebtCurrent",
    "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "KLAC",
+   "concept": "LongTermDebtCurrent",
+   "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "MIDD",
+   "concept": "DebtAndCapitalLeaseObligations",
+   "last_reported": "2025-06-28",
    "candidates": {}
   },
   {
@@ -271,6 +301,12 @@
    "ticker": "PR",
    "concept": "LongTermDebtCurrent",
    "last_reported": "2025-06-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "PRGO",
+   "concept": "SeniorNotes",
+   "last_reported": "2025-06-28",
    "candidates": {}
   },
   {
@@ -381,7 +417,13 @@
   },
   {
    "ticker": "WOLF",
-   "concept": "NetIncomeLoss",
+   "concept": "CostOfGoodsAndServicesSold",
+   "last_reported": "2025-06-29",
+   "candidates": {}
+  },
+  {
+   "ticker": "WOLF",
+   "concept": "GrossProfit",
    "last_reported": "2025-06-29",
    "candidates": {}
   },

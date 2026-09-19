@@ -17,8 +17,8 @@ runtime API calls, no server, no database — and no recurring cost.
 |---|---|
 | Listed on NYSE/NASDAQ | 6,856 |
 | Common stock, above $1B, one line per company | 2,266 |
-| Scored | **1,381** (1,186 operating · 178 financials & REITs · 17 pre-revenue) |
-| Routed to *Insufficient data* | 471 |
+| Scored | **1,380** (1,185 operating · 178 financials & REITs · 17 pre-revenue) |
+| Routed to *Insufficient data* | 469 |
 | Metric coverage across scored stocks | **94%** |
 | Cost | $0 |
 
@@ -124,7 +124,7 @@ company, and JPMorgan legitimately has no gross margin.
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There have
-been five, all to the first month, before any comparison depended on it.
+been six, all to the first month, before any comparison depended on it.
 
 **2026-09 — the 2026-08 record was regenerated once.** Growth in profitability
 (dGPOA) subtracted a fiscal-year ratio from a trailing-twelve-month one, so the
@@ -236,6 +236,42 @@ of 1,376 rows re-ranked (operating median move 22 places); five companies became
 Micron 256 -> 30 (third in Technology), Teradyne 482 -> 197, Alphabet 307 -> 261, Green Plains
 30 -> 482, Microsoft 164 -> 185, GE 357 -> 373 (annual fallback); Deckers stays first. The 1.2
 record is preserved in git.
+
+
+**2026-09 — methodology 1.4: every metric current to the latest quarter, and the 2026-08
+baseline recomputed under it.** Micron's change in gross profitability read −3.0 points while
+its gross margin rose from 56% to 85% over three quarters, which prompted an audit of every
+input behind every metric for figures older than the company's latest report:
+
+- *Fiscal-year metrics lagged by up to a year.* For 80% of companies the last fiscal year ends
+  more than six months before the latest balance sheet. The change in gross profitability is
+  now the three-year change on the trend line through quarterly GPOA (twelve-month gross
+  profit over total assets at the same quarter end); earnings variability uses five
+  twelve-month windows ending at the latest quarter. Fiscal years remain the fallback, and
+  the quarterly versions are rejected where the quarters disagree with the restated annual
+  report or are implausible (a quarter's gross profit above three times its assets).
+- *Debt came from the first path in priority order, not the most recent.* 70 companies read
+  their debt from the last 10-K although a newer balance sheet reported it (Lilly,
+  UnitedHealth, Verizon, Qualcomm). The most recent complete path now wins; a component tag
+  (convertible or senior notes alone) cannot replace an older total it falls far below
+  (TeraWulf), while a smaller newer *total* is a repayment and stands (CSW Industrials).
+  Several companies had near-zero debt on stale figures: Ball, Sunrun, Matador, Teradata.
+- *Revenue across a restatement.* Taking the largest nested revenue tag (1.3) could pick a
+  pre-restatement figure from an older filing: Crane NXT's 2022 revenue read as
+  pre-separation Crane. The largest tag is now taken within the latest filing only.
+- *A fiscal-year dGPOA whose cost tag changed meaning* - Asbury's 2022 cost of sales is a $0.9B
+  component, its 2025 the full $14.9B - is left missing rather than reported as −154 points.
+- *Companies that stopped filing.* A company whose latest report ends more than 200 days before
+  the scoring date is no longer scored on it (IDACORP, Hub Group).
+
+What was checked and left alone: trailing figures are current to the latest quarter for
+97-99% of companies; the exceptions are items a company reports only annually (interest
+expense, some D&A), which are the latest figures that exist.
+
+Weights are unchanged; the version moved to 1.4 because two metric definitions changed.
+Effect: 1,302 of 1,379 rows present in both versions re-ranked (operating median move 12
+places). Micron 30 -> 20, Qualcomm 365 -> 261, Crane NXT 843 -> 669; Ball 238 -> 728 and
+Sunrun 459 -> 1,142 on their actual debt. Deckers stays first. The 1.3 record is preserved in git.
 
 ---
 

@@ -248,11 +248,25 @@ if ROIC <= ${hurdle}% (hurdle):   min(p, 100 - p)   (never above 50; faster grow
 GPOA  = (Revenue - COGS) / Total Assets
 
 Earnings variability
-  ROA_t   = Net Income_t / Total Assets_t     for the last 5 fiscal years
+  ROA_t   = 12-month Net Income_t / Total Assets_t, for 5 years ending at the
+            latest quarter and each anniversary before it
+            (fallback: the last 5 fiscal years)
   EarnVar = standard deviation of ROA_t       (lower is better, so inverted when scoring)
 
 Change in gross profitability
-  dGPOA   = GPOA_latest FY - GPOA_(3 fiscal years earlier)    (percentage points)`}</pre>
+  dGPOA   = 3-year change on the trend line through quarterly GPOA
+            (12-month gross profit / total assets at the same quarter end)
+            fallback: GPOA_latest FY - GPOA_(3 fiscal years earlier)`}</pre>
+        <p>
+          <b>Every metric is current to the latest quarter, since methodology 1.4.</b> Fiscal years
+          alone ended more than six months before the latest balance sheet for 80% of companies.
+          On them Micron&apos;s change in gross profitability read −3.0 points (the previous memory-cycle
+          peak to fiscal 2025) while its gross margin rose from 56% to 85% over three quarters. Both
+          fiscal-year metrics now use trailing twelve-month windows ending at the latest quarter,
+          with each window&apos;s figure divided by the balance sheet at its own date. Debt comes from
+          the most recent balance sheet that reports it, and a company whose latest report is more
+          than 200 days old is not scored.
+        </p>
         <p>
           Mauboussin&apos;s full ROIC treatment — capitalised intangibles, operating-lease interest,
           excess-cash estimates — needs company-level judgment and cannot be automated reliably

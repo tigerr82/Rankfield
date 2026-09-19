@@ -38,7 +38,8 @@ def build_rows(universe, fundamentals, prices, settings, funnel, excluded):
     every stage so the funnel is auditable."""
     cfg = settings["universe"]
     rows = []
-    stage_counts = {"no_fundamentals": 0, "no_price": 0, "foreign_filer": 0,
+    as_of = date.fromisoformat(fundamentals["as_of"])
+    stage_counts = {"stale_filer": 0, "no_fundamentals": 0, "no_price": 0, "foreign_filer": 0,
                     "short_history": 0, "illiquid": 0}
 
     for listing in universe["listings"]:
@@ -70,6 +71,19 @@ def build_rows(universe, fundamentals, prices, settings, funnel, excluded):
                           f"{listing['cik']} (need {cfg['min_quarters_filed']}) - growth metrics unreliable",
             })
             continue
+        # Every input is judged against the company's own latest balance sheet,
+        # so a company that has stopped filing would be scored on figures from
+        # its last report however old (IDACORP's latest was December 2025, Hub
+        # Group's September 2025). Too old a report excludes it, with the date.
+        latest = (fund.get("provenance") or {}).get("latest_balance_sheet")
+        if latest and (as_of - date.fromisoformat(latest)).days > cfg["max_report_age_days"]:
+            stage_counts["stale_filer"] += 1
+            excluded.append({
+                "ticker": ticker, "stage": "structural hygiene",
+                "reason": f"latest financial report is for the period ending {latest}, more than "
+                          f"{cfg['max_report_age_days']} days before the scoring date",
+            })
+            continue
         adv = price.get("adv_dollar")
         if adv is None or adv < cfg["adv_dollar_floor"]:
             stage_counts["illiquid"] += 1
@@ -94,7 +108,8 @@ def build_rows(universe, fundamentals, prices, settings, funnel, excluded):
     funnel.append({"stage": "has EDGAR fundamentals", "count": len(universe["listings"]) - stage_counts["no_fundamentals"]})
     funnel.append({"stage": "has an adjusted close", "count": len(universe["listings"]) - stage_counts["no_fundamentals"] - stage_counts["no_price"]})
     funnel.append({"stage": "files 10-K/10-Q (foreign private issuers removed)", "count": len(universe["listings"]) - sum([stage_counts["no_fundamentals"], stage_counts["no_price"], stage_counts["foreign_filer"]])})
-    funnel.append({"stage": f"at least {cfg['min_quarters_filed']} periodic filings", "count": len(rows) + stage_counts["illiquid"]})
+    funnel.append({"stage": f"at least {cfg['min_quarters_filed']} periodic filings", "count": len(rows) + stage_counts["illiquid"] + stage_counts["stale_filer"]})
+    funnel.append({"stage": f"latest report within {cfg['max_report_age_days']} days", "count": len(rows) + stage_counts["illiquid"]})
     funnel.append({"stage": f"average daily dollar volume >= ${cfg['adv_dollar_floor']/1e6:.0f}M", "count": len(rows)})
     return rows
 
