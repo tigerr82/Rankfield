@@ -576,3 +576,27 @@ class TestFiscalYearGrossProfitabilityFallback:
                 row["val"] = 30.0
         fs._cache.clear()
         assert compute_metrics(fs, market_cap=5000.0)["values"]["delta_gpoa"] is not None
+
+
+class TestEarningsVariabilityAroundTheTrend:
+    """1.5: steady improvement is not instability; steady decline and cycles are."""
+
+    from rankfield.metrics import variability_around_rising_trend as measure
+
+    def test_steady_improvement_is_stable(self):
+        # Palantir's shape: ROA climbing every year
+        assert type(self).measure([-0.16, -0.01, 0.08, 0.10, 0.26]) < 0.05
+        assert type(self).measure([0.05, 0.10, 0.15, 0.20, 0.25]) == pytest.approx(0.0, abs=1e-12)
+
+    def test_a_steady_decline_counts_in_full(self):
+        # Devon's shape: a slide from 23% to 5% is not a stable business
+        import statistics
+        points = [0.227, 0.205, 0.139, 0.091, 0.046]
+        assert type(self).measure(points) == pytest.approx(statistics.stdev(points))
+
+    def test_a_cycle_stays_volatile(self):
+        # Micron: into losses and back to a record
+        assert type(self).measure([0.152, -0.044, -0.023, 0.079, 0.376]) > 0.15
+
+    def test_flat_earnings_are_stable(self):
+        assert type(self).measure([0.176, 0.176, 0.176, 0.176, 0.176]) == pytest.approx(0.0, abs=1e-12)

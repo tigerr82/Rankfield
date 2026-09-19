@@ -157,9 +157,12 @@ METRICS: list[dict] = [
      "formula": "(Revenue - COGS) / total assets (Novy-Marx)."},
     {"key": "earn_var", "label": "Earnings Variability", "short": "EarnVar", "factor": "quality",
      "higher_better": False, "unit": "pct",
-     "formula": "Standard deviation of return on assets over five years: twelve-month earnings ending at "
-                "the latest quarter and at each anniversary before it, each over total assets at the same "
-                "date (fallback: the last five fiscal years). Lower is better, so the percentile is inverted."},
+     "formula": "How far return on assets swings over five years: twelve-month earnings ending at the "
+                "latest quarter and at each anniversary before it, each over total assets at the same date "
+                "(fallback: the last five fiscal years). Where the five points trend upward, the standard "
+                "deviation around that trend line, so steady improvement is not instability; otherwise the "
+                "plain standard deviation, so a steady decline is. Lower is better, so the percentile is "
+                "inverted."},
     # Moved from Growth in methodology 1.1. A rising gross-profits-to-assets ratio
     # is a quality signal - the business extracting more from what it owns - which
     # is where Asness et al.'s Quality-Minus-Junk places it. Not ROIC-conditioned.
@@ -522,7 +525,26 @@ def roa_variability(fs: FactSet) -> tuple[float | None, str | None]:
         if not assets or assets <= 0:
             return None, f"no balance sheet at {e}"
         roas.append(v / assets)
-    return stdev(roas), None
+    return variability_around_rising_trend(roas[::-1]), None
+
+
+def variability_around_rising_trend(roas: list[float]) -> float:
+    """How far return on assets swings, oldest point first.
+
+    Around the mean, steady improvement read as instability: Palantir's ROA
+    climbing from -16% to 26% scored as erratic as a memory-chip cycle. Where the
+    trend rises, only the swings around the trend line count (residual standard
+    deviation, three degrees of freedom), so steady growth is stable. Where it
+    falls, the decline is itself the instability and the plain standard
+    deviation stands - a steady slide from 23% to 5% is not a stable business.
+    """
+    xs = range(len(roas))
+    mx, my = mean(xs), mean(roas)
+    slope = sum((x - mx) * (y - my) for x, y in zip(xs, roas)) / sum((x - mx) ** 2 for x in xs)
+    if slope <= 0:
+        return stdev(roas)
+    residuals = [y - (my + slope * (x - mx)) for x, y in zip(xs, roas)]
+    return math.sqrt(sum(r * r for r in residuals) / (len(roas) - 2))
 
 
 MAX_MARGIN_SWING = 0.5
@@ -636,7 +658,7 @@ def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) ->
             if r is not None:
                 roas.append(r)
         if len(roas) >= 5:
-            values["earn_var"] = stdev(roas)
+            values["earn_var"] = variability_around_rising_trend(roas[::-1])
             provenance["earn_var_source"] = f"5 fiscal years ({variability_reason})"
         else:
             missing["earn_var"] = f"fewer than 5 fiscal years of earnings ({len(roas)})"

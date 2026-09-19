@@ -251,12 +251,22 @@ Earnings variability
   ROA_t   = 12-month Net Income_t / Total Assets_t, for 5 years ending at the
             latest quarter and each anniversary before it
             (fallback: the last 5 fiscal years)
-  EarnVar = standard deviation of ROA_t       (lower is better, so inverted when scoring)
+  EarnVar = if the ROA_t trend rises: standard deviation around the trend line
+            otherwise:               standard deviation of ROA_t
+            (lower is better, so inverted when scoring)
 
 Change in gross profitability
   dGPOA   = 3-year change on the trend line through quarterly GPOA
             (12-month gross profit / total assets at the same quarter end)
             fallback: GPOA_latest FY - GPOA_(3 fiscal years earlier)`}</pre>
+        <p>
+          <b>Steady improvement is not instability, since methodology 1.5.</b> Measured around its
+          mean, return on assets that climbs every year - Palantir from −16% to 26% - scored as
+          erratic as a memory-chip cycle. Where the five points trend upward, only the swings around
+          the trend line count. Where they trend downward the plain spread stands, because a steady
+          slide in profitability is a weakening business, not a stable one. Micron, which fell into
+          losses and then surged, stays near the bottom either way.
+        </p>
         <p>
           <b>Every metric is current to the latest quarter, since methodology 1.4.</b> Fiscal years
           alone ended more than six months before the latest balance sheet for 80% of companies.

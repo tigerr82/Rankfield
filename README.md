@@ -124,7 +124,7 @@ company, and JPMorgan legitimately has no gross margin.
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There have
-been six, all to the first month, before any comparison depended on it.
+been seven, all to the first month, before any comparison depended on it.
 
 **2026-09 — the 2026-08 record was regenerated once.** Growth in profitability
 (dGPOA) subtracted a fiscal-year ratio from a trailing-twelve-month one, so the
@@ -272,6 +272,21 @@ Weights are unchanged; the version moved to 1.4 because two metric definitions c
 Effect: 1,302 of 1,379 rows present in both versions re-ranked (operating median move 12
 places). Micron 30 -> 20, Qualcomm 365 -> 261, Crane NXT 843 -> 669; Ball 238 -> 728 and
 Sunrun 459 -> 1,142 on their actual debt. Deckers stays first. The 1.3 record is preserved in git.
+
+
+**2026-09 — methodology 1.5: steady improvement is not instability, and the 2026-08 baseline
+recomputed under it.** Earnings variability was the standard deviation of five return-on-assets
+points around their mean, so a company improving every year scored as erratic as a cyclical:
+Palantir, whose ROA rose from −16% to 26%, sat in the 11th percentile. Where the five points
+trend upward, only the swings around the trend line now count. Where they trend downward the
+plain standard deviation stands - measured around a falling trend, Devon Energy's slide from
+23% to 5% read as stable in simulation, which is why the adjustment is one-sided. Cycles stay
+volatile either way (Micron, Western Digital).
+
+Weights are unchanged; the version moved to 1.5 because the metric's definition changed.
+Effect: small - operating median rank move 7 places, correlation with 1.4 at 0.998. Palantir
+134 -> 100, Carpenter Technology 303 -> 164, AppLovin 58 -> 54; Micron 20 -> 21; Deckers stays
+first. The 1.4 record is preserved in git.
 
 ---
 
