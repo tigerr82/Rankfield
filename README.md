@@ -124,7 +124,7 @@ company, and JPMorgan legitimately has no gross margin.
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There have
-been seven, all to the first month, before any comparison depended on it.
+been eight, all to the first month, before any comparison depended on it.
 
 **2026-09 — the 2026-08 record was regenerated once.** Growth in profitability
 (dGPOA) subtracted a fiscal-year ratio from a trailing-twelve-month one, so the
@@ -287,6 +287,15 @@ Weights are unchanged; the version moved to 1.5 because the metric's definition 
 Effect: small - operating median rank move 7 places, correlation with 1.4 at 0.998. Palantir
 134 -> 100, Carpenter Technology 303 -> 164, AppLovin 58 -> 54; Micron 20 -> 21; Deckers stays
 first. The 1.4 record is preserved in git.
+
+
+**2026-09 — the 2026-08 baseline rebuilt from a fresh EDGAR download.** A clean-clone
+reproduction from GitHub, fetching every company fresh as the monthly job does, matched the code
+exactly but not the data: the local companyfacts copy used for the regenerations above lacked
+the June 10-Qs of five companies, filed in late July and so inside the point-in-time window -
+Corning, Capital One, American Tower, Expand Energy and Ares Capital. The baseline now uses the
+fresh download (Corning 596 -> 466, Expand Energy 255 -> 82; 34 other rows moved more than three
+places). Committed regenerations now always fetch fresh (`fetch_fundamentals.py --no-cache`).
 
 ---
 
