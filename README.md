@@ -124,7 +124,7 @@ company, and JPMorgan legitimately has no gross margin.
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There have
-been ten, all to the first month, before any comparison depended on it.
+been eleven, all to the first month, before any comparison depended on it.
 
 **2026-09 — the 2026-08 record was regenerated once.** Growth in profitability
 (dGPOA) subtracted a fiscal-year ratio from a trailing-twelve-month one, so the
@@ -344,6 +344,37 @@ scored as before, operating median rank move 2 places, 12 names moved more than 
 view changed by one - National Beverage in, Sonos out. Tidewater 643 -> 465, InterDigital 325 ->
 160, Green Brick 480 -> 323; Cal-Maine 365 -> 363, BellRing 170 -> 171, Deckers stays first. Fresh
 EDGAR download (`fetch_fundamentals.py --no-cache`); the 1.6 record is preserved in git.
+
+
+**2026-09 — methodology 1.9: one-off items are normalised out of EBIT, and the 2026-08 baseline
+recomputed under it.** A reader asked why Duolingo's Growth read 85 against a collapsing
+earnings-per-share chart. It was right - the chart's spike was a one-off tax benefit and Growth
+reads revenue and operating income, not EPS - but the scan that question prompted found a real
+defect next door. One quarter can decide a company's whole ranking: Molson Coors wrote down $3.6B
+of goodwill and its trailing operating profit read -$2.5B, Centene -$5.6B after a $7.3B
+impairment, Kroger's $2.7B of restructuring left it at $2.0B instead of $4.7B, while CareDx, whose
+entire year's operating profit *was* the $113M gain on selling a business, ranked 52nd.
+
+- *Both directions, always together:* where a company tags a disposal gain, an impairment or a
+  restructuring charge itself, it is taken back out of EBIT - and a gain is never removed without
+  the charges in the same year. A first pass stripped gains only; that punished the 122 companies
+  carrying a material tagged charge to fix the 17 carrying a material gain, and would have reported
+  General Mills at a loss it never had ($886M reported, a $1,054M gain and a $2,971M write-down
+  inside it, $2,802M normalised).
+- *Three conditions:* inside the trailing year; visible in the operating line itself (a quarter
+  that moved against the same quarter a year earlier by at least half the item, so a gain booked
+  below the line is not deducted twice and a footnote disclosure is not counted at all); and a net
+  adjustment worth at least a quarter of trailing EBIT.
+- *Nothing untagged is estimated.* A company that buries a one-off in an ordinary line is read as
+  it reports. Within a tag family the largest amount is taken, not the sum, because the tags nest.
+
+Weights are unchanged; the version moved to 1.9 because EBIT changed. Effect: 127 companies
+normalised, 111 of them scored - 84 rose, 26 fell. Centene 781 -> 180, Kroger 549 -> 245, Molson
+Coors 1004 -> 599, Owens Corning 1081 -> 727, Omnicom 1097 -> 747; CareDx 52 -> 782, Solventum 703
+-> 1008. The operating table moved a median of 5 places, the default view by one name (CareDx out,
+Krystal Biotech in), and the top ten is unchanged. Earnings variability still uses reported net
+income, where removing an item would need its tax effect too. Fresh EDGAR download; the 1.8 record
+is in git.
 
 
 **2026-09 — methodology 1.8: debt-free is not the same as unreported, and the 2026-08 baseline

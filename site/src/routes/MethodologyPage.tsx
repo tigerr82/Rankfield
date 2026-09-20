@@ -306,6 +306,25 @@ FCF/EV     = (Operating Cash Flow - Capital Expenditure) / EV`}</pre>
           EBIT.
         </p>
         <p>
+          <b>One-off items are normalised out of EBIT, in both directions, since methodology 1.9.</b>{" "}
+          A single quarter can decide a company&apos;s whole ranking: Molson Coors wrote down $3.6B of
+          goodwill and its trailing operating profit read -$2.5B, Centene -$5.6B after a $7.3B
+          impairment, Kroger&apos;s $2.7B of restructuring left it at $2.0B instead of $4.7B - while
+          CareDx, whose entire year&apos;s operating profit was the $113M gain on selling a business,
+          ranked 52nd. Where a company tags such an item itself - a disposal gain, an impairment, a
+          restructuring charge - it is removed from EBIT, and gains and charges are always removed
+          together. Stripping only the gain would report a loss that never happened for a business
+          holding both. Three conditions apply: the item must fall inside the trailing year, it must
+          show up in the operating line itself (a quarter that moved against the same quarter a year
+          earlier by at least half of it, so a gain booked below the operating line is not deducted
+          twice and a footnote disclosure is not counted at all), and the net adjustment must be
+          worth at least a quarter of trailing EBIT. Nothing untagged is estimated: a company that
+          buries a one-off inside an ordinary line is read as it reports. The adjustment is recorded
+          in the company&apos;s EBIT provenance, and it reaches ROIC and every valuation multiple.
+          Earnings variability still uses reported net income, where removing an item would need its
+          tax effect too.
+        </p>
+        <p>
           <b>Only current figures are used.</b> EDGAR keeps every tag a company has ever reported,
           including ones it abandoned years ago. Any input older than 300 days before the company's
           latest balance sheet is treated as not reported, and the next source in the chain is

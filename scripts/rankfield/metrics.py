@@ -399,6 +399,101 @@ def _ebit(fs: FactSet):
     return None, revenue, "unresolved"
 
 
+# Items a filer tags as one-off, in both directions. Only balances a company
+# states itself: nothing is estimated, and nothing untagged is guessed at.
+# Within each family the largest value in the window is taken rather than the
+# sum, because the tags nest - AssetImpairmentCharges can already contain the
+# goodwill line - and double counting would be worse than under-adjusting.
+ONE_OFF_GAINS = [
+    "GainLossOnSaleOfBusiness", "GainLossOnDispositionOfBusiness",
+    "GainLossOnDispositionOfAssets", "GainLossOnDispositionOfAssets1",
+    "GainLossOnSaleOfOtherAssets", "GainLossOnSaleOfPropertyPlantEquipment",
+    "GainLossRelatedToLitigationSettlement", "DeconsolidationGainOrLossAmount",
+    "BusinessCombinationBargainPurchaseGainRecognizedAmount",
+]
+ONE_OFF_CHARGES = [
+    "GoodwillImpairmentLoss", "AssetImpairmentCharges", "TangibleAssetImpairmentCharges",
+    "ImpairmentOfIntangibleAssetsExcludingGoodwill", "ImpairmentOfIntangibleAssetsFinitelived",
+    "ImpairmentOfIntangibleAssetsIndefinitelivedExcludingGoodwill",
+    "ImpairmentOfLongLivedAssetsHeldAndUsed", "RestructuringCharges",
+    "RestructuringSettlementAndImpairmentProvisions", "RestructuringCostsAndAssetImpairmentCharges",
+]
+ONE_OFF_MATERIAL = 0.25      # of trailing EBIT, or of revenue where EBIT is near zero
+ONE_OFF_CONFIRM = 0.5        # how much of the item the operating line must show
+ONE_OFF_WINDOW = 370         # days: the item must fall inside the trailing year
+
+
+def _one_off_amount(fs: FactSet, concepts: list[str], ref) -> tuple[float, str | None, str | None]:
+    """The largest positive amount tagged under any of `concepts` whose period
+    ends inside the trailing year."""
+    best = (0.0, None, None)
+    for concept in concepts:
+        for fact in fs.durations([concept]):
+            val, end = fact.get("val"), fact.get("end")
+            if not val or val <= 0 or not end:
+                continue
+            if 0 <= (ref - parse_iso(end)).days <= ONE_OFF_WINDOW and val > best[0]:
+                best = (val, concept, end)
+    return best
+
+
+def _shows_in_operating_income(fs: FactSet, amount: float, sign: int) -> bool:
+    """Evidence the item passed through operating income rather than below it,
+    or than being a footnote disclosure: some quarter of the trailing year moved
+    against the same quarter a year earlier by at least half of it, in the right
+    direction. A gain booked below the operating line is already outside EBIT and
+    must not be deducted twice; an expected-cost disclosure never moved anything.
+    """
+    quarters = quarterly_series(fs, OPERATING_INCOME)
+    if len(quarters) < 8:
+        return False
+    for end, val in quarters[-4:]:
+        prior = [v for e, v in quarters if 350 <= (end - e).days <= 380]
+        if not prior:
+            continue
+        move = (val - prior[-1]) * sign
+        if move >= ONE_OFF_CONFIRM * amount and (sign < 0 or val >= amount):
+            return True
+    return False
+
+
+def normalised_ebit(fs: FactSet, ebit: float | None) -> tuple[float | None, str | None]:
+    """EBIT with the one-off items the company tagged taken back out, in both
+    directions.
+
+    A year holding a large disposal gain and a larger write-down is two
+    distortions, not one: strip only the gain and a profitable business reads as
+    a loss-maker. Both are removed together or neither is, and the net
+    adjustment must be material and visible in the operating line before it is
+    applied. Returns (ebit, note) with note None when nothing was adjusted.
+    """
+    ref = fs.reference_end
+    if ebit is None or ref is None:
+        return ebit, None
+    gain, gain_tag, gain_end = _one_off_amount(fs, ONE_OFF_GAINS, ref)
+    charge, charge_tag, charge_end = _one_off_amount(fs, ONE_OFF_CHARGES, ref)
+    if gain and not _shows_in_operating_income(fs, gain, +1):
+        gain, gain_tag = 0.0, None
+    if charge and not _shows_in_operating_income(fs, charge, -1):
+        charge, charge_tag = 0.0, None
+    net = charge - gain
+    if not net:
+        return ebit, None
+    # Materiality against EBIT, or against revenue where EBIT is near zero - a
+    # company at break-even has no meaningful EBIT to take a percentage of.
+    revenue = _val(fs.ttm(REVENUE))
+    base = max(abs(ebit), 0.02 * (revenue or 0.0))
+    if base <= 0 or abs(net) < ONE_OFF_MATERIAL * base:
+        return ebit, None
+    parts = []
+    if gain_tag:
+        parts.append(f"a tagged one-off gain of {gain / 1e6:,.0f}M ({gain_tag}, {gain_end})")
+    if charge_tag:
+        parts.append(f"a tagged one-off charge of {charge / 1e6:,.0f}M ({charge_tag}, {charge_end})")
+    return ebit + net, ("normalised for " + " and ".join(parts)
+                        + f": {ebit / 1e6:,.0f}M -> {(ebit + net) / 1e6:,.0f}M")
+
+
 def _effective_tax_rate(fs: FactSet, clamp: tuple[float, float]) -> tuple[float, str]:
     tax = fs.ttm(INCOME_TAX)
     pretax = fs.ttm(PRETAX_INCOME)
@@ -700,6 +795,9 @@ def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) ->
     debt, debt_path = total_debt(fs)
 
     ebit, ebit_fact, ebit_path = _ebit(fs)
+    ebit, one_off_note = normalised_ebit(fs, ebit)
+    if one_off_note:
+        ebit_path += "; " + one_off_note
     da = _val(fs.ttm(DEPRECIATION_AMORT))
     ocf = _val(fs.ttm(OPERATING_CASH_FLOW))
     capex = _val(fs.ttm(CAPEX))

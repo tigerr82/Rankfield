@@ -12,7 +12,9 @@ import pytest
 from rankfield.facts import FactSet
 from rankfield.metrics import (
     METRIC_KEYS,
+    _ebit,
     compute_metrics,
+    normalised_ebit,
     revenue_latest_year_change,
     revenue_trend,
     total_debt,
@@ -707,3 +709,84 @@ class TestOperatingIncomeChange:
         rows = [{"segment": "pre_revenue", "values": {"op_inc_change": -0.1, "earn_var": 0.2}} for _ in range(5)]
         keys, _ = applicable_metrics(rows)
         assert "op_inc_change" not in keys and "earn_var" in keys
+
+
+class TestOneOffItemsAreNormalisedBothWays:
+    """1.9: a year holding a disposal gain and a write-down is two distortions."""
+
+    company = TestCurrentToTheLatestQuarter.company
+    QUARTER_ENDS = TestCurrentToTheLatestQuarter.QUARTER_ENDS
+
+    def steady(self, **extra):
+        """Operating income of 150 a quarter, with the last quarter overridden."""
+        return self.company(OperatingIncomeLoss=lambda i: 150.0, **extra)
+
+    @staticmethod
+    def one_period(fs, concept, value, start, end):
+        fs._facts["us-gaap"][concept] = {"units": {"USD": [
+            {"start": start, "end": end, "val": value, "filed": "2026-08-01", "form": "10-Q", "accn": "q"}]}}
+        fs._cache.clear()
+        return fs
+
+    def test_a_write_down_is_added_back(self):
+        # Molson Coors, Centene, Owens Corning: one impairment quarter turns a
+        # profitable business into a reported loss-maker
+        fs = self.company(OperatingIncomeLoss=lambda i: 150.0 if i < len(self.QUARTER_ENDS) - 1 else -1000.0)
+        self.one_period(fs, "GoodwillImpairmentLoss", 1150.0, "2026-04-01", "2026-06-30")
+        before, _, _ = _ebit(fs)
+        after, note = normalised_ebit(fs, before)
+        assert before < 0 < after
+        assert after == pytest.approx(before + 1150.0)
+        assert "one-off charge" in note
+
+    def test_a_disposal_gain_is_taken_out(self):
+        # CareDx: the whole year's operating profit is the sale of a business
+        fs = self.company(OperatingIncomeLoss=lambda i: 10.0 if i < len(self.QUARTER_ENDS) - 1 else 900.0)
+        self.one_period(fs, "GainLossOnSaleOfBusiness", 880.0, "2026-04-01", "2026-06-30")
+        before, _, _ = _ebit(fs)
+        after, note = normalised_ebit(fs, before)
+        assert after == pytest.approx(before - 880.0)
+        assert "one-off gain" in note
+
+    def test_a_gain_and_a_larger_charge_are_netted(self):
+        # General Mills: a $1,054M disposal gain inside a year holding a $2,971M
+        # write-down. Removing only the gain would report a loss that never was.
+        fs = self.company(OperatingIncomeLoss=lambda i: 150.0 if i < len(self.QUARTER_ENDS) - 1 else -900.0)
+        self.one_period(fs, "GainLossOnSaleOfBusiness", 300.0, "2025-10-01", "2025-12-31")
+        fs._facts["us-gaap"]["OperatingIncomeLoss"]["units"]["USD"][-3]["val"] = 450.0   # the gain quarter
+        self.one_period(fs, "AssetImpairmentCharges", 1050.0, "2026-04-01", "2026-06-30")
+        before, _, _ = _ebit(fs)
+        after, note = normalised_ebit(fs, before)
+        assert after == pytest.approx(before + 1050.0 - 300.0)
+        assert "one-off gain" in note and "one-off charge" in note
+
+    def test_an_item_the_operating_line_never_shows_is_left_alone(self):
+        # a footnote disclosure, or a gain booked below the operating line:
+        # deducting it would punish the company for a number it never counted
+        fs = self.steady()
+        self.one_period(fs, "GainLossOnSaleOfBusiness", 400.0, "2026-04-01", "2026-06-30")
+        before, _, _ = _ebit(fs)
+        after, note = normalised_ebit(fs, before)
+        assert after == before and note is None
+
+    def test_an_immaterial_item_is_left_alone(self):
+        fs = self.company(OperatingIncomeLoss=lambda i: 150.0 if i < len(self.QUARTER_ENDS) - 1 else 100.0)
+        self.one_period(fs, "RestructuringCharges", 50.0, "2026-04-01", "2026-06-30")
+        before, _, _ = _ebit(fs)
+        after, note = normalised_ebit(fs, before)
+        assert after == before and note is None
+
+    def test_an_item_from_an_earlier_year_is_out_of_the_window(self):
+        fs = self.company(OperatingIncomeLoss=lambda i: 150.0 if i != 8 else -1000.0)
+        self.one_period(fs, "GoodwillImpairmentLoss", 1150.0, "2023-04-01", "2023-06-30")
+        before, _, _ = _ebit(fs)
+        after, note = normalised_ebit(fs, before)
+        assert after == before and note is None
+
+    def test_the_adjustment_reaches_the_metrics_that_use_ebit(self):
+        fs = self.company(OperatingIncomeLoss=lambda i: 150.0 if i < len(self.QUARTER_ENDS) - 1 else -1000.0)
+        self.one_period(fs, "GoodwillImpairmentLoss", 1150.0, "2026-04-01", "2026-06-30")
+        result = compute_metrics(fs, market_cap=5000.0)
+        assert result["values"]["roic"] > 0
+        assert result["values"]["ebit_ev"] > 0
+        assert "normalised for" in result["provenance"]["ebit_source"]
