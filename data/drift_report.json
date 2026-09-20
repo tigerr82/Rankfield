@@ -6,7 +6,7 @@
   "block_scored_drop_pct": 5,
   "recently_abandoned_days": 450
  },
- "scored_now": 1380,
+ "scored_now": 1469,
  "recently_abandoned_tags": [
   {
    "ticker": "AIT",
@@ -58,8 +58,6 @@
    "last_reported": "2025-12-31",
    "candidates": {
     "debt": [
-     "FederalHomeLoanBankAdvancesGeneralDebtObligationsDisclosuresCollateralPledged1",
-     "FederalHomeLoanBankAdvancesGeneralDebtObligationsDisclosuresAmountOfAvailableUnusedFunds",
      "SubordinatedDebt",
      "InterestExpenseBorrowings"
     ],
@@ -265,11 +263,6 @@
     ],
     "cost_of_revenue": [
      "CostOfGoodsAndServicesSoldDepreciationAndAmortization"
-    ],
-    "capex": [
-     "PaymentsToAcquireCommercialRealEstate",
-     "PaymentsToAcquireRealEstate",
-     "PaymentsToAcquireInterestInJointVenture"
     ]
    }
   },
@@ -355,11 +348,7 @@
    "ticker": "SLG",
    "concept": "IncomeTaxExpenseBenefit",
    "last_reported": "2025-09-30",
-   "candidates": {
-    "capex": [
-     "PaymentsToAcquireCommercialRealEstate"
-    ]
-   }
+   "candidates": {}
   },
   {
    "ticker": "SNEX",

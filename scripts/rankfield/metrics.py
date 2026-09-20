@@ -102,23 +102,45 @@ DEBT_COMBINED = ["DebtLongtermAndShorttermCombinedAmount"]
 DEBT_LT_NONCURRENT = [
     "LongTermDebtNoncurrent", "LongTermDebtAndCapitalLeaseObligations",
     "UnsecuredLongTermDebt", "ConvertibleDebtNoncurrent", "SecuredLongTermDebt", "LongTermNotesPayable",
+    # Software filers fund themselves with convertible notes and tag them here
+    # rather than under any general debt tag: Datadog's $986M at June 2026,
+    # DoorDash's $2.7B, HubSpot's. The discovery report had been listing this tag
+    # as unmapped for 18 companies a month (1.8). Only tags that hold a filer's
+    # whole borrowing belong here - see the note below on the ones that do not.
+    "ConvertibleLongTermNotesPayable", "SeniorLongTermNotes",
 ]
 DEBT_LT_CURRENT = [
     "LongTermDebtCurrent", "LongTermDebtAndCapitalLeaseObligationsCurrent",
     "ConvertibleDebtCurrent", "SeniorNotesCurrent", "NotesPayableCurrent", "UnsecuredDebtCurrent",
     "SecuredDebtCurrent", "LoansPayableCurrent",
+    "ConvertibleNotesPayableCurrent",
 ]
 DEBT_SHORT = ["ShortTermBorrowings", "OtherShortTermBorrowings", "CommercialPaper"]
 DEBT_LT_TOTAL = [
     "LongTermDebt",
     "SeniorNotes", "UnsecuredDebt", "SecuredDebt", "ConvertibleDebt", "NotesPayable", "LoansPayable",
     "DebtAndCapitalLeaseObligations",
+    "ConvertibleNotesPayable",
 ]
+# Tags that hold one slice of a filer's borrowing and are regularly the only one
+# it tags: a drawn revolver, other borrowings, subordinated notes, a mortgage
+# note. Reading them as total debt understates it badly - CubeSmart's $98M of
+# notes and loans payable against some $3B of real debt, Ameriprise's revolver
+# reported at zero while its senior notes sit in a tag we do not read. They are
+# therefore left unmapped on purpose: they keep a company out of the ranking
+# (and out of the debt-free rule below), and the discovery report lists them
+# every month so the omission stays visible rather than becoming a wrong number.
+DEBT_SLICE_TAGS = frozenset({
+    "NotesAndLoansPayable", "SubordinatedDebt", "JuniorSubordinatedNotes", "OtherLongTermDebt",
+    "OtherLongTermDebtNoncurrent", "LineOfCredit", "OtherBorrowings",
+    "CommercialPaperAtCarryingValue", "LoansPayableToBankCurrent",
+})
 PARTIAL_DEBT_RATIO = 0.75
 # The fallback tags that can hold one class of debt rather than all of it.
 DEBT_COMPONENT_TAGS = frozenset({
     "UnsecuredLongTermDebt", "ConvertibleDebtNoncurrent", "SecuredLongTermDebt", "LongTermNotesPayable",
     "SeniorNotes", "UnsecuredDebt", "SecuredDebt", "ConvertibleDebt", "NotesPayable", "LoansPayable",
+    "ConvertibleLongTermNotesPayable", "SeniorLongTermNotes", "ConvertibleNotesPayable",
 })
 ALL_DEBT = DEBT_COMBINED + DEBT_LT_NONCURRENT + DEBT_LT_CURRENT + DEBT_SHORT + DEBT_LT_TOTAL
 EPS_DILUTED = ["EarningsPerShareDiluted", "EarningsPerShareBasicAndDiluted", "EarningsPerShareBasic"]
@@ -130,7 +152,7 @@ KNOWN_TAGS = frozenset(
     if name.isupper() and isinstance(value, list) for tag in value if isinstance(tag, str)
 )
 CANDIDATE_FAMILIES = {
-    "debt": re.compile(r"(Debt|Notes|Borrowing|LoansPayable|CommercialPaper)"),
+    "debt": re.compile(r"(Debt|Notes|Borrowing|LoansPayable|CommercialPaper|LineOfCredit|Subordinated)"),
     "operating_income": re.compile(r"(OperatingIncome|InterestExpense)"),
     "cost_of_revenue": re.compile(r"^Costs?Of"),
     "capex": re.compile(r"^PaymentsToAcquire"),
@@ -140,7 +162,25 @@ CANDIDATE_NOISE = re.compile(
     r"(Receivable|Proceeds|Repayment|FairValue|Maturit|Unamortized|Discount|Premium|Securities|"
     r"Investment|Extinguishment|Covenant|Rate|Weighted|Number|Face|Principal|Increase|Decrease|"
     r"Gain|Loss|Allowance|Capacity|Guarantee|Instrument|Business|Intangible|Marketable|"
-    r"Share|Compensation|InterestExpenseOperating|Deposits)"
+    r"Share|Compensation|InterestExpenseOperating|Deposits|"
+    # cash flows, averages and footnote disclosures are not balance-sheet debt
+    r"Payments|Average|Disclosure|Adjustments|Conversion|Issuance|Unused|Commitment|Remaining|Maximum)"
+)
+# A name that, if the company has ever filed it, means we cannot conclude the
+# company is debt-free - even where it resolves to nothing today. The noise half
+# is deliberately narrow: an unused facility or a preferred-share conversion is
+# not a borrowing, but anything that could be one keeps debt unresolved.
+DEBT_LIKE_EVER = re.compile(
+    r"(Debt|Borrowing|NotesPayable|LoansPayable|LineOfCredit|CommercialPaper|Subordinated|SeniorNotes)"
+)
+DEBT_LIKE_NOISE = re.compile(
+    # "liabilities other than long-term debt" is Intuitive Surgical saying it has
+    # none; a trading-securities line is an asset, not a borrowing.
+    r"(LiabilitiesOtherThan|TradingSecurities|"
+    r"AvailableForSale|DebtSecurities|HeldToMaturity|Lease|StockIssued|Interest|"
+    r"Proceeds|Repayment|Payments|Extinguishment|Conversion|Issuance|Adjustments|"
+    r"Capacity|Unused|Commitment|Remaining|Maximum|Percentage|Ratio|Average|Disclosure|"
+    r"Covenant|FairValue|Maturit|Unamortized|Discount|Premium|Weighted|Number|Face|Pledged)"
 )
 
 # ------------------------------------------------------------- the registry
@@ -306,6 +346,18 @@ def total_debt(fs: FactSet, on_or_before=None):
         newest = max(f["end"] for f in last)
         if all(f["val"] == 0 for f in last if f["end"] == newest):
             return 0.0, "last-reported-zero"
+    # Never borrowed at all. A company with a current, complete balance sheet
+    # that has never tagged a borrowing anywhere in its filing history is
+    # equity-funded, not silent: clinical-stage biotechs, Intuitive Surgical,
+    # Reddit, Duolingo. Absent debt is zero for them (1.8). Guarded by the
+    # whole history, so a filer whose debt sits in a tag we do not map - or who
+    # repaid one we do - stays unresolved rather than being flattered.
+    if (not last and fs.reference_end is not None
+            and _val(fs.instant(EQUITY, on_or_before)) is not None
+            and _val(fs.instant(ASSETS, on_or_before)) is not None
+            and not any(fs.instants([concept]) for concept in DEBT_SLICE_TAGS)
+            and not fs.ever_reported(DEBT_LIKE_EVER, noise=DEBT_LIKE_NOISE)):
+        return 0.0, "no debt tag ever filed"
     return None, "unresolved"
 
 

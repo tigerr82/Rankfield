@@ -313,6 +313,24 @@ FCF/EV     = (Operating Cash Flow - Capital Expenditure) / EV`}</pre>
           profit subtracted 2018 costs from 2026 revenue. Where no debt tag is current and the last
           one reported was exactly zero, debt is zero; any other gap stays a gap.
         </p>
+        <p>
+          <b>Debt-free is not the same as unreported, since methodology 1.8.</b> Total debt is
+          composed from whichever tags a filer actually uses, and a company that reports none used to
+          be dropped for want of it: one unresolved balance kills return on invested capital,
+          enterprise value and everything ROIC-conditioned, so Intuitive Surgical, Reddit, Duolingo,
+          Tradeweb and dozens of clinical-stage biotechs scored 4 of 11 metrics and were routed to
+          Insufficient data. Debt is now read as zero when the company&apos;s entire filing history
+          contains no borrowing at all - not merely nothing current - so an unused revolver or a
+          preferred-share conversion does not qualify, and a company that once borrowed and stopped
+          tagging it stays unresolved. The same release mapped the convertible and senior notes that
+          software filers tag alone - Datadog&apos;s $986M, DoorDash&apos;s $2.7B - which our own
+          discovery report had been listing as unmapped every month; they now rank with their real
+          debt rather than not at all. Tags that hold one slice of a borrowing are deliberately still
+          not read: CubeSmart tags $98M of notes and loans payable against some $3B of real debt, and
+          Ameriprise reports a revolver at zero while its senior notes sit in a tag no list reaches.
+          Reading either would understate leverage, so those companies stay out of the ranking and
+          stay on the monthly discovery report, where the omission is visible.
+        </p>
 
         <h3>Growth</h3>
         <pre>{`RevGrowth = annual growth rate of the trend line through

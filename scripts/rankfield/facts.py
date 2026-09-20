@@ -148,6 +148,16 @@ class FactSet:
                         sizes[concept] = max(sizes.get(concept, 0.0), abs(f["val"]))
         return [c for c, _ in sorted(sizes.items(), key=lambda kv: -kv[1])[:limit]]
 
+    def ever_reported(self, pattern, *, noise=None) -> list[str]:
+        """Every US-GAAP tag this company has ever filed whose name matches
+        `pattern`. Tells "never had one" apart from "we cannot find it": a
+        company that has never tagged a borrowing anywhere in its history is
+        equity-funded, not unreported."""
+        return sorted(
+            concept for concept in (self._facts.get("us-gaap") or {})
+            if pattern.search(concept) and not (noise and noise.search(concept))
+        )
+
     def _fresh(self, fact: dict | None, anchor: date | None = None, max_age: int | None = None) -> dict | None:
         """The fact, unless it is too old to describe `anchor` (by default the
         latest balance sheet), in which case the caller sees nothing and falls

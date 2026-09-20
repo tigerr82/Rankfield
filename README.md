@@ -17,8 +17,8 @@ runtime API calls, no server, no database — and no recurring cost.
 |---|---|
 | Listed on NYSE/NASDAQ | 6,856 |
 | Common stock, above $1B, one line per company | 2,266 |
-| Scored | **1,380** (1,185 operating · 178 financials & REITs · 17 pre-revenue) |
-| Routed to *Insufficient data* | 469 |
+| Scored | **1,469** (1,246 operating · 182 financials & REITs · 41 pre-revenue) |
+| Routed to *Insufficient data* | 380 |
 | Metric coverage across scored stocks | **94%** |
 | Cost | $0 |
 
@@ -124,7 +124,7 @@ company, and JPMorgan legitimately has no gross margin.
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There have
-been nine, all to the first month, before any comparison depended on it.
+been ten, all to the first month, before any comparison depended on it.
 
 **2026-09 — the 2026-08 record was regenerated once.** Growth in profitability
 (dGPOA) subtracted a fiscal-year ratio from a trailing-twelve-month one, so the
@@ -344,6 +344,36 @@ scored as before, operating median rank move 2 places, 12 names moved more than 
 view changed by one - National Beverage in, Sonos out. Tidewater 643 -> 465, InterDigital 325 ->
 160, Green Brick 480 -> 323; Cal-Maine 365 -> 363, BellRing 170 -> 171, Deckers stays first. Fresh
 EDGAR download (`fetch_fundamentals.py --no-cache`); the 1.6 record is preserved in git.
+
+
+**2026-09 — methodology 1.8: debt-free is not the same as unreported, and the 2026-08 baseline
+recomputed under it.** A reader asked why Damora Therapeutics was missing. It was in the
+Insufficient-data list on 2 of 3 metrics, because enterprise value needs total debt and the company
+has never borrowed: 210 tags filed, not one of them a borrowing. The same gap removed 141
+companies, and for operating companies it cascaded - ROIC needs debt, enterprise value needs debt,
+and Growth is ROIC-conditioned - so Intuitive Surgical, Reddit, Duolingo, Garmin and Veeva resolved
+4 of 11 metrics and were not ranked at all.
+
+- *Debt read as zero where nothing was ever filed:* the whole filing history must hold no borrowing,
+  not merely nothing current. An undrawn revolver's commitment fee or a preferred-share conversion
+  does not qualify; a company that once borrowed and stopped tagging it stays unresolved (65
+  companies).
+- *Convertible and senior notes mapped:* software filers tag their converts under
+  `ConvertibleLongTermNotesPayable` alone - Datadog $986M at June 2026, DoorDash $2.7B - and
+  insurers under `SeniorLongTermNotes`. These had been on the discovery report every month since
+  1.4, unmapped (24 companies).
+- *Slice tags deliberately left unmapped:* a first pass read them too, and the result was false
+  comfort - CubeSmart resolved to $98M of notes and loans payable against some $3B of real debt,
+  Ameriprise to zero because its revolver was last reported at zero while its senior notes sit in a
+  tag no list reaches. Those tags now also block the debt-free rule, so the companies stay out of
+  the ranking and stay on the discovery report. Exclusion is honest; a wrong number is not.
+
+Weights are unchanged; the version moved to 1.8 because debt resolution changed. Effect: 1,469
+scored, up from 1,380, and Insufficient data down from 469 to 380 - 61 operating, 4 financials and
+24 pre-revenue companies entered. Reddit enters at 5, Aurinia 11, Garmin 20, Duolingo 24, Instacart
+30, Intuitive Surgical 88; Datadog and DoorDash rank near the bottom on their real debt and price.
+Deckers stays first; incumbent operating names moved a median of 31 places, most of it the
+arithmetic of 61 new companies joining the table. Fresh EDGAR download; the 1.7 record is in git.
 
 ---
 

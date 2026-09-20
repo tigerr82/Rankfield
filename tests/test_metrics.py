@@ -170,15 +170,69 @@ class TestTotalDebt:
         assert how == "noncurrent+current+short"
 
     def test_unresolvable_debt_is_reported_as_such(self):
-        value, how = total_debt(build(LongTermDebtNoncurrent=None))
+        # a borrowing the company clearly has - its notes are in the footnotes -
+        # but under no tag we read: unresolved, never guessed
+        fs = build(LongTermDebtNoncurrent=None)
+        fs._facts["us-gaap"]["NotesPayableToFormerParent"] = {
+            "units": {"USD": [{"end": "2025-12-31", "val": 350.0, "filed": "2026-02-15",
+                               "form": "10-K", "accn": "a"}]}}
+        fs._cache.clear()
+        value, how = total_debt(fs)
         assert value is None
         assert how == "unresolved"
 
     def test_unresolvable_debt_nulls_the_dependent_metrics(self):
-        result = run(LongTermDebtNoncurrent=None)
+        fs = build(LongTermDebtNoncurrent=None)
+        fs._facts["us-gaap"]["NotesPayableToFormerParent"] = {
+            "units": {"USD": [{"end": "2025-12-31", "val": 350.0, "filed": "2026-02-15",
+                               "form": "10-K", "accn": "a"}]}}
+        fs._cache.clear()
+        result = compute_metrics(fs, market_cap=5000.0)
         assert result["values"]["debt_equity"] is None
         assert result["values"]["net_debt_ebitda"] is None
         assert result["values"]["roic"] is None
+
+    def test_a_company_that_never_filed_a_borrowing_has_no_debt(self):
+        # 1.8: Intuitive Surgical, Reddit, a clinical-stage biotech - equity-funded,
+        # not silent. Absent debt is zero only when the history holds nothing debt-like.
+        value, how = total_debt(build(LongTermDebtNoncurrent=None))
+        assert (value, how) == (0.0, "no debt tag ever filed")
+        result = run(LongTermDebtNoncurrent=None)
+        assert result["values"]["debt_equity"] == 0.0
+        assert result["values"]["roic"] is not None
+
+    def test_an_unused_credit_facility_is_not_a_borrowing(self):
+        # Reddit files only the commitment fee on an undrawn revolver
+        fs = build(LongTermDebtNoncurrent=None)
+        fs._facts["us-gaap"]["LineOfCreditFacilityUnusedCapacityCommitmentFeePercentage"] = {
+            "units": {"pure": [{"end": "2025-12-31", "val": 0.002, "filed": "2026-02-15",
+                                "form": "10-K", "accn": "a"}]}}
+        fs._cache.clear()
+        assert total_debt(fs) == (0.0, "no debt tag ever filed")
+
+    def test_one_slice_of_a_filers_debt_is_not_read_as_all_of_it(self):
+        # CubeSmart tags $98M of notes and loans payable against some $3B of real
+        # debt; Ameriprise reports a revolver at zero while its senior notes sit
+        # in a tag we do not read. Neither may produce a number, and neither may
+        # pass for debt-free.
+        for tag, value in (("NotesAndLoansPayable", 98.0), ("LineOfCredit", 0.0),
+                           ("OtherBorrowings", 114.0), ("JuniorSubordinatedNotes", 2059.0)):
+            fs = build(LongTermDebtNoncurrent=None)
+            fs._facts["us-gaap"][tag] = {
+                "units": {"USD": [{"end": "2025-12-31", "val": value, "filed": "2026-02-15",
+                                   "form": "10-K", "accn": "a"}]}}
+            fs._cache.clear()
+            assert total_debt(fs) == (None, "unresolved"), f"{tag} was read as debt"
+
+    def test_a_convertible_note_a_software_filer_tags_alone_is_read(self):
+        # Datadog, DoorDash, HubSpot: $986M of converts under a tag no general
+        # debt list reached before 1.8
+        fs = build(LongTermDebtNoncurrent=None)
+        fs._facts["us-gaap"]["ConvertibleLongTermNotesPayable"] = {
+            "units": {"USD": [{"end": "2025-12-31", "val": 985.5, "filed": "2026-02-15",
+                               "form": "10-K", "accn": "a"}]}}
+        fs._cache.clear()
+        assert total_debt(fs)[0] == 985.5
 
 
 class TestMissingMarketCap:
@@ -435,10 +489,10 @@ class TestFallbackChains:
 
     def test_an_unresolved_input_names_the_tags_the_company_reports_instead(self):
         fs = build(LongTermDebtNoncurrent=None)
-        self.add(fs, "OtherLongTermDebtNoncurrent", [self.instant("2025-12-31", 350.0)])
+        self.add(fs, "NotesPayableToFormerParent", [self.instant("2025-12-31", 350.0)])
         result = compute_metrics(fs, market_cap=5000.0)
         assert result["raw_inputs"]["debt"] is None
-        assert result["provenance"]["unmapped_candidates"] == {"debt": ["OtherLongTermDebtNoncurrent"]}
+        assert result["provenance"]["unmapped_candidates"] == {"debt": ["NotesPayableToFormerParent"]}
 
     def test_the_singular_service_spelling_of_cost_of_revenue_is_read(self):
         fs = build(CostOfGoodsAndServicesSold=None)
