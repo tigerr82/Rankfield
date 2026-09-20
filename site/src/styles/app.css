@@ -266,7 +266,10 @@ main {
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--ink-3);
+  /* The brand teal, the same one that fills the active button in each group, so
+     the label reads as the heading of the choice it introduces. Text only - no
+     background, nothing else about these labels changes. */
+  color: var(--accent);
 }
 /* The table tabs are the primary choice: a touch larger than the controls that refine them. */
 .seg.segtabs button { font-size: var(--t-body); font-weight: 600; padding: 6px 12px; white-space: nowrap; }
