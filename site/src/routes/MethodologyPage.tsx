@@ -318,7 +318,7 @@ FCF/EV     = (Operating Cash Flow - Capital Expenditure) / EV`}</pre>
         <pre>{`RevGrowth = annual growth rate of the trend line through
             3 years of trailing-12-month revenue, one point per quarter
             (fallback: 3-fiscal-year CAGR)
-            capped: if revenue fell in the latest twelve months, at most that fall
+            if revenue fell over the latest twelve months: average of the trend and that fall
 
 OpIncChange = 4 x median of the last 4 quarters' operating income change
               against the same quarter a year earlier, / average total assets
@@ -334,10 +334,19 @@ then, after the percentile step (both metrics):
           after a 32% fall in the latest year. Growth now adds the latest year&apos;s change in operating
           income - the median of four quarterly year-on-year changes, so one impairment or one-off
           cannot set it, scaled by assets so a near-zero base cannot turn a small change into a huge
-          percentage - and revenue growth can be no higher than the latest year&apos;s fall. Across the
-          operating universe the direction of operating income over the year ranked +0.24 with the
-          year&apos;s share-price move. That is same-period evidence, not a forecast; the score still
-          does not use price.
+          percentage - and where revenue fell over the latest twelve months, revenue growth is the
+          average of the three-year trend and that fall. Across the operating universe the direction
+          of operating income over the year ranked +0.24 with the year&apos;s share-price move. That is
+          same-period evidence, not a forecast; the score still does not use price.
+        </p>
+        <p>
+          <b>The fall is averaged, not a ceiling, since methodology 1.7.</b> Until 1.7 a falling year
+          replaced the trend outright, which made a rounding error decisive: Tidewater grew 17% a year
+          over three years, gave back 1% in the latest twelve months, and fell 178 places for it. Of the
+          127 companies the rule reached, 62 had fallen by less than 5%. Averaging keeps both horizons -
+          a company that grew for three years and stumbled once is not scored as a shrinking business,
+          while Cal-Maine, down 32% against a +13% trend, is still averaged to -9% and stays in the
+          bottom third. It also halves, rather than removes, the discontinuity at zero.
         </p>
         <p>
           <b>Growth is current to the latest quarter, since methodology 1.3.</b> Completed fiscal

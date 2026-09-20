@@ -816,12 +816,18 @@ def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) ->
 
     # A three-year trend can read a collapse as growth: Cal-Maine's revenue peaked
     # with egg prices and fell 32% in the latest year, yet the line through three
-    # years still rose 13%. When the latest year shrank, growth is at most that.
+    # years still rose 13%. When the latest year shrank, growth is the average of the
+    # trend and that year, so a collapse still scores near the bottom while a 1%
+    # dip costs little (1.7; the 1.6 hard cap let a 1% dip erase a 17% trend).
     latest_year = revenue_latest_year_change(fs)
     if values["rev_growth"] is not None and latest_year is not None and latest_year < values["rev_growth"] \
             and latest_year < 0:
-        values["rev_growth"] = latest_year
-        provenance["growth_source"] += f"; capped by the latest year ({latest_year:+.1%})"
+        trend_growth = values["rev_growth"]
+        values["rev_growth"] = (trend_growth + latest_year) / 2
+        provenance["growth_source"] += (
+            f"; revenue fell {latest_year:+.1%} in the latest year, so growth is the average of"
+            f" that and the trend ({trend_growth:+.1%} -> {values['rev_growth']:+.1%})"
+        )
 
     change, change_reason = operating_income_change(fs)
     if change is not None:

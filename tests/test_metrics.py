@@ -10,7 +10,13 @@ from datetime import date
 import pytest
 
 from rankfield.facts import FactSet
-from rankfield.metrics import METRIC_KEYS, compute_metrics, total_debt
+from rankfield.metrics import (
+    METRIC_KEYS,
+    compute_metrics,
+    revenue_latest_year_change,
+    revenue_trend,
+    total_debt,
+)
 
 AS_OF = date(2026, 8, 31)
 
@@ -622,12 +628,25 @@ class TestOperatingIncomeChange:
         fs = self.company(OperatingIncomeLoss=lambda i: -2000.0 if i == len(self.QUARTER_ENDS) - 1 else 150.0)
         assert compute_metrics(fs, market_cap=5000.0)["values"]["op_inc_change"] == pytest.approx(0.0, abs=1e-9)
 
-    def test_revenue_growth_is_capped_when_the_latest_year_shrank(self):
-        # three years of growth, then a 30% fall in the latest year
-        fs = self.company(Revenues=lambda i: 1e9 * 1.05 ** i if i < 18 else 7e8)
+    def test_revenue_growth_is_averaged_with_a_shrinking_latest_year(self):
+        # years of growth, then a fall of 30% over the last four quarters
+        fs = self.company(Revenues=lambda i: 1e9 * 1.15 ** i if i < 18 else 1e9 * 1.15 ** 17 * 0.7)
         result = compute_metrics(fs, market_cap=5000.0)
-        assert result["values"]["rev_growth"] < 0
-        assert "capped by the latest year" in result["provenance"]["growth_source"]
+        trend, _ = revenue_trend(fs)
+        latest = revenue_latest_year_change(fs)
+        assert trend > 0 > latest
+        assert result["values"]["rev_growth"] == pytest.approx((trend + latest) / 2)
+        assert result["values"]["rev_growth"] < trend * 0.6      # the fall costs it dearly
+        assert "average of that and the trend" in result["provenance"]["growth_source"]
+
+    def test_a_shallow_dip_leaves_most_of_the_trend(self):
+        # 1.7: a fall of a couple of percent must not erase a rising trend, as the 1.6 cap did
+        fs = self.company(Revenues=lambda i: 1e9 * 1.15 ** i if i < 18 else 1e9 * 1.15 ** 17 * 0.8)
+        result = compute_metrics(fs, market_cap=5000.0)
+        trend, _ = revenue_trend(fs)
+        latest = revenue_latest_year_change(fs)
+        assert -0.05 < latest < 0 < trend
+        assert result["values"]["rev_growth"] > trend * 0.4      # far above the 1.6 cap of `latest`
 
     def test_it_is_not_applied_to_pre_revenue_companies(self):
         from rankfield.scoring import applicable_metrics

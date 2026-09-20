@@ -320,6 +320,31 @@ Effect: operating median rank move 35 places; 21 of the default view's names cha
 Deckers stays first. The price correlation is same-period evidence, not a forecast, and the score
 still does not use price. The 1.5 record is preserved in git.
 
+
+**2026-09 — methodology 1.7: the falling year is averaged, not a ceiling, and the 2026-08 baseline
+recomputed under it.** The 1.6 cap replaced the three-year trend outright, which made a rounding
+error decisive: Tidewater grew 17% a year for three years, gave back 1.0% over the latest twelve
+months, and lost 178 places for it. Of the 127 scored companies the rule reached, 62 had fallen by
+less than 5% and only 25 by more than 15%; the median gap between trend and latest year was 6
+points.
+
+- *The rule now:* where trailing revenue fell against the twelve months before, revenue growth is
+  the average of the three-year trend and that fall (166 companies, 127 of them scored).
+- *Why the average:* it keeps both horizons. A collapse still scores near the bottom - Cal-Maine,
+  down 31.7% against a +13.1% trend, averages to -9.3% and stays in the bottom third - while a
+  company that grew for three years and stumbled once is no longer scored as a shrinking business.
+  Under 1.6 the latest year set both Growth metrics for every decliner, so the long view vanished
+  exactly where it mattered. The discontinuity at zero is halved, not removed.
+- *Considered and rejected:* applying the cap only to falls beyond 5%. It moves the cliff rather
+  than removing it, gives no relief in the 5-15% band (InterDigital would stay at 324), and churns
+  four names in the default view instead of one.
+
+Weights are unchanged; the version moved to 1.7 because a Growth metric changed. Effect: 1,380
+scored as before, operating median rank move 2 places, 12 names moved more than 50, and the default
+view changed by one - National Beverage in, Sonos out. Tidewater 643 -> 465, InterDigital 325 ->
+160, Green Brick 480 -> 323; Cal-Maine 365 -> 363, BellRing 170 -> 171, Deckers stays first. Fresh
+EDGAR download (`fetch_fundamentals.py --no-cache`); the 1.6 record is preserved in git.
+
 ---
 
 ## Configuration
