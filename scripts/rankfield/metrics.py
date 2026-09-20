@@ -705,29 +705,144 @@ def gpoa_trend(fs: FactSet) -> tuple[float | None, str | None]:
     return _slope_per_year(points) * TREND_YEARS, None
 
 
-def roa_variability(fs: FactSet) -> tuple[float | None, str | None]:
+def one_off_quarters(fs: FactSet) -> dict:
+    """Per quarter end, the net one-off amount the company tagged for it -
+    charges positive, gains negative - across its whole reported history.
+
+    Variability looks back five years, so an impairment three years ago matters
+    as much as one last quarter. Within a family the largest amount for the
+    quarter is taken, never the sum, because the tags nest.
+    """
+    net: dict = {}
+    for concepts, sign in ((ONE_OFF_CHARGES, 1.0), (ONE_OFF_GAINS, -1.0)):
+        family: dict = {}
+        for concept in concepts:
+            for end, val in quarterly_series(fs, [concept]):
+                if val and val > 0 and val > family.get(end, 0.0):
+                    family[end] = val
+        for end, val in family.items():
+            net[end] = net.get(end, 0.0) + sign * val
+    return net
+
+
+ONE_OFF_RECURRENCE = 1 / 3     # of the periods measured: beyond this it is how the business runs
+ONE_OFF_VS_TYPICAL = 1.0       # of the period earnings a company typically reports
+
+
+def _qualifying_periods(periods: list, items: dict, tax_rate: float) -> dict:
+    """Which of the measured periods hold an item big enough to distort them.
+
+    Three things have to hold. The item is worth at least a quarter of that
+    period's earnings, and at least as much as the company's typical period
+    earnings - a $50M charge against a $400M quarter is an ordinary cost of
+    doing business, a $6.7B one is an event. And the earnings line has to move
+    with it, so a footnote disclosure changes nothing.
+    """
+    if not periods:
+        return {}
+    typical = median_abs([val for _, val in periods]) or 0.0
+    by_end = dict(periods)
+    out = {}
+    for end, val in periods:
+        after_tax = (items.get(end) or 0.0) * (1 - tax_rate)
+        if not after_tax or abs(after_tax) < max(ONE_OFF_MATERIAL * abs(val),
+                                                 ONE_OFF_VS_TYPICAL * typical):
+            continue
+        prior = next((v for e, v in by_end.items() if 350 <= (end - e).days <= 380), None)
+        if prior is None or (prior - val) * (1 if after_tax > 0 else -1) < 0.5 * abs(after_tax):
+            continue
+        out[end] = after_tax
+    # Recurring by definition: a filer tagging one in most periods is not having
+    # events, it is describing how it operates, and removing them would flatter
+    # it against a company that restructured once.
+    if len(out) > max(1, len(periods) * ONE_OFF_RECURRENCE):
+        return {}
+    return out
+
+
+def median_abs(values: list[float]) -> float:
+    ordered = sorted(abs(v) for v in values if v is not None)
+    if not ordered:
+        return 0.0
+    mid = len(ordered) // 2
+    return ordered[mid] if len(ordered) % 2 else (ordered[mid - 1] + ordered[mid]) / 2
+
+
+def normalised_quarterly_earnings(fs: FactSet, tax_rate: float) -> tuple[list[tuple], int]:
+    """Quarterly net income with tagged one-off items taken out, after tax.
+
+    A write-down is not instability: Molson Coors' single impairment quarter
+    made a steady brewer read as erratic as a memory-chip cycle. The item is
+    removed only where the earnings line actually shows it - the quarter differs
+    from the same quarter a year earlier by at least half the after-tax amount,
+    in the direction of the item - so a footnote disclosure changes nothing.
+    """
+    quarters = quarterly_series(fs, NET_INCOME)
+    items = one_off_quarters(fs)
+    if not items or not quarters:
+        return quarters, 0
+    # Only the periods the metric reads: five twelve-month windows, so the last
+    # twenty-one quarters. An impairment in 2014 is not this company's story.
+    window = quarters[-21:]
+    adjustments = _qualifying_periods(window, items, tax_rate)
+    if not adjustments:
+        return quarters, 0
+    return [(end, val + adjustments.get(end, 0.0)) for end, val in quarters], len(adjustments)
+
+
+def normalised_annual_earnings(fs: FactSet, tax_rate: float) -> tuple[list[dict], int]:
+    """The five fiscal years of net income, with tagged one-off items taken out
+    after tax. The fiscal-year fallback carries the companies whose quarterly
+    history has a gap - Molson Coors and Kroger among them - and a $3.6B
+    write-down distorts a fiscal year exactly as it distorts a quarter."""
+    years = fs.annual_series(NET_INCOME, 5)
+    items: dict = {}
+    for concepts, sign in ((ONE_OFF_CHARGES, 1.0), (ONE_OFF_GAINS, -1.0)):
+        family: dict = {}
+        for concept in concepts:
+            for row in fs.annual_series([concept], 6):
+                val = row.get("val")
+                if val and val > 0 and val > family.get(row["end"], 0.0):
+                    family[row["end"]] = val
+        for end, val in family.items():
+            items[end] = items.get(end, 0.0) + sign * val
+    if not items:
+        return years, 0
+    dated = [(parse_iso(row["end"]), row["val"]) for row in years if row.get("val") is not None]
+    adjustments = _qualifying_periods(dated, {parse_iso(e): v for e, v in items.items()}, tax_rate)
+    if not adjustments:
+        return years, 0
+    out = []
+    for row in years:
+        shift = adjustments.get(parse_iso(row["end"])) if row.get("val") is not None else None
+        out.append({**row, "val": row["val"] + shift} if shift else row)
+    return out, len(adjustments)
+
+
+def roa_variability(fs: FactSet, tax_rate: float = 0.0) -> tuple[float | None, str | None, int]:
     """Standard deviation of return on assets over five years, current to the
     latest quarter: five non-overlapping twelve-month windows ending at the
     latest quarter and at each anniversary before it, each divided by total
     assets at its own end. Fiscal years alone ended up to a year before the
     scoring date for 80% of companies."""
     ref = fs.reference_end
-    ttm = ttm_points(quarterly_series(fs, NET_INCOME))
+    quarters, normalised = normalised_quarterly_earnings(fs, tax_rate)
+    ttm = ttm_points(quarters)
     if not ttm or ref is None or (ref - ttm[-1][0]).days > 120:
-        return None, "no current quarterly earnings"
+        return None, "no current quarterly earnings", 0
     end = ttm[-1][0]
     roas = []
     for k in range(5):
         target = end - timedelta(days=round(365.25 * k))
         near = [(abs((e - target).days), e, v) for e, v in ttm if abs((e - target).days) <= 20]
         if not near:
-            return None, f"no twelve-month earnings ending near {target}"
+            return None, f"no twelve-month earnings ending near {target}", 0
         _, e, v = min(near)
         assets = _assets_at(fs, e)
         if not assets or assets <= 0:
-            return None, f"no balance sheet at {e}"
+            return None, f"no balance sheet at {e}", 0
         roas.append(v / assets)
-    return variability_around_rising_trend(roas[::-1]), None
+    return variability_around_rising_trend(roas[::-1]), None, normalised
 
 
 def variability_around_rising_trend(roas: list[float]) -> float:
@@ -850,12 +965,14 @@ def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) ->
 
     # Current to the latest quarter where the quarterly history supports it;
     # otherwise the five completed fiscal years, as before methodology 1.4.
-    variability, variability_reason = roa_variability(fs)
+    variability, variability_reason, normalised_quarters = roa_variability(fs, tax_rate)
     if variability is not None:
         values["earn_var"] = variability
-        provenance["earn_var_source"] = "5 twelve-month windows to the latest quarter"
+        provenance["earn_var_source"] = "5 twelve-month windows to the latest quarter" + (
+            f", with {normalised_quarters} quarter{'s' if normalised_quarters > 1 else ''} "
+            "normalised for tagged one-off items (after tax)" if normalised_quarters else "")
     else:
-        net_income_years = fs.annual_series(NET_INCOME, 5)
+        net_income_years, normalised_years = normalised_annual_earnings(fs, tax_rate)
         roas = []
         for row in net_income_years:
             a = fs.instant_near(ASSETS, row["end"])
@@ -864,7 +981,9 @@ def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) ->
                 roas.append(r)
         if len(roas) >= 5:
             values["earn_var"] = variability_around_rising_trend(roas[::-1])
-            provenance["earn_var_source"] = f"5 fiscal years ({variability_reason})"
+            provenance["earn_var_source"] = f"5 fiscal years ({variability_reason})" + (
+                f", with {normalised_years} year{'s' if normalised_years > 1 else ''} "
+                "normalised for tagged one-off items (after tax)" if normalised_years else "")
         else:
             missing["earn_var"] = f"fewer than 5 fiscal years of earnings ({len(roas)})"
 

@@ -321,8 +321,25 @@ FCF/EV     = (Operating Cash Flow - Capital Expenditure) / EV`}</pre>
           worth at least a quarter of trailing EBIT. Nothing untagged is estimated: a company that
           buries a one-off inside an ordinary line is read as it reports. The adjustment is recorded
           in the company&apos;s EBIT provenance, and it reaches ROIC and every valuation multiple.
-          Earnings variability still uses reported net income, where removing an item would need its
-          tax effect too.
+        </p>
+        <p>
+          <b>Earnings variability is measured on the same basis, since methodology 1.10.</b> A
+          write-down is not instability. Molson Coors&apos; single $3.6B impairment quarter made a
+          steady brewer read as erratic as a memory-chip cycle; Centene&apos;s $7.3B charge did the
+          same. Where a company tags a one-off item, it is removed from the quarter - or the fiscal
+          year, for the companies whose quarterly history has a gap - in which it was booked, at the
+          company&apos;s own effective tax rate, because earnings are measured after tax. The same
+          evidence rule applies: the earnings line must move by at least half the after-tax amount
+          against the same period a year earlier, and the item must be worth at least a quarter of
+          that period&apos;s earnings. Two further conditions keep ordinary costs in. The item must
+          also be worth at least as much as the company&apos;s typical period earnings - a $50M
+          charge against a $400M quarter is the cost of doing business, a $6.7B one is an event -
+          and a filer that books qualifying items in more than a third of the periods measured is
+          not having events at all, so nothing of its is removed. On that basis 301 companies are
+          normalised, almost all of them in one or two periods: Molson Coors&apos; variability falls
+          from 0.058 to 0.022 and Centene&apos;s from 0.041 to 0.013, while Microsoft, Micron and
+          Duolingo are untouched - a real earnings cycle is still a real earnings cycle. How many
+          periods were normalised is published in the company&apos;s provenance.
         </p>
         <p>
           <b>Only current figures are used.</b> EDGAR keeps every tag a company has ever reported,

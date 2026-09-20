@@ -14,7 +14,10 @@ from rankfield.metrics import (
     METRIC_KEYS,
     _ebit,
     compute_metrics,
+    normalised_annual_earnings,
     normalised_ebit,
+    normalised_quarterly_earnings,
+    roa_variability,
     revenue_latest_year_change,
     revenue_trend,
     total_debt,
@@ -790,3 +793,78 @@ class TestOneOffItemsAreNormalisedBothWays:
         assert result["values"]["roic"] > 0
         assert result["values"]["ebit_ev"] > 0
         assert "normalised for" in result["provenance"]["ebit_source"]
+
+
+class TestEarningsVariabilityIgnoresOneOffs:
+    """1.10: a write-down is not instability, in the earnings line either."""
+
+    company = TestCurrentToTheLatestQuarter.company
+    QUARTER_ENDS = TestCurrentToTheLatestQuarter.QUARTER_ENDS
+    one_period = staticmethod(TestOneOffItemsAreNormalisedBothWays.one_period)
+
+    def steady_with_a_write_down(self, charge=1150.0):
+        """Steady earnings, then one quarter wrecked by an impairment."""
+        last = len(self.QUARTER_ENDS) - 1
+        fs = self.company(NetIncomeLoss=lambda i: 35.0 if i != last else -1000.0)
+        return self.one_period(fs, "GoodwillImpairmentLoss", charge, "2026-04-01", "2026-06-30")
+
+    def test_the_impairment_quarter_is_normalised(self):
+        fs = self.steady_with_a_write_down()
+        quarters, count = normalised_quarterly_earnings(fs, tax_rate=0.21)
+        assert count == 1
+        assert quarters[-1][1] == pytest.approx(-1000.0 + 1150.0 * 0.79)
+
+    def test_it_lowers_measured_variability(self):
+        # the same earnings, once with the charge tagged and once without
+        last = len(self.QUARTER_ENDS) - 1
+        untagged = self.company(NetIncomeLoss=lambda i: 35.0 if i != last else -1000.0)
+        noisy, _, untouched = roa_variability(untagged, tax_rate=0.21)
+        calm, _, normalised = roa_variability(self.steady_with_a_write_down(), tax_rate=0.21)
+        assert (untouched, normalised) == (0, 1)
+        assert calm < noisy
+
+    def test_the_reason_is_published(self):
+        result = compute_metrics(self.steady_with_a_write_down(), market_cap=5000.0)
+        assert "normalised for tagged one-off items" in result["provenance"]["earn_var_source"]
+
+    def test_a_charge_the_earnings_line_never_shows_is_left_alone(self):
+        # an expected-cost or footnote figure: earnings did not move, so neither does the metric
+        fs = self.company(NetIncomeLoss=lambda i: 35.0)
+        self.one_period(fs, "RestructuringCharges", 900.0, "2026-04-01", "2026-06-30")
+        quarters, count = normalised_quarterly_earnings(fs, tax_rate=0.21)
+        assert count == 0
+        assert quarters[-1][1] == 35.0
+
+    def test_an_ordinary_quarter_is_untouched(self):
+        fs = self.company(NetIncomeLoss=lambda i: 35.0)
+        quarters, count = normalised_quarterly_earnings(fs, tax_rate=0.21)
+        assert count == 0
+        assert [v for _, v in quarters] == [35.0] * len(self.QUARTER_ENDS)
+
+    def test_the_fiscal_year_fallback_is_normalised_too(self):
+        # Molson Coors and Kroger have a gap in their quarterly history and land here
+        fs = build()
+        rows = fs._facts["us-gaap"]["NetIncomeLoss"]["units"]["USD"]
+        rows[-1]["val"] = -900.0
+        fs._facts["us-gaap"]["GoodwillImpairmentLoss"] = {"units": {"USD": [
+            {"start": "2025-01-01", "end": "2025-12-31", "val": 1100.0, "filed": "2026-02-15",
+             "form": "10-K", "accn": "a2025"}]}}
+        fs._cache.clear()
+        years, count = normalised_annual_earnings(fs, tax_rate=0.21)
+        assert count == 1
+        assert years[0]["end"] == "2025-12-31"
+        assert years[0]["val"] == pytest.approx(-900.0 + 1100.0 * 0.79)
+
+    def test_a_company_that_restructures_every_quarter_is_read_as_it_is(self):
+        # 25 restructuring quarters out of 25 is how the business runs, not an
+        # event: normalising it would flatter it against a company that did it once
+        last = len(self.QUARTER_ENDS) - 1
+        fs = self.company(NetIncomeLoss=lambda i: 35.0 if i % 2 else -1000.0)
+        fs._facts["us-gaap"]["RestructuringCharges"] = {"units": {"USD": [
+            {"start": f"{y}-{m - 2:02d}-01", "end": f"{y}-{m:02d}-{d}", "val": 1150.0,
+             "filed": "2026-08-01", "form": "10-Q", "accn": "q"}
+            for i, (y, m, d) in enumerate(self.QUARTER_ENDS) if i % 2 == 0]}}
+        fs._cache.clear()
+        quarters, count = normalised_quarterly_earnings(fs, tax_rate=0.21)
+        assert count == 0
+        assert quarters[last][1] == 35.0 if last % 2 else quarters[last][1] == -1000.0

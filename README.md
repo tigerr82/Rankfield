@@ -124,7 +124,7 @@ company, and JPMorgan legitimately has no gross margin.
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There have
-been eleven, all to the first month, before any comparison depended on it.
+been twelve, all to the first month, before any comparison depended on it.
 
 **2026-09 — the 2026-08 record was regenerated once.** Growth in profitability
 (dGPOA) subtracted a fiscal-year ratio from a trailing-twelve-month one, so the
@@ -375,6 +375,29 @@ Coors 1004 -> 599, Owens Corning 1081 -> 727, Omnicom 1097 -> 747; CareDx 52 -> 
 Krystal Biotech in), and the top ten is unchanged. Earnings variability still uses reported net
 income, where removing an item would need its tax effect too. Fresh EDGAR download; the 1.8 record
 is in git.
+
+
+**2026-09 — methodology 1.10: earnings variability is measured on the same normalised basis, and
+the 2026-08 baseline recomputed under it.** 1.9 left the asymmetry half-closed: a write-down no
+longer wrecked a company's EBIT, but it still counted as *instability*. Molson Coors' single $3.6B
+impairment quarter made a steady brewer read as erratic as a memory-chip cycle (variability 0.058),
+and Centene's $7.3B charge did the same. A tagged one-off is now removed from the quarter - or the
+fiscal year, for the companies whose quarterly history has a gap - in which it was booked, at the
+company's own effective tax rate, because earnings are measured after tax.
+
+- *The first cut was far too broad.* Scanning the whole filing history and removing every material
+  tagged item normalised 1,034 companies, some in 25 separate quarters - a filer that restructures
+  every quarter is not having events. Three conditions now apply beyond 1.9's evidence rule: only
+  the twenty-one quarters the metric actually reads; the item must be worth at least as much as the
+  company's typical period earnings, not merely a quarter of that period's; and a company booking
+  qualifying items in more than a third of the periods has none of them removed.
+- *The result:* 301 companies normalised, 197 of them in a single period and one in five.
+
+Weights are unchanged; the version moved to 1.10 because a metric changed. Effect: Molson Coors
+0.058 -> 0.022, Centene 0.041 -> 0.013, Kroger 0.012 -> 0.005, Adeia 0.130 -> 0.018 (rank 361 ->
+170), Pediatrix 369 -> 259, RingCentral 378 -> 289; Microsoft, Micron and Duolingo untouched. The
+operating table moved a median of 3 places and the default view by two names (Adeia and CarGurus
+in, Arista and LegalZoom out). Fresh EDGAR download; the 1.9 record is in git.
 
 
 **2026-09 — methodology 1.8: debt-free is not the same as unreported, and the 2026-08 baseline

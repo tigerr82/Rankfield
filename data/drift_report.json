@@ -92,6 +92,12 @@
   },
   {
    "ticker": "FERG",
+   "concept": "AssetImpairmentCharges",
+   "last_reported": "2025-07-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "FERG",
    "concept": "CostOfGoodsAndServicesSold",
    "last_reported": "2025-07-31",
    "candidates": {}
@@ -99,6 +105,12 @@
   {
    "ticker": "FERG",
    "concept": "DepreciationDepletionAndAmortization",
+   "last_reported": "2025-07-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "FERG",
+   "concept": "GoodwillImpairmentLoss",
    "last_reported": "2025-07-31",
    "candidates": {}
   },
@@ -141,6 +153,12 @@
   {
    "ticker": "FERG",
    "concept": "PaymentsToAcquireProductiveAssets",
+   "last_reported": "2025-07-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "FERG",
+   "concept": "RestructuringCostsAndAssetImpairmentCharges",
    "last_reported": "2025-07-31",
    "candidates": {}
   },
@@ -234,6 +252,16 @@
    "concept": "CommercialPaper",
    "last_reported": "2025-06-30",
    "candidates": {}
+  },
+  {
+   "ticker": "MSGE",
+   "concept": "GainLossOnDispositionOfAssets1",
+   "last_reported": "2025-06-30",
+   "candidates": {
+    "cost_of_revenue": [
+     "CostOfGoodsAndServicesSoldDepreciationAndAmortization"
+    ]
+   }
   },
   {
    "ticker": "NUVB",
