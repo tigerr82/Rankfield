@@ -787,7 +787,7 @@ footer.pf a { color: var(--ink-2); }
     gap: 2px 10px;
     align-items: center;
   }
-  tbody tr.spacer { display: none; }
+  tbody tr.spacer { display: none !important; }
   tbody td { border: none; height: auto; padding: 1px 0; }
   td[data-col="_star"] { grid-row: span 2; }
   td[data-col="ticker"] { font-size: 14px; }
@@ -909,12 +909,29 @@ footer.pf a { color: var(--ink-2); }
     overflow-x: auto;
     overscroll-behavior-x: contain;
   }
-  table { display: table; width: max-content; min-width: 100%; }
+  /* `width: auto` with the table's own colgroup and fixed layout: the columns
+     keep the widths they were given and the table takes their sum, so the frame
+     scrolls instead of the columns being squeezed into 358px. `max-content`
+     looked equivalent and was not - it detached the header cells from their
+     columns. */
+  /* Every part of the table goes back to its table role. Restoring only some of
+     them - the rows but not the header row, the cells but not the header cells -
+     leaves the header laid out as blocks while the body is a table grid, which
+     is exactly how the columns came unstuck from their data. */
+  table { display: table; width: 100%; min-width: max-content; }
   thead { display: table-header-group; }
   tbody { display: table-row-group; }
-  tbody tr { display: table-row; padding: 0; }
-  tbody tr.spacer { display: none; }
-  thead th { display: table-cell; }
+  /* `tbody tr` beats a bare `tr`, so the card layout's grid row survived and
+     blockified every cell inside it - a grid item cannot be a table cell, which
+     is why the columns still came apart after the cells were restored. */
+  thead tr, tbody tr { display: table-row !important; }
+  /* !important, and not for style: the card layout below 900px sets the cells to
+     block, inline-block or none through a long :not() chain, and those selectors
+     are more specific than anything sane here. A cell left as a block does not
+     join the table grid, which is what detached the columns from their data. */
+  thead th, tbody td { display: table-cell !important; }
+  tbody tr { padding: 0; }
+  tbody tr.spacer { display: none !important; }
   /* Beats the card layout's hiding rule, which is a long :not() chain and so
      more specific than anything reasonable here. */
   tbody td[data-col] { display: table-cell !important; }
