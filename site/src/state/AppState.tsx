@@ -9,7 +9,15 @@ import {
 } from "react";
 import type { FactorKey, SegmentKey } from "../data/types";
 import { DEFAULT_WEIGHTS, FACTOR_ORDER, rebalanceWeights, type Weights } from "../lib/scoring";
-import { allEvents, currentHoldings, removeAll, toggle, type WatchEvent } from "../lib/portfolio";
+import {
+  allEvents,
+  currentHoldings,
+  importSharedHoldings,
+  removeAll,
+  toggle,
+  type SharedHolding,
+  type WatchEvent,
+} from "../lib/portfolio";
 
 export type Mode = "basic" | "pro";
 export type Theme = "system" | "light" | "dark";
@@ -93,6 +101,7 @@ interface AppContextValue {
   holdings: string[];
   toggleHolding: (ticker: string) => void;
   clearHoldings: () => void;
+  importHoldings: (shared: SharedHolding[], keepDates: boolean) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -231,6 +240,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const toggleHolding = useCallback((ticker: string) => setWatchEvents([...toggle(ticker)]), []);
   const clearHoldings = useCallback(() => setWatchEvents([...removeAll()]), []);
+  const importHoldings = useCallback(
+    (shared: SharedHolding[], keepDates: boolean) =>
+      setWatchEvents([...importSharedHoldings(shared, keepDates)]),
+    [],
+  );
 
   const holdings = useMemo(() => currentHoldings(watchEvents), [watchEvents]);
   const hasFilters =
@@ -248,7 +262,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     weights, setWeight, resetWeights,
     railCollapsed, toggleRail,
     hiddenColumns, toggleColumn, widths, setWidths, resetWidths,
-    watchEvents, holdings, toggleHolding, clearHoldings,
+    watchEvents, holdings, toggleHolding, clearHoldings, importHoldings,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

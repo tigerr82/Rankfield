@@ -803,3 +803,20 @@ footer.pf a { color: var(--ink-2); }
 
 /* A label and the control it names wrap as one unit, never split across lines. */
 .tbgroup { display: inline-flex; align-items: center; gap: var(--s-2); }
+
+/* A portfolio arriving in a link, and the button that produces one. */
+.sharebanner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 18px 0;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  font-size: var(--t-small);
+  color: var(--ink-2);
+}
+.sharebanner .sharehint { color: var(--ink-3); }

@@ -19,8 +19,10 @@ const storage = new MemoryStorage();
 (globalThis as unknown as { localStorage: MemoryStorage }).localStorage = storage;
 
 const {
-  allEvents, currentHoldings, heldOn, holdingsOn, isHeld, logStart, removeAll, toggle,
+  allEvents, currentHoldings, encodeSharedHoldings, heldOn, holdingsOn, importSharedHoldings,
+  isHeld, logStart, parseSharedHoldings, removeAll, toggle,
 } = await import("./portfolio");
+type WatchEvent = Awaited<ReturnType<typeof toggle>>[number];
 
 beforeEach(() => storage.clear());
 
@@ -130,5 +132,52 @@ describe("resilience", () => {
   it("treats a non-array payload as empty", () => {
     storage.setItem("rankfield_watchlist_v1", JSON.stringify({ ticker: "X" }));
     expect(allEvents()).toEqual([]);
+  });
+});
+
+describe("sharing the portfolio in a link", () => {
+  it("encodes the open positions with the day each was opened", () => {
+    const events: WatchEvent[] = [
+      { ticker: "MU", added_at: "2026-09-01T10:00:00.000Z", removed_at: null },
+      { ticker: "GOOGL", added_at: "2026-09-15T08:30:00.000Z", removed_at: null },
+      { ticker: "SOLD", added_at: "2026-08-01T08:30:00.000Z", removed_at: "2026-09-20T09:00:00.000Z" },
+    ];
+    expect(encodeSharedHoldings(events)).toBe("MU:2026-09-01,GOOGL:2026-09-15");
+  });
+
+  it("round-trips", () => {
+    const events: WatchEvent[] = [{ ticker: "AAPL", added_at: "2026-07-04T00:00:00.000Z", removed_at: null }];
+    expect(parseSharedHoldings(encodeSharedHoldings(events))).toEqual([
+      { ticker: "AAPL", added_at: "2026-07-04" },
+    ]);
+  });
+
+  it("drops anything malformed rather than guessing", () => {
+    const parsed = parseSharedHoldings("MU:2026-09-01,,<script>:2026-09-01,MU:2026-01-01,TOOLONGTICKER:x");
+    expect(parsed.map((p) => p.ticker)).toEqual(["MU"]);
+  });
+
+  it("an empty or absent parameter shares nothing", () => {
+    expect(parseSharedHoldings(null)).toEqual([]);
+    expect(parseSharedHoldings("")).toEqual([]);
+  });
+
+  it("a portfolio someone sent starts today, so the record is not backdated", () => {
+    importSharedHoldings([{ ticker: "MU", added_at: "2020-01-01" }], false);
+    const [event] = allEvents();
+    expect(event.ticker).toBe("MU");
+    expect(new Date(event.added_at).getFullYear()).toBe(new Date().getFullYear());
+  });
+
+  it("your own portfolio on a second device keeps its start dates", () => {
+    importSharedHoldings([{ ticker: "GOOGL", added_at: "2026-07-04" }], true);
+    const event = allEvents().find((e) => e.ticker === "GOOGL");
+    expect(event?.added_at.slice(0, 10)).toBe("2026-07-04");
+  });
+
+  it("does not duplicate a position already held", () => {
+    importSharedHoldings([{ ticker: "NVDA", added_at: "2026-07-04" }], true);
+    importSharedHoldings([{ ticker: "NVDA", added_at: "2026-01-01" }], true);
+    expect(allEvents().filter((e) => e.ticker === "NVDA")).toHaveLength(1);
   });
 });

@@ -5,6 +5,7 @@ import { percent } from "../lib/format";
 import { rankRows, type RankedRow, type Weights } from "../lib/scoring";
 import { useApp } from "../state/AppState";
 import { RankTable } from "./RankTable";
+import { SharePortfolioButton } from "./SharedPortfolio";
 
 interface Props {
   /** Every scored segment. The portfolio is the user's, not the selected
@@ -112,6 +113,7 @@ export function PortfolioSection({ segments, metrics, factors, history, scrollRe
         >
           {summary.measurable ? `${observations} mo · small sample` : "not measurable yet"}
         </span>
+        <SharePortfolioButton />
         <button type="button" className="linkbtn" onClick={clearHoldings}>
           Remove all
         </button>

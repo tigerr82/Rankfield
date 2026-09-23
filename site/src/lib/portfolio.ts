@@ -98,3 +98,72 @@ export function logStart(events: WatchEvent[] = read()): string | null {
   if (!events.length) return null;
   return events.reduce((min, e) => (e.added_at < min ? e.added_at : min), events[0].added_at);
 }
+
+// --------------------------------------------------------------- sharing
+//
+// The portfolio lives in this browser and nowhere else, which loses it on a new
+// device and makes it impossible to show anyone. Encoding the holdings into the
+// link solves both without an account, a server or a password to leak.
+//
+// The format is deliberately readable - `MU:2026-09-01,GOOGL:2026-09-15` - so
+// anyone can see exactly what a link they were sent contains before opening it.
+
+export interface SharedHolding {
+  ticker: string;
+  added_at: string;    // ISO date, day precision
+}
+
+const TICKER = /^[A-Z][A-Z0-9.-]{0,9}$/;
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Today's open positions, with the day each was opened. */
+export function encodeSharedHoldings(events: WatchEvent[] = read()): string {
+  const open = new Map<string, string>();
+  for (const e of events) {
+    if (e.removed_at != null) continue;
+    const day = e.added_at.slice(0, 10);
+    const known = open.get(e.ticker);
+    if (!known || day < known) open.set(e.ticker, day);   // the earliest open position wins
+  }
+  return [...open].map(([ticker, day]) => `${ticker}:${day}`).join(",");
+}
+
+/** Parse a shared link's parameter. Anything malformed is dropped, never guessed. */
+export function parseSharedHoldings(param: string | null): SharedHolding[] {
+  if (!param) return [];
+  const out: SharedHolding[] = [];
+  const seen = new Set<string>();
+  for (const part of param.split(",")) {
+    const [rawTicker, rawDay] = part.split(":");
+    const ticker = (rawTicker || "").trim().toUpperCase();
+    if (!TICKER.test(ticker) || seen.has(ticker)) continue;
+    const day = (rawDay || "").trim();
+    seen.add(ticker);
+    out.push({ ticker, added_at: DAY.test(day) ? day : new Date().toISOString().slice(0, 10) });
+  }
+  return out;
+}
+
+/**
+ * Add shared positions to this browser's log.
+ *
+ * `keepDates` is the honesty switch. Opening your own portfolio on a second
+ * device should keep the day you actually bought; importing a portfolio someone
+ * sent you must not, because you did not hold it then and the measured record
+ * would credit you with months you never had. The caller asks the user which
+ * one this is - the log cannot tell.
+ */
+export function importSharedHoldings(shared: SharedHolding[], keepDates: boolean): WatchEvent[] {
+  const events = read();
+  const now = new Date().toISOString();
+  for (const item of shared) {
+    if (events.some((e) => e.ticker === item.ticker && e.removed_at == null)) continue;
+    events.push({
+      ticker: item.ticker,
+      added_at: keepDates ? `${item.added_at}T00:00:00.000Z` : now,
+      removed_at: null,
+    });
+  }
+  write(events);
+  return events;
+}

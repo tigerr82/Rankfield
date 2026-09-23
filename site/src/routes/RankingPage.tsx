@@ -4,6 +4,7 @@ import { usePayload } from "../data/usePayload";
 import { Chips } from "../components/Chips";
 import { FilterRail } from "../components/FilterRail";
 import { PortfolioSection } from "../components/PortfolioSection";
+import { SharedPortfolioBanner } from "../components/SharedPortfolio";
 import { RankTable } from "../components/RankTable";
 import { Shell, useScrollRef } from "../components/Shell";
 import { Toolbar, segmentNoun } from "../components/Toolbar";
@@ -94,6 +95,7 @@ export function RankingPage() {
         scopeCounts={app.segment === "insufficient" ? undefined : scopeCounts}
       />
       <Chips factors={scores.factors} />
+      <SharedPortfolioBanner />
 
       {/* Above every segment, Insufficient data included: the portfolio is the
           user's, so switching tabs or filtering the table never hides it. */}
