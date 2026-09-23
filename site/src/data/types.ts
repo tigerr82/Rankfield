@@ -1,5 +1,5 @@
 export type FactorKey = "quality" | "growth" | "valuation" | "health";
-export type SegmentKey = "operating" | "financials" | "pre_revenue";
+export type SegmentKey = "operating" | "financials" | "reits" | "pre_revenue";
 
 export interface MetricSpec {
   key: string;

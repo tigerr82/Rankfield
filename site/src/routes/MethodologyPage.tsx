@@ -199,8 +199,28 @@ if ROIC <= ${hurdle}% (hurdle):   min(p, 100 - p)   (never above 50; faster grow
             insurers, REITs and BDCs break them structurally — JPMorgan legitimately has no gross
             margin and therefore no meaningful Financial Health input — and pre-revenue biotech
             breaks growth and valuation the same way. These are ranked in{" "}
-            <b>separate tables, never against each other</b>. Sector-specific factor models are a
-            later enhancement, not a v1 claim.
+            <b>four separate tables, never against each other</b>: operating companies, banks and
+            insurers, REITs, and pre-revenue biotech.
+          </li>
+          <li>
+            <b>Each table is scored on metrics its companies actually report, since methodology
+            2.0.</b>{" "}
+            Until 2.0 all four tables used the operating-company metrics, which resolved for half of
+            the financial names at best — ROIC 50%, EBIT/EV 51%, Altman Z 13% — so 204 of 386 banks,
+            insurers and REITs were never scored at all, JPMorgan and Bank of America among them,
+            while book value, assets, earnings and market cap resolve for 97–100% of them. Banks,
+            insurers and asset managers are now scored on return on equity and on assets, the
+            earnings yield and book yield (the inverses of price/earnings and price/book, so a loss
+            ranks at the bottom instead of dropping out), equity/assets — the capitalisation measure
+            that means for a bank what debt/equity means for an industrial — and the three-year
+            change in profit over assets. REITs have their own table, scored on funds from
+            operations: net income plus depreciation and amortisation, with one-off items removed on
+            the same rule as everywhere else. A building that holds its value is not consumed, so
+            charging its depreciation against the score marks the whole asset class down: under an
+            earnings-based set Realty Income fell 53 → 155 and American Tower 111 → 293, and Crown
+            Castle, SBA and Iron Mountain dropped out entirely on negative book equity. Leverage is
+            read as debt/assets and net debt/FFO for the same reason. Growth stays conditioned on a
+            return above the 9% hurdle — return on equity for financials, FFO over assets for REITs.
           </li>
           <li>
             <b>Data coverage.</b> A stock resolving fewer than 70% of the metrics applicable to its

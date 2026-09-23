@@ -49,10 +49,16 @@ class TestClassifySegment:
     def test_a_bank_is_a_financial(self):
         assert classify_segment({"sector": "Finance", "industry": "Major Banks"}, 1e9) == "financials"
 
-    def test_a_reit_is_a_financial(self):
+    def test_a_reit_has_its_own_segment(self):
+        # 2.0: depreciation on buildings that hold their value makes an
+        # earnings-based score mark the whole asset class down
         assert classify_segment(
             {"sector": "Real Estate", "industry": "Real Estate Investment Trusts"}, 1e9
-        ) == "financials"
+        ) == "reits"
+
+    def test_a_bank_is_a_financial_and_not_a_reit(self):
+        assert classify_segment({"sector": "Finance", "industry": "Major Banks"}, 1e10) == "financials"
+        assert classify_segment({"sector": "Finance", "industry": "Life Insurance"}, 1e10) == "financials"
 
     def test_an_education_company_misfiled_under_real_estate_is_an_operating_company(self):
         # Nasdaq files Grand Canyon, Stride, Perdoceo and Strayer under
@@ -285,7 +291,9 @@ class TestFactorCompositionV11:
         # 1.1 made Growth revenue growth alone; 1.6 adds the direction of operating
         # income over the latest year. dGPOA must never return to it.
         from rankfield.metrics import METRICS
-        assert [m["key"] for m in METRICS if m["factor"] == "growth"] == ["rev_growth", "op_inc_change"]
+        operating_growth = [m["key"] for m in METRICS if m["factor"] == "growth"
+                            and "operating" not in (m.get("not_for_segments") or [])]
+        assert operating_growth == ["rev_growth", "op_inc_change"]
 
     def test_delta_gpoa_belongs_to_quality(self):
         from rankfield.metrics import METRICS_BY_KEY

@@ -188,6 +188,7 @@ function shortLabel(label: string): string {
 export function segmentNoun(segment: string): string {
   if (segment === "operating") return "operating";
   if (segment === "financials") return "financials";
+  if (segment === "reits") return "REITs";
   if (segment === "pre_revenue") return "pre-revenue";
   return "stocks";
 }

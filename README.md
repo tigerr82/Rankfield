@@ -17,8 +17,8 @@ runtime API calls, no server, no database — and no recurring cost.
 |---|---|
 | Listed on NYSE/NASDAQ | 6,856 |
 | Common stock, above $1B, one line per company | 2,266 |
-| Scored | **1,469** (1,246 operating · 182 financials & REITs · 41 pre-revenue) |
-| Routed to *Insufficient data* | 380 |
+| Scored | **1,654** (1,246 operating · 289 banks & insurers · 78 REITs · 41 pre-revenue) |
+| Routed to *Insufficient data* | 195 |
 | Metric coverage across scored stocks | **94%** |
 | Cost | $0 |
 
@@ -115,16 +115,17 @@ hurdle, and inverted where it does not. Expanding while destroying value is not 
 **Momentum is deliberately excluded.** It is entirely price, so including it would contaminate
 the score-versus-price validation — partly testing whether past price predicts future price.
 
-**Banks are not ranked against industrials.** Operating companies, financials & REITs, and
-pre-revenue biotech are three separate tables. The four factors assume a normal operating
-company, and JPMorgan legitimately has no gross margin.
+**Banks are not ranked against industrials.** Operating companies, banks & insurers, REITs, and
+pre-revenue biotech are four separate tables, each scored on metrics its companies report. The
+four factors assume a normal operating company: JPMorgan legitimately has no gross margin, and a
+REIT is scored on funds from operations rather than on depreciated earnings.
 
 ---
 
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There have
-been twelve, all to the first month, before any comparison depended on it.
+been thirteen, all to the first month, before any comparison depended on it.
 
 **2026-09 — the 2026-08 record was regenerated once.** Growth in profitability
 (dGPOA) subtracted a fiscal-year ratio from a trailing-twelve-month one, so the
@@ -428,6 +429,35 @@ scored, up from 1,380, and Insufficient data down from 469 to 380 - 61 operating
 30, Intuitive Surgical 88; Datadog and DoorDash rank near the bottom on their real debt and price.
 Deckers stays first; incumbent operating names moved a median of 31 places, most of it the
 arithmetic of 61 new companies joining the table. Fresh EDGAR download; the 1.7 record is in git.
+
+**2026-09 — methodology 2.0: four segments, each scored on what its companies report, and the
+2026-08 baseline recomputed under it.** Every segment was scored on the operating-company metrics,
+which do not exist for a bank. Across the 386 financial-segment companies ROIC resolved for 50%,
+EBIT/EV for 51% and Altman Z for 13%, so 204 of them were never scored - JPMorgan, Bank of America,
+Wells Fargo and Goldman Sachs among them - while book value, assets, earnings and market cap
+resolve for 97-100% of the same list.
+
+- *Banks, insurers and asset managers* are now scored on return on equity and on assets, the
+  earnings yield and book yield (the inverses of P/E and P/B, expressed as yields so a loss ranks
+  at the bottom instead of dropping out), equity/assets, and the three-year change in profit over
+  assets. Enterprise value is gone from this table: a bank's debt is its raw material, not leverage.
+- *REITs have their own table,* scored on funds from operations - net income plus depreciation and
+  amortisation, with one-off items removed on the 1.9 rule. Depreciation on buildings that hold
+  their value is not an economic cost, and charging it marks the whole asset class down: on an
+  earnings basis Realty Income fell 53 -> 155 and American Tower 111 -> 293, while Crown Castle,
+  SBA and Iron Mountain dropped out entirely on negative book equity. Leverage is read as
+  debt/assets and net debt/FFO for the same reason.
+- *One-off normalisation now reaches net income too,* after tax and on the same evidence rule: 179
+  companies were adjusted.
+- *Growth stays conditioned* on a return above the 9% hurdle - return on equity for financials,
+  FFO over assets for REITs.
+
+Weights are unchanged; the version moved to 2.0 because two segments changed entirely. Effect:
+1,654 scored, up from 1,469, and Insufficient data down from 380 to 195. The operating table did
+not move by a single place. JPMorgan enters at 144 of 289, Bank of America 231, Wells Fargo 212,
+Goldman Sachs 234; Realty Income ranks 9 of 78 REITs, Simon Property 19, Prologis 47, American
+Tower 69, Crown Castle 78. Hamilton Insurance leads the financial table, Innovative Industrial
+Properties the REIT table. Fresh EDGAR download; the 1.10 record is in git.
 
 ---
 

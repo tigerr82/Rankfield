@@ -6,7 +6,7 @@
   "block_scored_drop_pct": 5,
   "recently_abandoned_days": 450
  },
- "scored_now": 1469,
+ "scored_now": 1654,
  "recently_abandoned_tags": [
   {
    "ticker": "AIT",
@@ -441,6 +441,12 @@
   {
    "ticker": "WOLF",
    "concept": "GrossProfit",
+   "last_reported": "2025-06-29",
+   "candidates": {}
+  },
+  {
+   "ticker": "WOLF",
+   "concept": "NetIncomeLoss",
    "last_reported": "2025-06-29",
    "candidates": {}
   },

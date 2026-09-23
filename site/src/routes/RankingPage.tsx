@@ -254,9 +254,10 @@ function InsufficientTable({
 function FooterNote({ scores }: { scores: ScoresPayload }) {
   return (
     <p className="note" style={{ margin: "18px 18px 0", maxWidth: "84ch" }}>
-      Operating companies, financials &amp; REITs and pre-revenue biotech are scored in separate
-      tables and are never ranked against each other: the four factors assume a normal operating
-      company, and a bank legitimately has no gross margin and no meaningful Financial Health input.
+      Operating companies, banks and insurers, REITs, and pre-revenue biotech are scored in four
+      separate tables and are never ranked against each other, on metrics each of them actually
+      reports: a bank legitimately has no gross margin, and a REIT&apos;s profit is depressed by
+      depreciation on buildings that hold their value, so it is scored on funds from operations.
       Weights v{scores.meta.weights_version}, effective for this run and stamped onto every stored
       score.
     </p>

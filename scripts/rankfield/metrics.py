@@ -265,6 +265,69 @@ METRICS: list[dict] = [
                 "Safe > 2.6, grey 1.1-2.6, distress < 1.1."},
 ]
 
+# ---------------------------------------------------------------------------
+# Methodology 2.0: banks, insurers and REITs are scored on what they report.
+#
+# The twelve metrics above assume an operating company's income statement and an
+# enterprise value. Across the 386 companies in those two segments they resolved
+# for half at best - ROIC 50%, EBIT/EV 51%, Altman Z 13% - so 204 of them were
+# never scored at all, JPMorgan and Bank of America among them. Book value,
+# assets, earnings and market cap resolve for 97-100% of the same companies.
+#
+# Enterprise value is the core problem: a bank's debt is the raw material of its
+# business, not leverage, and subtracting cash from its market value is
+# meaningless. Yields against market cap and equity are the standard tools, and
+# they are what these metrics use.
+FINANCIAL_METRICS = [
+    {"key": "roe", "label": "Return on Equity", "short": "ROE", "factor": "quality",
+     "higher_better": True, "unit": "pct", "not_for_segments": ["operating", "pre_revenue", "reits"],
+     "formula": "Trailing net income / closing shareholders' equity. Null where equity is negative."},
+    {"key": "roa", "label": "Return on Assets", "short": "ROA", "factor": "quality",
+     "higher_better": True, "unit": "pct", "not_for_segments": ["operating", "pre_revenue", "reits"],
+     "formula": "Trailing net income / total assets - the leverage-neutral view of the same earnings."},
+    {"key": "earn_yield", "label": "Earnings Yield", "short": "E/P", "factor": "valuation",
+     "higher_better": True, "unit": "pct", "not_for_segments": ["operating", "pre_revenue", "reits"],
+     "formula": "Trailing net income / market cap - the inverse of the price/earnings ratio, so a "
+                "loss ranks at the bottom instead of dropping out."},
+    {"key": "book_yield", "label": "Book Yield", "short": "B/P", "factor": "valuation",
+     "higher_better": True, "unit": "pct", "not_for_segments": ["operating", "pre_revenue"],
+     "formula": "Shareholders' equity / market cap - the inverse of price/book."},
+    {"key": "equity_assets", "label": "Equity / Assets", "short": "EQ/A", "factor": "health",
+     "higher_better": True, "unit": "pct", "not_for_segments": ["operating", "pre_revenue", "reits"],
+     "formula": "Shareholders' equity / total assets - capitalisation, the measure that means for a "
+                "bank what debt/equity means for an industrial."},
+    {"key": "profit_growth", "label": "Change in profit / assets", "short": "dProfit", "factor": "growth",
+     "higher_better": True, "unit": "pp", "not_for_segments": ["operating", "pre_revenue", "reits"],
+     "formula": "(net income now - net income three years ago) / total assets / 3. Scaled by assets "
+                "so a near-zero base cannot turn a small change into a huge percentage."},
+    # ---- REITs: funds from operations, because depreciation on buildings that
+    # hold their value is not an economic cost.
+    {"key": "ffo_assets", "label": "FFO / Assets", "short": "FFO/A", "factor": "quality",
+     "higher_better": True, "unit": "pct", "not_for_segments": ["operating", "pre_revenue", "financials"],
+     "formula": "Funds from operations (net income + depreciation and amortisation, one-off items "
+                "removed) / total assets."},
+    {"key": "ffo_yield", "label": "FFO Yield", "short": "FFO/P", "factor": "valuation",
+     "higher_better": True, "unit": "pct", "not_for_segments": ["operating", "pre_revenue", "financials"],
+     "formula": "Funds from operations / market cap - the REIT equivalent of an earnings yield."},
+    {"key": "debt_assets", "label": "Debt / Assets", "short": "D/A", "factor": "health",
+     "higher_better": False, "unit": "pct", "not_for_segments": ["operating", "pre_revenue", "financials"],
+     "formula": "Total debt / total assets. Used instead of debt/equity because a leveraged REIT's "
+                "book equity can be negative while the business is sound."},
+    {"key": "net_debt_ffo", "label": "Net debt / FFO", "short": "ND/FFO", "factor": "health",
+     "higher_better": False, "unit": "x", "not_for_segments": ["operating", "pre_revenue", "financials"],
+     "formula": "(total debt - cash) / funds from operations. Null where FFO is not positive."},
+    {"key": "ffo_growth", "label": "Change in FFO / assets", "short": "dFFO", "factor": "growth",
+     "higher_better": True, "unit": "pp", "not_for_segments": ["operating", "pre_revenue", "financials"],
+     "formula": "(FFO now - FFO three years ago) / total assets / 3."},
+]
+# The operating-company metrics that these two segments are no longer scored on.
+NOT_FOR_FINANCIALS = ["roic", "gpoa", "delta_gpoa", "ebit_ev", "ebitda_ev", "fcf_ev",
+                      "net_debt_ebitda", "altman_z", "op_inc_change"]
+for _m in METRICS:
+    if _m["key"] in NOT_FOR_FINANCIALS:
+        _m["not_for_segments"] = sorted(set((_m.get("not_for_segments") or []) + ["financials", "reits"]))
+METRICS += FINANCIAL_METRICS
+
 METRIC_KEYS = [m["key"] for m in METRICS]
 METRICS_BY_KEY = {m["key"]: m for m in METRICS}
 
@@ -455,6 +518,54 @@ def _shows_in_operating_income(fs: FactSet, amount: float, sign: int) -> bool:
         if move >= ONE_OFF_CONFIRM * amount and (sign < 0 or val >= amount):
             return True
     return False
+
+
+def _shows_in_net_income(fs: FactSet, amount: float, sign: int) -> bool:
+    """The same evidence rule, read off the earnings line: some quarter of the
+    trailing year moved against the same quarter a year earlier by at least half
+    the item. Used where the metric is built on net income rather than EBIT."""
+    quarters = quarterly_series(fs, NET_INCOME)
+    if len(quarters) < 8:
+        return False
+    for end, val in quarters[-4:]:
+        prior = [v for e, v in quarters if 350 <= (end - e).days <= 380]
+        if prior and (val - prior[-1]) * sign >= ONE_OFF_CONFIRM * amount:
+            return True
+    return False
+
+
+def normalised_net_income(fs: FactSet, net_income: float | None, tax_rate: float) -> tuple[float | None, str | None]:
+    """Trailing net income with tagged one-off items removed, after tax.
+
+    Banks, insurers and REITs are scored on earnings rather than EBIT, so the
+    same distortion reaches them through a different line: a disposal gain or a
+    write-down decides the year. Gains and charges are removed together, never
+    one without the other, and only where the earnings line shows the item.
+    """
+    ref = fs.reference_end
+    if net_income is None or ref is None:
+        return net_income, None
+    gain, gain_tag, gain_end = _one_off_amount(fs, ONE_OFF_GAINS, ref)
+    charge, charge_tag, charge_end = _one_off_amount(fs, ONE_OFF_CHARGES, ref)
+    if gain and not _shows_in_net_income(fs, gain * (1 - tax_rate), +1):
+        gain, gain_tag = 0.0, None
+    if charge and not _shows_in_net_income(fs, charge * (1 - tax_rate), -1):
+        charge, charge_tag = 0.0, None
+    net = (charge - gain) * (1 - tax_rate)
+    if not net:
+        return net_income, None
+    revenue = _val(fs.ttm(REVENUE))
+    assets = _val(fs.instant(ASSETS))
+    base = max(abs(net_income), 0.02 * (revenue or 0.0), 0.005 * (assets or 0.0))
+    if base <= 0 or abs(net) < ONE_OFF_MATERIAL * base:
+        return net_income, None
+    parts = []
+    if gain_tag:
+        parts.append(f"a tagged one-off gain of {gain / 1e6:,.0f}M ({gain_tag}, {gain_end})")
+    if charge_tag:
+        parts.append(f"a tagged one-off charge of {charge / 1e6:,.0f}M ({charge_tag}, {charge_end})")
+    return net_income + net, ("normalised for " + " and ".join(parts) + " (after tax): "
+                              f"{net_income / 1e6:,.0f}M -> {(net_income + net) / 1e6:,.0f}M")
 
 
 def normalised_ebit(fs: FactSet, ebit: float | None) -> tuple[float | None, str | None]:
@@ -1145,6 +1256,59 @@ def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) ->
     else:
         absent = [k for k, v in z_inputs.items() if v is None]
         missing["altman_z"] = "missing " + ", ".join(absent)
+
+    # -------------------------------------- banks, insurers, REITs (2.0)
+    # Computed for every company; the registry decides which segment is scored
+    # on them, so nothing here reaches an operating company's score.
+    net_income = _val(fs.ttm(NET_INCOME))
+    net_income, ni_note = normalised_net_income(fs, net_income, tax_rate)
+    if ni_note:
+        provenance["net_income_source"] = ni_note
+    ffo = (net_income + da) if (net_income is not None and da is not None) else None
+
+    values["roe"] = safe_div(net_income, equity) if (net_income is not None and equity and equity > 0) else None
+    if values["roe"] is None:
+        missing["roe"] = "net income or positive equity unavailable"
+    values["roa"] = safe_div(net_income, assets) if (net_income is not None and assets) else None
+    if values["roa"] is None:
+        missing["roa"] = "net income or total assets unavailable"
+    values["earn_yield"] = safe_div(net_income, market_cap) if (net_income is not None and market_cap) else None
+    if values["earn_yield"] is None:
+        missing["earn_yield"] = "net income or market cap unavailable"
+    values["book_yield"] = safe_div(equity, market_cap) if (equity and equity > 0 and market_cap) else None
+    if values["book_yield"] is None:
+        missing["book_yield"] = "positive equity or market cap unavailable"
+    values["equity_assets"] = safe_div(equity, assets) if (equity is not None and assets) else None
+    if values["equity_assets"] is None:
+        missing["equity_assets"] = "equity or total assets unavailable"
+    values["ffo_assets"] = safe_div(ffo, assets) if (ffo is not None and assets) else None
+    if values["ffo_assets"] is None:
+        missing["ffo_assets"] = "net income, depreciation or total assets unavailable"
+    values["ffo_yield"] = safe_div(ffo, market_cap) if (ffo is not None and market_cap) else None
+    if values["ffo_yield"] is None:
+        missing["ffo_yield"] = "funds from operations or market cap unavailable"
+    values["debt_assets"] = safe_div(debt, assets) if (debt is not None and assets) else None
+    if values["debt_assets"] is None:
+        missing["debt_assets"] = "total debt or total assets unavailable"
+    if debt is not None and ffo and ffo > 0:
+        values["net_debt_ffo"] = (debt - (cash or 0.0)) / ffo
+    else:
+        missing["net_debt_ffo"] = "total debt unavailable or funds from operations not positive"
+    # Growth, three years back, scaled by assets so a near-zero base cannot turn
+    # a small change into a huge percentage.
+    profit_years = fs.annual_series(NET_INCOME, 4)
+    if len(profit_years) >= 4 and assets and profit_years[0]["val"] is not None \
+            and profit_years[3]["val"] is not None:
+        change = (profit_years[0]["val"] - profit_years[3]["val"]) / assets / 3
+        values["profit_growth"] = change
+        da_years = fs.annual_series(DEPRECIATION_AMORT, 4)
+        if len(da_years) >= 4 and da_years[0]["val"] is not None and da_years[3]["val"] is not None:
+            values["ffo_growth"] = change + (da_years[0]["val"] - da_years[3]["val"]) / assets / 3
+        else:
+            values["ffo_growth"] = change
+    else:
+        missing["profit_growth"] = "fewer than 4 fiscal years of earnings, or no total assets"
+        missing["ffo_growth"] = missing["profit_growth"]
 
     # Name every figure rejected as stale, so a metric missing because the filer
     # abandoned a tag can be told apart from one it never reported.

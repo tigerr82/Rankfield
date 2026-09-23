@@ -12,10 +12,13 @@ import pytest
 from rankfield.facts import FactSet
 from rankfield.metrics import (
     METRIC_KEYS,
+    NET_INCOME,
     _ebit,
+    _val,
     compute_metrics,
     normalised_annual_earnings,
     normalised_ebit,
+    normalised_net_income,
     normalised_quarterly_earnings,
     roa_variability,
     revenue_latest_year_change,
@@ -868,3 +871,52 @@ class TestEarningsVariabilityIgnoresOneOffs:
         quarters, count = normalised_quarterly_earnings(fs, tax_rate=0.21)
         assert count == 0
         assert quarters[last][1] == 35.0 if last % 2 else quarters[last][1] == -1000.0
+
+
+class TestSegmentMetricsForFinancialsAndReits:
+    """2.0: banks, insurers and REITs are scored on what they report."""
+
+    company = TestCurrentToTheLatestQuarter.company
+    QUARTER_ENDS = TestCurrentToTheLatestQuarter.QUARTER_ENDS
+    one_period = staticmethod(TestOneOffItemsAreNormalisedBothWays.one_period)
+
+    def test_the_bank_metrics_are_computed_from_earnings_and_equity(self):
+        v = run()["values"]
+        # the fixture: net income 140, equity 800, assets 2000, market cap 5000
+        assert v["roe"] == pytest.approx(140.0 / 800.0, rel=0.01)
+        assert v["roa"] == pytest.approx(140.0 / 2000.0, rel=0.01)
+        assert v["earn_yield"] == pytest.approx(140.0 / 5000.0, rel=0.01)
+        assert v["book_yield"] == pytest.approx(800.0 / 5000.0, rel=0.01)
+        assert v["equity_assets"] == pytest.approx(800.0 / 2000.0, rel=0.01)
+
+    def test_funds_from_operations_adds_depreciation_back(self):
+        v = run()["values"]
+        ffo = 140.0 + 50.0                       # net income + depreciation
+        assert v["ffo_assets"] == pytest.approx(ffo / 2000.0, rel=0.01)
+        assert v["ffo_yield"] == pytest.approx(ffo / 5000.0, rel=0.01)
+        assert v["debt_assets"] == pytest.approx(400.0 / 2000.0, rel=0.01)
+        assert v["net_debt_ffo"] == pytest.approx((400.0 - 150.0) / ffo, rel=0.01)
+
+    def test_negative_equity_keeps_the_reit_metrics_alive(self):
+        # Crown Castle, SBA and Iron Mountain: no book equity, a real business.
+        # Return on equity and book yield go, debt/assets and FFO stay.
+        v = run(StockholdersEquity=-500.0)["values"]
+        assert v["roe"] is None and v["book_yield"] is None
+        assert v["debt_assets"] is not None and v["ffo_yield"] is not None
+
+    def test_a_write_down_is_normalised_out_of_earnings(self):
+        last = len(self.QUARTER_ENDS) - 1
+        fs = self.company(NetIncomeLoss=lambda i: 150.0 if i < last else -900.0)
+        self.one_period(fs, "GoodwillImpairmentLoss", 1100.0, "2026-04-01", "2026-06-30")
+        before = _val(fs.ttm(NET_INCOME))
+        after, note = normalised_net_income(fs, before, tax_rate=0.21)
+        assert before < 0 < after
+        assert after == pytest.approx(before + 1100.0 * 0.79)
+        assert "one-off charge" in note
+
+    def test_an_item_the_earnings_line_never_shows_is_left_alone(self):
+        fs = self.company(NetIncomeLoss=lambda i: 150.0)
+        self.one_period(fs, "GoodwillImpairmentLoss", 1100.0, "2026-04-01", "2026-06-30")
+        before = _val(fs.ttm(NET_INCOME))
+        after, note = normalised_net_income(fs, before, tax_rate=0.21)
+        assert after == before and note is None

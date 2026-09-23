@@ -25,11 +25,18 @@ from .util import mean, percentile_ranks, winsorize
 
 SEGMENTS = {
     "operating": "Operating companies",
-    "financials": "Financials & REITs",
+    "financials": "Banks, insurers & asset managers",
+    "reits": "REITs & property",
     "pre_revenue": "Pre-revenue / biotech",
 }
 
 FINANCIAL_SECTORS = {"Finance", "Real Estate"}
+
+# Growth is only rewarded where it is funded at a return above the cost of
+# capital. Which return that is depends on the segment: invested capital is
+# meaningless for a bank, and a REIT earns its return in funds from operations.
+HURDLE_METRIC = {"operating": "roic", "pre_revenue": "roic", "financials": "roe", "reits": "ffo_assets"}
+HURDLE_LABEL = {"roic": "ROIC", "roe": "Return on equity", "ffo_assets": "FFO on assets"}
 
 # The sector label alone is not enough. The Nasdaq screener files ten education
 # operators (Grand Canyon, Stride, Perdoceo, Strayer) under "Real Estate" with
@@ -43,6 +50,11 @@ FINANCIAL_INDUSTRY = re.compile(
     r"trusts except|building operators)",
     re.IGNORECASE,
 )
+# A REIT's accounting profit is depressed by depreciation on buildings that are
+# not losing value, so earnings-based metrics mark the whole asset class down and
+# the most leveraged names lose book equity entirely (Crown Castle, SBA, Iron
+# Mountain). They are scored on funds from operations, in their own table (2.0).
+REIT_INDUSTRY = re.compile(r"(real estate|building operators|trusts except)", re.IGNORECASE)
 BIOTECH_INDUSTRY = re.compile(r"(biotechnolog|pharmaceutical preparation|medicinal chemical)", re.IGNORECASE)
 PRE_REVENUE_CEILING = 10_000_000  # annualised revenue below which a biotech is pre-revenue
 
@@ -59,7 +71,7 @@ def classify_segment(listing: dict, revenue_ttm: float | None) -> str:
     sector = listing.get("sector") or ""
     industry = listing.get("industry") or ""
     if sector in FINANCIAL_SECTORS and FINANCIAL_INDUSTRY.search(industry):
-        return "financials"
+        return "reits" if REIT_INDUSTRY.search(industry) else "financials"
     if BIOTECH_INDUSTRY.search(industry):
         if revenue_ttm is None or revenue_ttm < PRE_REVENUE_CEILING:
             return "pre_revenue"
@@ -132,12 +144,16 @@ def score_segment(
                 percentiles[i][key] = ranked[pos]
                 bases[i][key] = basis
 
-    # ---- growth is ROIC-conditioned, applied AFTER the percentile step.
+    # ---- growth is return-conditioned, applied AFTER the percentile step.
     # The conditioned set is read from the registry rather than listed here, so
-    # moving a metric between factors cannot leave it inverted by mistake.
+    # moving a metric between factors cannot leave it inverted by mistake. Which
+    # return does the conditioning depends on the segment: a bank has no
+    # meaningful invested capital, and a REIT's return shows up in funds from
+    # operations, not in accounting profit (2.0).
     growth_keys = [m["key"] for m in METRICS if m["factor"] == "growth"]
+    hurdle_key = HURDLE_METRIC.get(rows[0].get("segment") if rows else None, "roic")
     for i, r in enumerate(rows):
-        roic = r["values"].get("roic")
+        roic = r["values"].get(hurdle_key)
         for key in growth_keys:
             p = percentiles[i].get(key)
             if p is None:
@@ -148,7 +164,9 @@ def score_segment(
                 # licence to reward it, and inverting would punish arbitrarily,
                 # so the metric drops out and Growth renormalises.
                 percentiles[i][key] = None
-                r["missing"].setdefault(key, "ROIC unavailable, so growth cannot be ROIC-conditioned")
+                r["missing"].setdefault(
+                    key, f"{HURDLE_LABEL.get(hurdle_key, hurdle_key)} unavailable, so growth cannot be "
+                         "judged against the cost of capital")
             elif roic <= roic_hurdle:
                 # Below the cost-of-capital hurdle growth is never rewarded: the
                 # score cannot exceed the midpoint, and faster growth scores
