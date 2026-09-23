@@ -259,7 +259,11 @@ main {
 .pillbtn:hover { background: var(--accent-soft); color: var(--ink); }
 .pillbtn.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 /* Rows of the toolbar: which table / show / count, then sort / search / mode. */
-.tbrow { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
+/* Segment, Show and Sort are three stacked choices, so their labels share one
+   left edge. The rail toggle sits in the margin to the left of that edge rather
+   than in the first row, where it used to push Segment out of line with the
+   two rows under it - and it stays put whether the rail is open or closed. */
+.tbrow { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; padding-left: 26px; }
 .tblabel {
   font-family: var(--font-ui);
   font-size: 11px;
@@ -278,6 +282,9 @@ main {
 .seg button.aside { border-left-style: dashed; }
 .seg button.aside:not(.on) { color: var(--ink-3); }
 .railtoggle {
+  position: absolute;
+  left: 10px;
+  top: 12px;
   flex: none;
   width: 26px;
   height: 26px;

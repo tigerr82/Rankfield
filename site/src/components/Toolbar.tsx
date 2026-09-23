@@ -102,6 +102,11 @@ export function Toolbar({ segmentsMeta, counts, shown, total, scopeCounts }: Pro
           </div>
         </span>
 
+      </div>
+
+      {/* Show sits on its own line so that Segment, Show and Sort read as three
+          stacked choices with their labels on one left edge. */}
+      <div className="tbrow">
         {ranked && scopeCounts && (
           <span className="tbgroup">
             <span className="tblabel">Show</span>
