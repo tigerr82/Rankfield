@@ -254,9 +254,19 @@ def assign_sector_deciles(scored: list[dict]) -> None:
     """Decile within the stock's own sector, so the default view can show the
     top decile per sector rather than a global top-N (a global cut is dominated
     by whichever sectors score high on absolute metrics and can erase others)."""
+    # A company the screener files under no sector at all has no peer group, so
+    # it has no decile either: Bel Fuse and Greif were the whole "(unclassified)
+    # sector" between them, which made the weaker of the two the top decile of
+    # itself and put a stock ranked 721st of 1,246 in the default view.
     by_sector: dict[str, list[dict]] = {}
     for r in scored:
-        by_sector.setdefault(r["listing"].get("sector") or "(unclassified)", []).append(r)
+        sector = r["listing"].get("sector")
+        if not sector:
+            r["sector_decile"] = None
+            r["sector_rank"] = None
+            r["sector_size"] = None
+            continue
+        by_sector.setdefault(sector, []).append(r)
     for rows in by_sector.values():
         ranked = sorted(
             [r for r in rows if r.get("composite") is not None],

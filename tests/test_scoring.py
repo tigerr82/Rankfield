@@ -324,3 +324,30 @@ class TestFactorCompositionV11:
         result = self._score(rows)
         scored = {r["ticker"]: r for r in result["scored"]}
         assert scored["T20"]["factors"]["growth"] > scored["T10"]["factors"]["growth"]
+
+
+class TestSectorDeciles:
+    """The default view is the top decile of each sector - so a company with no
+    sector has no decile, rather than being the top of a cohort of itself."""
+
+    @staticmethod
+    def row(ticker, sector, composite):
+        return {"ticker": ticker, "listing": {"sector": sector}, "composite": composite}
+
+    def test_a_company_with_no_sector_gets_no_decile(self):
+        rows = [self.row("BELFB", None, 45.1), self.row("GEF", None, 40.0)]
+        assign_sector_deciles(rows)
+        assert [r["sector_decile"] for r in rows] == [None, None]
+        assert [r["sector_rank"] for r in rows] == [None, None]
+
+    def test_an_empty_sector_label_counts_as_no_sector(self):
+        rows = [self.row("X", "", 50.0)]
+        assign_sector_deciles(rows)
+        assert rows[0]["sector_decile"] is None
+
+    def test_a_real_sector_still_gets_its_deciles(self):
+        rows = [self.row(f"T{i}", "Technology", 100 - i) for i in range(20)]
+        assign_sector_deciles(rows)
+        assert rows[0]["sector_decile"] == 1 and rows[0]["sector_rank"] == 1
+        assert rows[-1]["sector_decile"] == 10
+        assert sum(1 for r in rows if r["sector_decile"] == 1) == 2

@@ -125,7 +125,7 @@ REIT is scored on funds from operations rather than on depreciated earnings.
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There have
-been thirteen, all to the first month, before any comparison depended on it.
+been fourteen, all to the first month, before any comparison depended on it.
 
 **2026-09 — the 2026-08 record was regenerated once.** Growth in profitability
 (dGPOA) subtracted a fiscal-year ratio from a trailing-twelve-month one, so the
@@ -458,6 +458,14 @@ not move by a single place. JPMorgan enters at 144 of 289, Bank of America 231, 
 Goldman Sachs 234; Realty Income ranks 9 of 78 REITs, Simon Property 19, Prologis 47, American
 Tower 69, Crown Castle 78. Hamilton Insurance leads the financial table, Innovative Industrial
 Properties the REIT table. Fresh EDGAR download; the 1.10 record is in git.
+
+**2026-09 — a company with no sector no longer has a decile (no score changed).** The default view
+shows the top tenth of each sector. Bel Fuse and Greif carry no sector in the screener feed, so the
+two of them formed an "(unclassified) sector" between them and the better of the pair was the top
+decile of itself - which put a stock ranked 721st of 1,246 in the default view. A company with no
+peer group now gets no decile: it keeps its rank and its score and appears under *All operating*,
+but not in the per-sector cut, which drops that view from 130 names to 129. Composites, ranks and
+factor scores are untouched; only the decile flag on those two rows changed.
 
 ---
 

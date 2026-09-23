@@ -69,7 +69,10 @@ export const COLUMNS: Column[] = [
   {
     key: "_rank",
     header: "#",
-    title: "Rank",
+    title:
+      "Rank within the whole table, not a position in the list on screen. The top-decile view "
+      + "takes the best tenth of each sector, so a strong company in a weak sector can carry a "
+      + "high number here.",
     align: "r",
     width: 34,
     cls: "rk",
