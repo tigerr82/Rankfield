@@ -820,3 +820,82 @@ footer.pf a { color: var(--ink-2); }
   color: var(--ink-2);
 }
 .sharebanner .sharehint { color: var(--ink-3); }
+
+/* ============================================================ phone layout
+   Everything below applies only at 767px and narrower. The desktop layout -
+   every control, position and column - is deliberately untouched: no rule here
+   can reach a window wide enough to show the table, so the design that was
+   tuned for it cannot move.
+
+   What the phone needed: the toolbar took 259px of an 812px screen before a
+   single stock was visible, the segment tabs pushed the page 843px wide, and
+   the meta line overflowed by 19px. Each row now scrolls sideways by itself
+   instead of stretching the page, and the controls are big enough to hit. */
+@media (max-width: 767px) {
+  /* Three tidy lines instead of six wrapped ones: name and run info, then the
+     pages, then the two switches. Each line that can overflow scrolls itself. */
+  header.app { padding: 7px 0 7px 12px; gap: 5px 10px; row-gap: 5px; }
+  .wordmark { font-size: 17px; }
+  /* The run stamp keeps the two facts a reader needs - how many stocks, as of
+     when. The "first run" chip and the coverage figure are one tap away on the
+     Coverage page and cost a whole line here. */
+  .hdr-meta {
+    order: 2;
+    margin-left: auto;
+    padding-right: 12px;
+    flex-wrap: nowrap;
+    gap: 7px;
+    min-width: 0;
+    font-size: 10.5px;
+    white-space: nowrap;
+  }
+  .hdr-meta .tag, .hdr-meta > span:last-child { display: none; }
+  header.app nav.main,
+  header.app .hdr-controls {
+    flex: 1 0 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    padding-right: 12px;
+  }
+  header.app nav.main::-webkit-scrollbar,
+  header.app .hdr-controls::-webkit-scrollbar { display: none; }
+  header.app nav.main { order: 3; }
+  header.app .hdr-controls { order: 4; gap: 14px; }
+  nav.main a { padding: 6px 9px; white-space: nowrap; }
+  .mainlabel { padding: 9px 10px 5px; font-size: 11px; }
+
+  .toolbar { padding: 7px 0 7px 12px; gap: 6px; min-height: 0; }
+  /* One line per row, swiped rather than wrapped: wrapping five segment tabs
+     onto three lines is what made the toolbar a third of the screen. */
+  .toolbar .tbrow {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    padding-right: 12px;
+  }
+  .toolbar .tbrow::-webkit-scrollbar { display: none; }
+  .toolbar .tbrow > * { flex: none; }
+  .toolbar .tblabel { font-size: 10px; }
+  .countsub { display: none; }              /* the same counts are on the tabs */
+
+  /* Search gets its own full-width line: typing a ticker is the one thing a
+     phone user does most, and a 210px box at the end of a scrolling row hides it. */
+  .toolbar .tbrow:last-child { flex-wrap: wrap; row-gap: 6px; }
+  .toolbar input[type="search"] { flex: 1 1 100%; width: 100%; min-width: 0; }
+
+  /* Tap targets: 34px minimum, which is what a thumb needs. */
+  .seg button, .pillbtn, .icon-btn { min-height: 34px; padding-top: 0; padding-bottom: 0; }
+  .seg button { display: inline-flex; align-items: center; }
+
+  /* The cards the table becomes below 900px, with room to read and to tap. */
+  tbody tr { padding: 11px 12px; gap: 3px 10px; }
+  td[data-col="composite"] { font-size: 16px; font-weight: 600; }
+  td[data-col="_star"] { padding-right: 6px; }
+  td[data-col="_star"] button { min-width: 32px; min-height: 32px; }
+
+  .sharebanner { margin: 8px 10px 0; padding: 8px 10px; gap: 8px; }
+  .twrap, .pfwrap { margin-left: 8px; margin-right: 8px; }
+}
