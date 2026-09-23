@@ -897,5 +897,55 @@ footer.pf a { color: var(--ink-2); }
   td[data-col="_star"] button { min-width: 32px; min-height: 32px; }
 
   .sharebanner { margin: 8px 10px 0; padding: 8px 10px; gap: 8px; }
-  .twrap, .pfwrap { margin-left: 8px; margin-right: 8px; }
+
+  /* The table stays a table. Below 900px it collapses into cards, which drops
+     nine of the columns and leaves nothing to scroll sideways to - on a phone
+     that removes the product rather than adapting it. Here the real table is
+     restored and the frame around it scrolls horizontally instead, with the
+     ticker column pinned so a row never loses its name. */
+  .twrap, .pfwrap {
+    margin-left: 8px;
+    margin-right: 8px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+  table { display: table; width: max-content; min-width: 100%; }
+  thead { display: table-header-group; }
+  tbody { display: table-row-group; }
+  tbody tr { display: table-row; padding: 0; }
+  tbody tr.spacer { display: none; }
+  thead th { display: table-cell; }
+  /* Beats the card layout's hiding rule, which is a long :not() chain and so
+     more specific than anything reasonable here. */
+  tbody td[data-col] { display: table-cell !important; }
+  tbody td {
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    height: 42px;                      /* a comfortable touch target per row */
+    padding: 0 8px;
+  }
+  td[data-col="composite"] { font-size: var(--t-body); font-weight: 600; }
+  td[data-col="_star"] button { min-width: 30px; min-height: 30px; }
+  tr.exp td { display: table-cell; }
+
+  /* The filter rail: the component renders it only when the toggle is open, but
+     the card layout hid it unconditionally, so the button appeared dead. It now
+     opens over the table, the only place a 375px screen has for it. */
+  .rail {
+    display: block;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    /* Opens from the right, so the toggle that opened it stays uncovered on the
+       left and can close it again - on a 375px screen the panel takes most of
+       the width, and a control hidden underneath it is a control that is gone. */
+    right: 0;
+    left: auto;
+    width: min(86vw, 320px);
+    z-index: 70;
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+    border-left: 1px solid var(--line-2);
+    border-right: none;
+  }
 }
