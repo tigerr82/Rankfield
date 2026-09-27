@@ -72,12 +72,14 @@ jobs:
       - name: Fetch universe
         env:
           RANKFIELD_USER_AGENT: ${{ secrets.RANKFIELD_USER_AGENT }}
-        run: python scripts/fetch_universe.py ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }}
+        shell: bash                     # pipefail, so tee cannot hide a failure
+        run: python scripts/fetch_universe.py ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }} 2>&1 | tee -a "$RUNNER_TEMP/run.log"
 
       - name: Fetch prices
         env:
           RANKFIELD_USER_AGENT: ${{ secrets.RANKFIELD_USER_AGENT }}
-        run: python scripts/fetch_prices.py ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }} ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }}
+        shell: bash
+        run: python scripts/fetch_prices.py ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }} ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }} 2>&1 | tee -a "$RUNNER_TEMP/run.log"
 
       - name: Fetch fundamentals
         env:
@@ -85,21 +87,24 @@ jobs:
         # Retry rather than skip: a failed month cannot be recovered later.
         run: |
           for attempt in 1 2 3; do
-            python scripts/fetch_fundamentals.py ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }} ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }} && break
+            python scripts/fetch_fundamentals.py ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }} ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }} 2>&1 | tee -a "$RUNNER_TEMP/run.log" && break
             echo "attempt $attempt failed, retrying in 120s"
             sleep 120
           done
 
       - name: Compute scores
-        run: python scripts/compute_scores.py ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }}
+        shell: bash
+        run: python scripts/compute_scores.py ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }} 2>&1 | tee -a "$RUNNER_TEMP/run.log"
 
       - name: Build site payloads
-        run: python scripts/build_json.py
+        shell: bash
+        run: python scripts/build_json.py 2>&1 | tee -a "$RUNNER_TEMP/run.log"
 
       - name: Split-handling acceptance test
         env:
           RANKFIELD_USER_AGENT: ${{ secrets.RANKFIELD_USER_AGENT }}
-        run: python scripts/test_split_handling.py
+        shell: bash
+        run: python scripts/test_split_handling.py 2>&1 | tee -a "$RUNNER_TEMP/run.log"
 
       - name: Data drift check
         id: drift
@@ -107,7 +112,8 @@ jobs:
         # inputs a month). A small loss opens an issue and still publishes; a
         # collapse of the scored universe (usually a taxonomy change) fails here,
         # so nothing below runs and nothing is committed.
-        run: python scripts/check_drift.py --issue-body "$RUNNER_TEMP/drift_issue.md"
+        shell: bash
+        run: python scripts/check_drift.py --issue-body "$RUNNER_TEMP/drift_issue.md" 2>&1 | tee -a "$RUNNER_TEMP/run.log"
 
       - name: Open a drift issue
         if: ${{ always() && !inputs.limit && (steps.drift.outputs.status == 'warn' || steps.drift.outputs.status == 'block') }}
@@ -136,6 +142,28 @@ jobs:
             git commit -m "Monthly scores $(date -u +%Y-%m)"
             git push
           fi
+
+
+      - name: Report a failure as an issue
+        # A scheduled run has nobody watching it, and its log needs repository
+        # admin to read. So a failure files its own report, with the tail of the
+        # output, in a place anyone can see (2026-09-27).
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "The **${{ github.workflow }}** run failed."
+            echo
+            echo "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo
+            echo "Last 60 lines of the pipeline output:"
+            echo
+            echo '```'
+            tail -60 "$RUNNER_TEMP/run.log" 2>/dev/null || echo "(the failure happened before any output was captured)"
+            echo '```'
+          } > "$RUNNER_TEMP/failure.md"
+          gh issue create             --title "${{ github.workflow }} failed: $(date -u +%Y-%m-%d)"             --body-file "$RUNNER_TEMP/failure.md"
 
   # A push from this job cannot trigger the deploy (see deploy-site.yml), so the
   # deploy is called here instead. Without it the data lands in the repo and the

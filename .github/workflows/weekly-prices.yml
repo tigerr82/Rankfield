@@ -26,6 +26,7 @@ concurrency:
 
 permissions:
   contents: write
+  issues: write   # a failed run files its own report; see the last step
 
 jobs:
   prices:
@@ -45,14 +46,16 @@ jobs:
         run: python -m pytest tests/ -q
 
       - name: Refresh prices
+        shell: bash                     # pipefail, so tee cannot hide a failure
         env:
           RANKFIELD_USER_AGENT: ${{ secrets.RANKFIELD_USER_AGENT }}
-        run: python scripts/fetch_prices.py
+        run: python scripts/fetch_prices.py 2>&1 | tee -a "$RUNNER_TEMP/run.log"
 
       - name: Rebuild the display payloads (history untouched)
+        shell: bash
         run: |
-          python scripts/compute_scores.py --no-history
-          python scripts/build_json.py
+          python scripts/compute_scores.py --no-history 2>&1 | tee -a "$RUNNER_TEMP/run.log"
+          python scripts/build_json.py 2>&1 | tee -a "$RUNNER_TEMP/run.log"
 
       - name: Confirm no history record was written or altered
         run: |
@@ -77,6 +80,28 @@ jobs:
             git commit -m "Weekly price refresh $(date -u +%Y-%m-%d)"
             git push
           fi
+
+
+      - name: Report a failure as an issue
+        # A scheduled run has nobody watching it, and its log needs repository
+        # admin to read. So a failure files its own report, with the tail of the
+        # output, in a place anyone can see (2026-09-27).
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "The **${{ github.workflow }}** run failed."
+            echo
+            echo "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo
+            echo "Last 60 lines of the pipeline output:"
+            echo
+            echo '```'
+            tail -60 "$RUNNER_TEMP/run.log" 2>/dev/null || echo "(the failure happened before any output was captured)"
+            echo '```'
+          } > "$RUNNER_TEMP/failure.md"
+          gh issue create             --title "${{ github.workflow }} failed: $(date -u +%Y-%m-%d)"             --body-file "$RUNNER_TEMP/failure.md"
 
   # A push from this job cannot trigger the deploy (see deploy-site.yml), so the
   # deploy is called here instead. Without it the data lands in the repo and the
