@@ -4,8 +4,14 @@ name: Deploy site
 # GitHub Pages. Separate from the scoring run on purpose:
 #
 #   * the first deploy needs no 40-minute data run - the data is in the repo;
-#   * the monthly run pushes new data to main, which triggers this;
 #   * only one workflow ever deploys, so two runs cannot race for Pages.
+#
+# A push made by a scheduled run does NOT trigger this: GitHub refuses to start
+# a workflow from an event raised with the built-in token, to stop runs looping.
+# That is why the scoring and price runs call this workflow directly through
+# `workflow_call` when they finish - relying on their push to trigger it left
+# the site serving the previous month's data while the new data sat in the repo
+# (2026-09-27).
 on:
   push:
     branches: [main]
@@ -14,6 +20,7 @@ on:
       - "data/**"
       - ".github/workflows/deploy-site.yml"
   workflow_dispatch:
+  workflow_call:
 
 concurrency:
   group: rankfield-pages

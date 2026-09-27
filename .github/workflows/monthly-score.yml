@@ -136,3 +136,14 @@ jobs:
             git commit -m "Monthly scores $(date -u +%Y-%m)"
             git push
           fi
+
+  # A push from this job cannot trigger the deploy (see deploy-site.yml), so the
+  # deploy is called here instead. Without it the data lands in the repo and the
+  # live site keeps serving the previous payload.
+  publish:
+    needs: score
+    uses: ./.github/workflows/deploy-site.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
