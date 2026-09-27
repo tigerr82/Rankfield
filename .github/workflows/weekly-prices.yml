@@ -67,6 +67,13 @@ jobs:
         run: |
           git config user.name  "rankfield-bot"
           git config user.email "actions@github.com"
-          git add data/ site/public/data/ ':!data/.cache'
-          git commit -m "Weekly price refresh $(date -u +%Y-%m-%d)" || echo "nothing to commit"
-          git push
+          # .gitignore already keeps data/.cache out. Naming it as an exclude
+          # pathspec made git refuse the whole `add` and exit 1, which failed the
+          # first scheduled run (2026-09-26).
+          git add data/ site/public/data/
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+          else
+            git commit -m "Weekly price refresh $(date -u +%Y-%m-%d)"
+            git push
+          fi

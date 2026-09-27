@@ -125,7 +125,14 @@ jobs:
         run: |
           git config user.name  "rankfield-bot"
           git config user.email "actions@github.com"
-          # The companyfacts cache is regenerable and enormous; never commit it.
-          git add data/ site/public/data/ ':!data/.cache'
-          git commit -m "Monthly scores $(date -u +%Y-%m)" || echo "nothing to commit"
-          git push
+          # The companyfacts cache is regenerable and enormous, and .gitignore
+          # already keeps it out. Naming it here as an exclude pathspec made git
+          # refuse the whole `add` - "the following paths are ignored" - and the
+          # step exited 1, which is what failed the first weekly run (2026-09-26).
+          git add data/ site/public/data/
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+          else
+            git commit -m "Monthly scores $(date -u +%Y-%m)"
+            git push
+          fi
