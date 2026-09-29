@@ -202,14 +202,17 @@ class TestScoreSegmentEndToEnd:
         assert by_ticker["T0"]["factors"]["growth"] <= 50
         assert by_ticker["T0"]["factors"]["growth"] < by_ticker["T29"]["factors"]["growth"]
 
-    def test_fast_growth_below_the_hurdle_is_penalised(self):
+    def test_fast_growth_below_the_hurdle_is_capped_not_inverted(self):
         rows = self._rows()
         by = {r["ticker"]: r for r in rows}
         by["T29"]["values"]["roic"] = 0.05   # fastest grower, now destroying value
         result = score_segment(rows, weights=EQUAL, winsor=(5, 95), roic_hurdle=0.09,
                                min_cohort=8, coverage_threshold=0.7)
         top = next(r for r in result["scored"] + result["insufficient"] if r["ticker"] == "T29")
-        assert top["factors"]["growth"] <= 10
+        # 2.1: never above the midpoint, and never the mirror image of the
+        # measurement - a raw 98 used to come back as 2.
+        assert top["factors"]["growth"] <= 50
+        assert top["percentiles"]["rev_growth"] == 50.0
 
     def test_no_growth_score_below_the_hurdle_exceeds_the_midpoint(self):
         result = score_segment(self._rows(), weights=EQUAL, winsor=(5, 95), roic_hurdle=0.09,
@@ -351,3 +354,75 @@ class TestSectorDeciles:
         assert rows[0]["sector_decile"] == 1 and rows[0]["sector_rank"] == 1
         assert rows[-1]["sector_decile"] == 10
         assert sum(1 for r in rows if r["sector_decile"] == 1) == 2
+
+
+class TestWhatTheReturnHurdleApplluesTo:
+    """2.1: the hurdle is about expanding while destroying value, which is a
+    statement about revenue. The direction of profit is not conditioned on it."""
+
+    @staticmethod
+    def rows(roic):
+        # a cohort wide enough to rank, all improving profit, all growing revenue
+        out = []
+        for i in range(12):
+            out.append({
+                "ticker": f"T{i}",
+                "listing": {"sector": "Technology"},
+                "segment": "operating",
+                "missing": {},
+                "values": {"roic": roic, "rev_growth": 0.05 * i, "op_inc_change": 0.05 * i,
+                           "gpoa": 0.3, "earn_var": 0.1, "delta_gpoa": 0.01, "ebit_ev": 0.05,
+                           "ebitda_ev": 0.06, "fcf_ev": 0.04, "debt_equity": 0.5,
+                           "net_debt_ebitda": 1.0, "altman_z": 3.0},
+            })
+        return out
+
+    def score(self, roic):
+        res = score_segment(self.rows(roic), weights=EQUAL, winsor=(5, 95), roic_hurdle=0.09,
+                            min_cohort=8, coverage_threshold=0.5)
+        return {r["ticker"]: r for r in res["scored"]}
+
+    def test_below_the_hurdle_revenue_growth_is_still_capped(self):
+        best = self.score(0.02)["T11"]
+        assert best["percentiles"]["rev_growth"] <= 50
+
+    def test_below_the_hurdle_the_profit_change_keeps_its_own_percentile(self):
+        # the whole point: shrinking a loss is not punished for the loss
+        best = self.score(0.02)["T11"]
+        assert best["percentiles"]["op_inc_change"] > 90
+
+    def test_above_the_hurdle_nothing_changes(self):
+        best = self.score(0.20)["T11"]
+        assert best["percentiles"]["rev_growth"] > 90
+        assert best["percentiles"]["op_inc_change"] > 90
+
+
+class TestTheHurdleCeiling:
+    """2.1: below the hurdle the score is capped, not mirrored."""
+
+    @staticmethod
+    def rows(growths, roic):
+        return [{"ticker": f"T{i}", "listing": {"sector": "Technology"}, "segment": "operating",
+                 "missing": {},
+                 "values": {"roic": roic, "rev_growth": g, "op_inc_change": 0.0, "gpoa": 0.3,
+                            "earn_var": 0.1, "delta_gpoa": 0.01, "ebit_ev": 0.05, "ebitda_ev": 0.06,
+                            "fcf_ev": 0.04, "debt_equity": 0.5, "net_debt_ebitda": 1.0, "altman_z": 3.0}}
+                for i, g in enumerate(growths)]
+
+    def score(self, roic):
+        rows = self.rows([0.01 * i for i in range(12)], roic)
+        res = score_segment(rows, weights=EQUAL, winsor=(5, 95), roic_hurdle=0.09,
+                            min_cohort=8, coverage_threshold=0.5)
+        return {r["ticker"]: r["percentiles"]["rev_growth"] for r in res["scored"]}
+
+    def test_the_fastest_grower_below_the_hurdle_lands_on_the_midpoint(self):
+        assert self.score(0.02)["T11"] == 50.0
+
+    def test_shrinking_is_still_not_rewarded(self):
+        assert self.score(0.02)["T0"] == 0.0
+
+    def test_nothing_below_the_hurdle_exceeds_the_midpoint(self):
+        assert max(self.score(0.02).values()) == 50.0
+
+    def test_above_the_hurdle_the_percentile_stands(self):
+        assert self.score(0.20)["T11"] == 100.0

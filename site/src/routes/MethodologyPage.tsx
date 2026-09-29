@@ -128,17 +128,35 @@ export function MethodologyPage() {
         <p>
           Raw growth does not predict returns. But growth is not useless — it is{" "}
           <i>conditional</i>: growth increases multiples when returns are above the cost of capital
-          and decreases them when returns are below. So growth is scored positively only where ROIC
-          exceeds an assumed cost of capital, and <b>scored negatively where it does not</b> — a
-          company expanding while destroying value is not rewarded for it.
+          and decreases them when returns are below. So revenue growth is scored in full only where
+          ROIC exceeds an assumed cost of capital, and <b>capped at the midpoint where it does
+          not</b> — a company expanding while destroying value is not rewarded for it.
         </p>
-        <pre>{`if ROIC >  ${hurdle}% (hurdle):   growth percentile used as-is
-if ROIC <= ${hurdle}% (hurdle):   min(p, 100 - p)   (never above 50; faster growth scores lower)`}</pre>
+        <pre>{`if ROIC >  ${hurdle}% (hurdle):   revenue-growth percentile used as-is
+if ROIC <= ${hurdle}% (hurdle):   min(p, 50)   (never above the midpoint)`}</pre>
+        <p>
+          <b>A ceiling, not a mirror, since methodology 2.1.</b> The rule used to be{" "}
+          <code>min(p, 100 - p)</code>, which returned the same measurement with its sign flipped: a
+          company whose growth ranked 98 of 100 in its sector scored 2 for it. That also put a
+          96-point cliff on a hurdle a tenth of a percentage point can cross. A plain ceiling keeps
+          what the rule is for — no reward for expanding below the cost of capital — and drops the
+          inversion. Shrinking is still not rewarded: a company in the bottom decile of growth keeps
+          its bottom-decile score, because the ceiling only ever lowers.
+        </p>
+        <p>
+          <b>The change in operating income is not conditioned at all, since 2.1.</b> The hurdle is a
+          statement about expansion — revenue bought with capital that earns less than it costs.
+          That metric measures something else: whether profitability is improving or deteriorating.
+          Conditioning it meant the faster a company shrank its losses, the worse it scored. Fortrea
+          improved by 27.9 points of assets, among the largest improvements in the market, and the
+          rule returned 2.4 out of 100 for it — while the loss itself was already counted in ROIC,
+          gross profitability and both earnings multiples.
+        </p>
         <p>
           A flat hurdle stands in for a company-specific cost of capital. That is a simplification,
-          stated here rather than hidden. Where ROIC itself could not be computed, the growth metrics
-          are dropped rather than guessed at: not knowing whether growth creates or destroys value is
-          not a licence to reward it, and inverting on an unknown would punish arbitrarily.
+          stated here rather than hidden. Where ROIC itself could not be computed, revenue growth is
+          dropped rather than guessed at: not knowing whether growth creates or destroys value is not
+          a licence to reward it.
         </p>
 
         <h2>Point-in-time discipline</h2>
@@ -392,14 +410,14 @@ FCF/EV     = (Operating Cash Flow - Capital Expenditure) / EV`}</pre>
         <pre>{`RevGrowth = annual growth rate of the trend line through
             3 years of trailing-12-month revenue, one point per quarter
             (fallback: 3-fiscal-year CAGR)
-            if revenue fell over the latest twelve months: average of the trend and that fall
+            averaged with the latest twelve months' change, in both directions
 
 OpIncChange = 4 x median of the last 4 quarters' operating income change
               against the same quarter a year earlier, / average total assets
 
-then, after the percentile step (both metrics):
+then, after the percentile step (RevGrowth only):
   if ROIC >  hurdle:  percentile used as-is
-  if ROIC <= hurdle:  min(p, 100 - p)`}</pre>
+  if ROIC <= hurdle:  min(p, 50)`}</pre>
         <p>
           <b>Growth sees the latest year, since methodology 1.6.</b> Every other metric is a level or
           a change over several years, so a business whose profits were collapsing now could still rank

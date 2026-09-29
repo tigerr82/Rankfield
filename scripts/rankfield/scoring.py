@@ -150,7 +150,8 @@ def score_segment(
     # return does the conditioning depends on the segment: a bank has no
     # meaningful invested capital, and a REIT's return shows up in funds from
     # operations, not in accounting profit (2.0).
-    growth_keys = [m["key"] for m in METRICS if m["factor"] == "growth"]
+    growth_keys = [m["key"] for m in METRICS
+                   if m["factor"] == "growth" and m.get("return_conditioned", True)]
     hurdle_key = HURDLE_METRIC.get(rows[0].get("segment") if rows else None, "roic")
     for i, r in enumerate(rows):
         roic = r["values"].get(hurdle_key)
@@ -169,17 +170,21 @@ def score_segment(
                          "judged against the cost of capital")
             elif roic <= roic_hurdle:
                 # Below the cost-of-capital hurdle growth is never rewarded: the
-                # score cannot exceed the midpoint, and faster growth scores
-                # lower, because growth funded below the cost of capital destroys
-                # value.
+                # score cannot exceed the midpoint.
                 #
-                # Until methodology 1.2 this was a straight inversion, 100 - p,
-                # which also turned the fastest-SHRINKING companies into the best
-                # "growers": G-III, revenue falling 2.9% a year, scored 88.6 on
-                # Growth and ranked first of 1,191; 148 companies with shrinking
-                # revenue scored 70 or more. min(p, 100 - p) keeps the penalty on
-                # value-destroying expansion and removes the reward for decline.
-                percentiles[i][key] = round(min(p, 100.0 - p), 1)
+                # Two earlier shapes were wrong. A straight inversion (100 - p,
+                # until 1.2) turned the fastest-SHRINKING companies into the best
+                # "growers": G-III, revenue falling 2.9% a year, scored 88.6 and
+                # ranked first of 1,191. Mirroring it (min(p, 100 - p), until
+                # 2.1) removed that, but scored the fastest grower below the
+                # hurdle 2 out of 100 off a raw 98 - the same measurement with
+                # its sign flipped, and a 96-point cliff across a hurdle that a
+                # tenth of a percentage point can cross.
+                #
+                # A plain ceiling keeps the principle and drops both artifacts:
+                # no reward above the midpoint, no reward for shrinking, and no
+                # measurement turned upside down.
+                percentiles[i][key] = round(min(p, 50.0), 1)
                 bases[i][key] = bases[i].get(key, "sector") + "|below-hurdle"
 
     # ---- factors and composite

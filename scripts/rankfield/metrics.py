@@ -243,7 +243,14 @@ METRICS: list[dict] = [
     # egg prices normalised while it ranked 20th. Across the operating universe the
     # direction of operating income over the last year ranked +0.24 with the
     # year's share-price move; the score, which could not see it, ranked -0.02.
-    {"key": "op_inc_change", "label": "Operating Income Change (latest year)", "short": "OpInc chg",
+    # Not return-conditioned (2.1). The hurdle exists to stop a company being
+    # rewarded for expanding while it destroys value - that is about revenue.
+    # This metric already measures the direction of profit itself, so inverting
+    # it on a low return says the faster a company shrinks its losses, the worse
+    # its score: Fortrea improved by 27.9 points of assets, one of the largest
+    # improvements in the market, and scored 2.4 out of 100 for it.
+    {"key": "op_inc_change", "return_conditioned": False,
+     "label": "Operating Income Change (latest year)", "short": "OpInc chg",
      "factor": "growth", "higher_better": True, "unit": "pp",
      "not_for_segments": ["pre_revenue"], "coverage_optional": True,
      "formula": "Four times the median of the last four quarters' change in operating income against the "

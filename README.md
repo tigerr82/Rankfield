@@ -17,8 +17,8 @@ runtime API calls, no server, no database — and no recurring cost.
 |---|---|
 | Listed on NYSE/NASDAQ | 6,856 |
 | Common stock, above $1B, one line per company | 2,266 |
-| Scored | **1,654** (1,246 operating · 289 banks & insurers · 78 REITs · 41 pre-revenue) |
-| Routed to *Insufficient data* | 195 |
+| Scored | **1,653** (1,245 operating · 288 banks & insurers · 79 REITs · 41 pre-revenue) |
+| Routed to *Insufficient data* | 194 |
 | Metric coverage across scored stocks | **94%** |
 | Cost | $0 |
 
@@ -109,8 +109,10 @@ stored last month — after a split that number is on the old basis and a 10-for
 `scripts/test_split_handling.py` proves this against real splits (Netflix's 10-for-1 reports
 +13.02%, not −90%).
 
-**Growth is ROIC-conditioned.** Scored positively only where ROIC clears the cost-of-capital
-hurdle, and inverted where it does not. Expanding while destroying value is not rewarded.
+**Revenue growth is ROIC-conditioned.** Scored in full only where ROIC clears the cost-of-capital
+hurdle, and capped at the midpoint where it does not. Expanding while destroying value is not
+rewarded. The change in operating income is not conditioned: it already measures the direction of
+profit, and inverting it punished companies for shrinking their losses.
 
 **Momentum is deliberately excluded.** It is entirely price, so including it would contaminate
 the score-versus-price validation — partly testing whether past price predicts future price.
@@ -125,7 +127,7 @@ REIT is scored on funds from operations rather than on depreciated earnings.
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There have
-been fourteen, all to the first month, before any comparison depended on it.
+been fifteen, all to the first month, before any comparison depended on it.
 
 **2026-09 — the 2026-08 record was regenerated once.** Growth in profitability
 (dGPOA) subtracted a fiscal-year ratio from a trailing-twelve-month one, so the
@@ -466,6 +468,34 @@ decile of itself - which put a stock ranked 721st of 1,246 in the default view. 
 peer group now gets no decile: it keeps its rank and its score and appears under *All operating*,
 but not in the per-sector cut, which drops that view from 130 names to 129. Composites, ranks and
 factor scores are untouched; only the decile flag on those two rows changed.
+
+**2026-09 — methodology 2.1: three corrections to how growth is scored, and the 2026-08 baseline
+recomputed under them.** A reader asked why SolarEdge scored 2.5 on Growth while its revenue had
+grown 41.6% over the latest year and its quarterly operating loss had shrunk from $1,111M to $16M.
+The arithmetic was doing exactly what it was told, and what it was told was wrong in three ways.
+
+- *The average was one-sided.* Since 1.7 the three-year trend is averaged with the latest year when
+  the latest year fell. When it rose, the trend stood alone - so the metric was sensitive to a
+  recent collapse and blind to a recent recovery. It now averages in both directions.
+- *The hurdle mirrored instead of capping.* Below the 9% return hurdle a growth percentile became
+  `min(p, 100 - p)`: the same measurement with its sign flipped, so a company ranked 98th of 100 on
+  growth scored 2 for it, and the score jumped 96 points across a hurdle a tenth of a point can
+  cross. It is now `min(p, 50)` - never above the midpoint, never inverted, and shrinking still
+  earns nothing.
+- *The profit metric should never have been conditioned.* The hurdle is a statement about
+  expansion - revenue bought with capital that earns less than it costs. The change in operating
+  income measures whether profitability is improving, which is a different thing, and inverting it
+  meant the faster a company shrank its losses the worse it scored. Fortrea improved by 27.9 points
+  of assets, among the largest improvements in the market, and was given 2.4 out of 100 for it -
+  while the loss itself was already counted in ROIC, gross profitability and both earnings
+  multiples. It is no longer conditioned.
+
+Weights are unchanged; the version moved to 2.1 because the Growth factor changed. Effect: the
+operating table moved a median of 36 places, 435 names by more than 50, and the default view by one
+(Inspire Medical in, Krystal Biotech out). Fortrea 1,104 -> 941 and SolarEdge 1,229 -> 1,176, both
+still ranked low on their trailing losses, which is the point. Cal-Maine and G-III keep the Growth
+scores the 1.6 and 1.2 corrections gave them (2.0 and 4.5), and the top ten is unchanged. Fresh
+EDGAR download; the 2.0 record is in git.
 
 ---
 
