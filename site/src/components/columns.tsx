@@ -193,8 +193,10 @@ export const COLUMNS: Column[] = [
   },
   {
     key: "_stability",
-    header: "Stable",
-    title: "Rank range across plausible weightings",
+    header: "Rank range",
+    title:
+      "Best and worst rank this company gets across many plausible ways of weighting the four "
+      + "factors. A narrow range means the rank does not depend on our choice of weights.",
     align: "l",
     width: 56,
     pro: true,

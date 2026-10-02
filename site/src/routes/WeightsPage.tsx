@@ -100,7 +100,7 @@ export function WeightsPage() {
 
       <p className="note" style={{ margin: "16px 18px 0", maxWidth: "84ch" }}>
         A stock that only ranks highly under one specific configuration is a weaker signal than one
-        that ranks highly across many. The <b>Stable</b> column and the{" "}
+        that ranks highly across many. The <b>Rank range</b> column and the{" "}
         <a href="#/stability">stability view</a> quantify exactly that.
       </p>
 
