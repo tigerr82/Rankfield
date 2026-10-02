@@ -15,10 +15,10 @@ runtime API calls, no server, no database — and no recurring cost.
 
 | | |
 |---|---|
-| Listed on NYSE/NASDAQ | 6,856 |
-| Common stock, above $1B, one line per company | 2,266 |
-| Scored | **1,653** (1,245 operating · 288 banks & insurers · 79 REITs · 41 pre-revenue) |
-| Routed to *Insufficient data* | 194 |
+| Listed on NYSE/NASDAQ | 6,780 |
+| Common stock, above $1B (or within 80% of it if already ranked), one line per company | 2,264 |
+| Scored | **1,667** (1,259 operating · 288 banks & insurers · 79 REITs · 41 pre-revenue) |
+| Routed to *Insufficient data* | 187 |
 | Metric coverage across scored stocks | **94%** |
 | Cost | $0 |
 
@@ -129,7 +129,28 @@ REIT is scored on funds from operations rather than on depreciated earnings.
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There have
-been fifteen, all to the first month, before any comparison depended on it.
+been sixteen: fifteen to the first month, before any comparison depended on it, and one to the
+second, within hours of its publication.
+
+**2026-10 — the 2026-09 record was regenerated once, on 2026-10-03, under two eligibility
+corrections.** Writing "who left the ranking and why" for the first month-over-month comparison
+traced all 33 exits, and 32 of them were not good reasons.
+
+- *A failed download was read as "no filings".* `http_json` returned `None` after exhausting its
+  retries whenever 404s were allowed, so a truncated EDGAR response for Walker & Dunlop was
+  recorded as "no XBRL facts on file" and the company dropped out. A request that fails now raises;
+  only a real 404 means "no data". The fundamentals and price stages retry failures in up to three
+  more passes with growing pauses, and a company that still fails is reported with the real reason.
+- *The floors were hard lines.* Thirty companies left the ranking because their market cap was
+  $835M-$998M against the $1B floor (CCNE at $998M, PCRX at $997M), and OPKO because its volume was
+  $4.96M against $5M. A company scored last month now keeps its place until it falls below 80% of a
+  floor; a company not yet ranked must clear the whole floor. Easy to stay, hard to join - so a
+  company hovering at a line no longer enters and leaves on a percent or two.
+
+Weights and factor definitions are unchanged, so the version stays 2.1; only who is eligible
+changed. Effect: 1,635 scored became 1,667, the 32 companies above returned, none was lost, and
+only Global Business Travel left the ranking, because it left the listing feed. The 2026-08 record
+is unchanged. Fresh EDGAR download; the first 2026-09 record is in git.
 
 **2026-09 — the 2026-08 record was regenerated once.** Growth in profitability
 (dGPOA) subtracted a fiscal-year ratio from a trailing-twelve-month one, so the

@@ -256,6 +256,14 @@ if ROIC <= ${hurdle}% (hurdle):   min(p, 50)   (never above the midpoint)`}</pre
           </li>
         </ol>
         <p>
+          The market-cap and liquidity floors are easy to stay above and hard to join. A company
+          already ranked last month stays eligible until it falls below 80% of a floor; a company not
+          yet ranked must clear the whole floor. Without that, a company hovering at a line would
+          enter and leave the ranking on a percent or two, which is noise and not information. A
+          download that fails is retried, and a company that still cannot be fetched is reported
+          with the real reason, never as having no filings.
+        </p>
+        <p>
           The full funnel, with a count at every stage and a named reason for every exclusion, is in
           the <a href="#/coverage">coverage report</a>.
         </p>

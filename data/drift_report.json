@@ -6,7 +6,7 @@
   "block_scored_drop_pct": 5,
   "recently_abandoned_days": 450
  },
- "scored_now": 1635,
+ "scored_now": 1667,
  "recently_abandoned_tags": [
   {
    "ticker": "AVGO",
@@ -242,170 +242,10 @@
  ],
  "status": "warn",
  "scored_prior": 1653,
- "scored_change_pct": -1.09,
+ "scored_change_pct": 0.85,
  "dropped_out": [
   {
-   "ticker": "ABUS",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "AEVA",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "ALMS",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "ANRO",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "BFST",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "BRBR",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "BV",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "BW",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "CCNE",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "CGEM",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "CMP",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "CRVS",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "EQBK",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "FUBO",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
    "ticker": "GBTG",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "HBNC",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "JBIO",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "LZ",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "MLTX",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "MSEX",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "OI",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "OPK",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "PCRX",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "PRCT",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "QNST",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "RCAT",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "SAFE",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "TRIP",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "TTI",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "UPBD",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "VRTS",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "VYX",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "WD",
    "reason": "no longer eligible (universe, price, filing or liquidity filters)",
    "candidates": {}
   }
