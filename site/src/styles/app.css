@@ -500,6 +500,8 @@ body.resizing { cursor: col-resize; user-select: none; }
 /* change cells: never colour alone - always a sign and an arrow too */
 .delta { font-family: var(--font-mono); font-weight: 600; font-size: 12.3px; }
 .delta .ar { margin-right: 2px; font-size: 9px; }
+/* In the rank-change column, where a company with no earlier rank would otherwise show a dash. */
+.newtag { font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; letter-spacing: 0.04em; color: var(--accent); }
 .up { color: var(--up); }
 .down { color: var(--down); }
 .flat { color: var(--ink-3); }

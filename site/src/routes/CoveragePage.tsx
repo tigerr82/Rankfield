@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useCoverage, usePayload } from "../data/usePayload";
+import type { ExitRow } from "../data/types";
 import { Shell, useScrollRef } from "../components/Shell";
 
 /**
@@ -66,6 +67,10 @@ export function CoveragePage() {
                 })}
               </tbody>
             </table>
+
+            {coverage.exits && coverage.exits.length > 0 && (
+              <LeftTheRanking exits={coverage.exits} since={scores?.meta.prior_scoring_date ?? null} />
+            )}
 
             <h2>Metric resolution by segment</h2>
             <p>
@@ -195,5 +200,59 @@ export function CoveragePage() {
         )}
       </div>
     </Shell>
+  );
+}
+
+const EXIT_LABEL: Record<ExitRow["kind"], string> = {
+  market_cap_floor: "Fell below the market-cap floor",
+  excluded: "Failed an eligibility rule",
+  insufficient_data: "Too few metrics to score",
+  share_class: "Counted under its other share class",
+  no_sec_match: "No longer matched to an SEC filer",
+  unlisted: "No longer in the listing feed",
+};
+
+/**
+ * Every company scored last month and not this month, with the stage that
+ * removed it. A company that vanishes without a trace is indistinguishable from
+ * one removed carelessly; naming each reason is what lets the removals be
+ * checked.
+ */
+function LeftTheRanking({ exits, since }: { exits: ExitRow[]; since: string | null }) {
+  const counts = new Map<ExitRow["kind"], number>();
+  for (const e of exits) counts.set(e.kind, (counts.get(e.kind) ?? 0) + 1);
+  const month = since
+    ? new Date(`${since}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" })
+    : "last month";
+  return (
+    <>
+      <h2>Left the ranking since {month}</h2>
+      <p>
+        {exits.length.toLocaleString()} companies scored last month are not scored this month:{" "}
+        {[...counts.entries()].map(([kind, n]) => `${n.toLocaleString()} — ${EXIT_LABEL[kind].toLowerCase()}`).join("; ")}.
+        The market-cap floor is a hard line, so a company only just under it leaves the ranking like
+        one far below it.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th className="al-l">Ticker</th>
+            <th className="al-l">Company</th>
+            <th className="al-r">Last rank</th>
+            <th className="al-l">Why it is not scored</th>
+          </tr>
+        </thead>
+        <tbody>
+          {exits.map((e) => (
+            <tr key={e.ticker} style={{ cursor: "default" }}>
+              <td className="al-l mono">{e.ticker}</td>
+              <td className="al-l">{e.name ? e.name.replace(/\s+(Class [A-Z] )?(Common Stock|Ordinary Shares).*$/i, "") : ""}</td>
+              <td className="al-r mono">{e.prior_rank != null ? e.prior_rank.toLocaleString() : "—"}</td>
+              <td className="al-l">{e.reason}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
   );
 }

@@ -93,8 +93,9 @@ export function MonthSummary({ rows, scores, history, metrics, factors, scrollRe
         </span>
       )}
       {summary.left > 0 && (
-        <span title="Scored last month and not this month - usually the market-cap, liquidity or filing filters, sometimes a metric that stopped resolving. The Coverage page lists every exclusion.">
-          <b>{summary.left.toLocaleString()}</b> left the ranking
+        <span title="Scored last month and not this month. The Coverage page names each one and the reason.">
+          <b>{summary.left.toLocaleString()}</b>{" "}
+          <Link to="/coverage" className="mosumlink">left the ranking</Link>
         </span>
       )}
       {summary.typical !== null && (

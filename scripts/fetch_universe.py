@@ -56,6 +56,9 @@ def main() -> int:
     floor = uni_cfg["market_cap_floor_usd"]
     big = [x for x in common if x.market_cap and x.market_cap >= floor]
     funnel.append({"stage": f"market cap >= ${floor/1e9:.0f}B", "count": len(big)})
+    # Who sat just under the floor, so that a company which leaves the ranking
+    # for it can be told exactly how far under it was rather than "not found".
+    below_floor = {x.ticker: x.market_cap for x in common if x.market_cap and x.market_cap < floor}
 
     # Dual-class de-duplication: one line per company, keyed on CIK rather than
     # on name heuristics. GOOG/GOOGL are one business counted twice.
@@ -101,6 +104,7 @@ def main() -> int:
         "funnel": funnel,
         "dropped_share_classes": dropped_classes,
         "unmatched_tickers": sorted(r.ticker for r in no_cik),
+        "below_floor": below_floor,
         "listings": deduped,
     }
     path = write_json(DATA_DIR / "universe.json", payload)

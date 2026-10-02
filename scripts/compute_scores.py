@@ -28,6 +28,7 @@ from rankfield.config import (
     DATA_DIR, HISTORY_DIR, ensure_dirs, load_settings, load_weights, read_json, write_json,
 )
 from rankfield.drift import build_drift_report
+from rankfield.exits import build_exits
 from rankfield.metrics import FACTORS, METRICS
 from rankfield.scoring import SEGMENTS, classify_segment, rank_stability, score_segment
 from rankfield.util import last_day_of_prior_month, month_key
@@ -341,6 +342,14 @@ def main() -> int:
 
     rebuild_history_index()
 
+    exits = build_exits(
+        prior_by_ticker,
+        {r["ticker"] for seg in segments_out.values() for r in seg},
+        excluded=excluded,
+        insufficient=insufficient_out,
+        universe=universe,
+    )
+
     coverage = {
         "generated_at": meta["generated_at"],
         "scoring_date": meta["scoring_date"],
@@ -350,6 +359,8 @@ def main() -> int:
         },
         "applicable_metrics_by_segment": {k: results[k]["applicable_metrics"] for k in SEGMENTS},
         "excluded": excluded,
+        # Scored last month, not this month, each traced to the stage that removed it.
+        "exits": exits,
         "insufficient_data": insufficient_out,
         "unresolved_metrics": [
             {"ticker": r["ticker"], "metric": key, "reason": reason}

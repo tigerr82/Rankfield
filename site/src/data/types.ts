@@ -158,6 +158,17 @@ export interface FunnelStage {
   count: number;
 }
 
+export interface ExitRow {
+  ticker: string;
+  name: string | null;
+  sector: string | null;
+  segment: string | null;
+  prior_rank: number | null;
+  kind: "market_cap_floor" | "excluded" | "insufficient_data" | "share_class" | "no_sec_match" | "unlisted";
+  reason: string;
+  market_cap: number | null;
+}
+
 export interface CoverageReport {
   generated_at: string;
   scoring_date: string;
@@ -165,6 +176,8 @@ export interface CoverageReport {
   metric_resolution_by_segment: Record<SegmentKey, Record<string, number>>;
   applicable_metrics_by_segment: Record<SegmentKey, string[]>;
   excluded: { ticker: string; stage: string; reason: string }[];
+  /** Scored last month, not this month, each traced to the stage that removed it. */
+  exits?: ExitRow[];
   insufficient_data: InsufficientRow[];
   unresolved_metrics: { ticker: string; metric: string; reason: string }[];
   price_review: { ticker: string; change_pct: number; splits_in_window: unknown[]; note: string }[];

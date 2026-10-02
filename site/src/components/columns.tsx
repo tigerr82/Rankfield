@@ -179,7 +179,14 @@ export const COLUMNS: Column[] = [
     width: 50,
     pro: true,
     sortValue: (row) => row.rank_change,
-    render: (row) => <DeltaCell value={row.rank_change} digits={0} />,
+    render: (row) =>
+      row.is_new ? (
+        <span className="newtag" title="Scored for the first time this month, so there is no earlier rank to compare with.">
+          NEW
+        </span>
+      ) : (
+        <DeltaCell value={row.rank_change} digits={0} />
+      ),
   },
   {
     key: "_spark",
