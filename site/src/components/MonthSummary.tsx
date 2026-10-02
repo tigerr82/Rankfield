@@ -14,7 +14,9 @@ import { monthSummary } from "../lib/monthSummary";
  * it.
  *
  * Three names per direction: a line that reads at a glance. The table is the
- * place for the full list, and the Rank risers sort already orders it.
+ * place for the full list, and the Rank risers sort already orders it. Each
+ * group says what it measures - "climbed most in rank", not "up" - because a
+ * bare direction next to a number reads as a price move, which this is not.
  */
 interface Props {
   /** The segment's rows, unfiltered: this line describes the month, not a search. */
@@ -63,8 +65,16 @@ export function MonthSummary({ rows, scores, history }: Props) {
           typical move <b>{summary.typical.toLocaleString()}</b> places
         </span>
       )}
-      {summary.risers.length > 0 && <span className="mosumgroup">up {names(summary.risers)}</span>}
-      {summary.fallers.length > 0 && <span className="mosumgroup">down {names(summary.fallers)}</span>}
+      {summary.risers.length > 0 && (
+        <span className="mosumgroup" title="The three largest climbs in rank this month, with the number of places gained.">
+          climbed most in rank {names(summary.risers)}
+        </span>
+      )}
+      {summary.fallers.length > 0 && (
+        <span className="mosumgroup" title="The three largest falls in rank this month, with the number of places lost.">
+          fell most in rank {names(summary.fallers)}
+        </span>
+      )}
     </div>
   );
 }

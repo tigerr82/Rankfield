@@ -994,6 +994,9 @@ footer.pf a { color: var(--ink-2); }
   text-transform: uppercase;
   color: var(--accent);
 }
+/* A group says what it measures, so it must not split across lines: the names
+   and their places stay with the label that explains them. */
+.mosumgroup { white-space: nowrap; }
 .mosumgroup .mono { color: var(--ink-3); }
 .mosumlink { color: var(--ink-2); text-decoration: none; font-weight: 600; }
 .mosumlink:hover { color: var(--accent); text-decoration: underline; }
