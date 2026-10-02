@@ -1,23 +1,17 @@
 {
- "scoring_date": "2026-08-31",
- "prior_scoring_date": "2026-07-31",
+ "scoring_date": "2026-09-30",
+ "prior_scoring_date": "2026-08-31",
  "thresholds": {
   "warn_scored_drop_pct": 1,
   "block_scored_drop_pct": 5,
   "recently_abandoned_days": 450
  },
- "scored_now": 1653,
+ "scored_now": 1635,
  "recently_abandoned_tags": [
   {
-   "ticker": "AIT",
-   "concept": "DebtLongtermAndShorttermCombinedAmount",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "BBIO",
-   "concept": "LongTermDebtNoncurrent",
-   "last_reported": "2025-06-30",
+   "ticker": "AVGO",
+   "concept": "CommercialPaper",
+   "last_reported": "2025-08-03",
    "candidates": {}
   },
   {
@@ -29,22 +23,6 @@
      "InterestExpenseBorrowings"
     ]
    }
-  },
-  {
-   "ticker": "BBT",
-   "concept": "ShortTermBorrowings",
-   "last_reported": "2025-06-30",
-   "candidates": {
-    "operating_income": [
-     "InterestExpenseBorrowings"
-    ]
-   }
-  },
-  {
-   "ticker": "BYD",
-   "concept": "LongTermDebt",
-   "last_reported": "2025-06-30",
-   "candidates": {}
   },
   {
    "ticker": "CCL",
@@ -67,21 +45,15 @@
    }
   },
   {
-   "ticker": "CR",
+   "ticker": "CPB",
    "concept": "LongTermDebtCurrent",
-   "last_reported": "2025-06-30",
+   "last_reported": "2025-08-03",
    "candidates": {}
   },
   {
    "ticker": "DOC",
    "concept": "CostOfGoodsAndServicesSold",
    "last_reported": "2025-09-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "EME",
-   "concept": "DebtAndCapitalLeaseObligations",
-   "last_reported": "2025-06-30",
    "candidates": {}
   },
   {
@@ -169,43 +141,21 @@
    "candidates": {}
   },
   {
-   "ticker": "FNF",
-   "concept": "InterestExpense",
-   "last_reported": "2025-06-30",
-   "candidates": {
-    "operating_income": [
-     "LiabilityForFuturePolicyBenefitInterestExpense"
-    ]
-   }
-  },
-  {
-   "ticker": "FOXA",
-   "concept": "LongTermDebtCurrent",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "FTI",
-   "concept": "CostOfRevenue",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
    "ticker": "FUL",
    "concept": "OperatingIncomeLoss",
    "last_reported": "2025-08-30",
    "candidates": {}
   },
   {
-   "ticker": "GFF",
-   "concept": "LongTermDebt",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
    "ticker": "GSBD",
    "concept": "IncomeTaxExpenseBenefit",
    "last_reported": "2025-09-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "GWRE",
+   "concept": "SeniorNotesCurrent",
+   "last_reported": "2025-07-31",
    "candidates": {}
   },
   {
@@ -230,40 +180,6 @@
    }
   },
   {
-   "ticker": "JKHY",
-   "concept": "LongTermDebtCurrent",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "KLAC",
-   "concept": "LongTermDebtCurrent",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "MIDD",
-   "concept": "DebtAndCapitalLeaseObligations",
-   "last_reported": "2025-06-28",
-   "candidates": {}
-  },
-  {
-   "ticker": "MSFT",
-   "concept": "CommercialPaper",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "MSGE",
-   "concept": "GainLossOnDispositionOfAssets1",
-   "last_reported": "2025-06-30",
-   "candidates": {
-    "cost_of_revenue": [
-     "CostOfGoodsAndServicesSoldDepreciationAndAmortization"
-    ]
-   }
-  },
-  {
    "ticker": "NUVB",
    "concept": "CostOfGoodsAndServicesSold",
    "last_reported": "2025-09-30",
@@ -282,118 +198,15 @@
    "candidates": {}
   },
   {
-   "ticker": "PECO",
-   "concept": "InterestExpenseNonoperating",
-   "last_reported": "2025-06-30",
-   "candidates": {
-    "operating_income": [
-     "OtherOperatingIncome"
-    ],
-    "cost_of_revenue": [
-     "CostOfGoodsAndServicesSoldDepreciationAndAmortization"
-    ]
-   }
-  },
-  {
-   "ticker": "PGY",
-   "concept": "AssetsCurrent",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "PGY",
-   "concept": "LiabilitiesCurrent",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "PGY",
-   "concept": "SecuredDebtCurrent",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "PGY",
-   "concept": "SecuredLongTermDebt",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "PR",
-   "concept": "LongTermDebtCurrent",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "PRGO",
-   "concept": "SeniorNotes",
-   "last_reported": "2025-06-28",
-   "candidates": {}
-  },
-  {
-   "ticker": "RDN",
-   "concept": "CostOfGoodsAndServicesSold",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "RGEN",
-   "concept": "ConvertibleDebtNoncurrent",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
    "ticker": "RYN",
    "concept": "PaymentsToAcquireProductiveAssets",
    "last_reported": "2025-09-30",
    "candidates": {}
   },
   {
-   "ticker": "SBET",
-   "concept": "CostOfRevenue",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "SBET",
-   "concept": "GrossProfit",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "SEIC",
-   "concept": "Assets",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "SEIC",
-   "concept": "Liabilities",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
    "ticker": "SLG",
    "concept": "IncomeTaxExpenseBenefit",
    "last_reported": "2025-09-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "SNEX",
-   "concept": "OperatingIncomeLoss",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "SWX",
-   "concept": "CostOfGoodsAndServicesSold",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "TMC",
-   "concept": "ShortTermBorrowings",
-   "last_reported": "2025-06-30",
    "candidates": {}
   },
   {
@@ -409,15 +222,9 @@
    }
   },
   {
-   "ticker": "UFPT",
-   "concept": "PaymentsToAcquirePropertyPlantAndEquipment",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "UI",
+   "ticker": "UNFI",
    "concept": "LongTermDebtNoncurrent",
-   "last_reported": "2025-06-30",
+   "last_reported": "2025-08-02",
    "candidates": {}
   },
   {
@@ -427,53 +234,199 @@
    "candidates": {}
   },
   {
-   "ticker": "VRDN",
-   "concept": "LongTermDebtCurrent",
-   "last_reported": "2025-06-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "WOLF",
-   "concept": "CostOfGoodsAndServicesSold",
-   "last_reported": "2025-06-29",
-   "candidates": {}
-  },
-  {
-   "ticker": "WOLF",
-   "concept": "GrossProfit",
-   "last_reported": "2025-06-29",
-   "candidates": {}
-  },
-  {
-   "ticker": "WOLF",
-   "concept": "NetIncomeLoss",
-   "last_reported": "2025-06-29",
-   "candidates": {}
-  },
-  {
-   "ticker": "WOLF",
-   "concept": "OperatingIncomeLoss",
-   "last_reported": "2025-06-29",
-   "candidates": {}
-  },
-  {
-   "ticker": "WOLF",
-   "concept": "RevenueFromContractWithCustomerExcludingAssessedTax",
-   "last_reported": "2025-06-29",
-   "candidates": {}
-  },
-  {
-   "ticker": "Z",
-   "concept": "DebtLongtermAndShorttermCombinedAmount",
-   "last_reported": "2025-06-30",
+   "ticker": "ZS",
+   "concept": "ConvertibleNotesPayableCurrent",
+   "last_reported": "2025-07-31",
    "candidates": {}
   }
  ],
- "status": "baseline",
- "scored_prior": null,
- "scored_change_pct": null,
- "dropped_out": [],
- "metrics_lost": [],
- "metrics_lost_economic": [],
- "metrics_lost_by_metric": {}
+ "status": "warn",
+ "scored_prior": 1653,
+ "scored_change_pct": -1.09,
+ "dropped_out": [
+  {
+   "ticker": "ABUS",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "AEVA",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "ALMS",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "ANRO",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "BFST",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "BRBR",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "BV",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "BW",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "CCNE",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "CGEM",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "CMP",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "CRVS",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "EQBK",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "FUBO",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "GBTG",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "HBNC",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "JBIO",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "LZ",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "MLTX",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "MSEX",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "OI",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "OPK",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "PCRX",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "PRCT",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "QNST",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "RCAT",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "SAFE",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "TRIP",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "TTI",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "UPBD",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "VRTS",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "VYX",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "WD",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  }
+ ],
+ "metrics_lost": [
+  {
+   "ticker": "ASAN",
+   "metric": "rev_growth",
+   "reason": "ROIC unavailable, so growth cannot be judged against the cost of capital",
+   "candidates": {}
+  }
+ ],
+ "metrics_lost_economic": [
+  {
+   "ticker": "ASAN",
+   "metric": "roic",
+   "reason": "invested capital zero or negative",
+   "candidates": {}
+  }
+ ],
+ "metrics_lost_by_metric": {
+  "rev_growth": 1
+ }
 }
