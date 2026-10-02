@@ -1,7 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState, type RefObject } from "react";
 import { Link } from "react-router-dom";
-import type { HistoryIndex, ScoresPayload, StockRow } from "../data/types";
+import type { FactorSpec, HistoryIndex, MetricSpec, ScoresPayload } from "../data/types";
+import type { RankedRow } from "../lib/scoring";
 import { monthSummary } from "../lib/monthSummary";
+import { COLUMNS, type Column } from "./columns";
+import { DeltaCell } from "./cells";
+import { RankTable } from "./RankTable";
 
 /**
  * What changed in this table since last month, in one line.
@@ -20,13 +24,43 @@ import { monthSummary } from "../lib/monthSummary";
  */
 interface Props {
   /** The segment's rows, unfiltered: this line describes the month, not a search. */
-  rows: StockRow[];
+  rows: RankedRow[];
   scores: ScoresPayload;
   history: HistoryIndex | null;
+  metrics: MetricSpec[];
+  factors: FactorSpec[];
+  scrollRef: RefObject<HTMLElement | null>;
 }
 
-export function MonthSummary({ rows, scores, history }: Props) {
+/** The same cells as the main table, in a fixed set that explains a move: where
+ *  the company stands now, where it stood, and what its price did. Headers do
+ *  not sort or resize, so this table never touches the main table's state. */
+const MOVER_KEYS = ["_rank", "ticker", "name", "sector", "market_cap", "price", "price_change_pct"];
+const MOVER_COLUMNS: Column[] = [
+  ...MOVER_KEYS.map((key) => ({ ...COLUMNS.find((c) => c.key === key)!, nosort: true, sticky: false, cls: undefined })),
+  {
+    key: "_was",
+    header: "Last mo.",
+    title: "Rank last month",
+    align: "r",
+    width: 62,
+    nosort: true,
+    render: (row) => (row.rank_change === null ? "" : (row.rank + row.rank_change).toLocaleString()),
+  },
+  {
+    key: "rank_change",
+    header: "Places",
+    title: "Places climbed (+) or lost (−) in rank since last month",
+    align: "r",
+    width: 62,
+    nosort: true,
+    render: (row) => <DeltaCell value={row.rank_change} digits={0} />,
+  },
+];
+
+export function MonthSummary({ rows, scores, history, metrics, factors, scrollRef }: Props) {
   const summary = useMemo(() => monthSummary(rows, scores, history), [rows, scores, history]);
+  const [open, setOpen] = useState(false);
 
   if (!summary) return null;
 
@@ -36,7 +70,7 @@ export function MonthSummary({ rows, scores, history }: Props) {
     timeZone: "UTC",
   });
 
-  const names = (group: StockRow[]) =>
+  const names = (group: RankedRow[]) =>
     group.map((row, i) => (
       <span key={row.ticker}>
         {i > 0 && ", "}
@@ -47,7 +81,10 @@ export function MonthSummary({ rows, scores, history }: Props) {
       </span>
     ));
 
+  const movers = [...summary.risers, ...summary.fallers];
+
   return (
+    <>
     <div className="mosum" role="note">
       <span className="mosumlabel">Since {month}</span>
       {summary.entered > 0 && (
@@ -76,5 +113,30 @@ export function MonthSummary({ rows, scores, history }: Props) {
         </span>
       )}
     </div>
+    {movers.length > 0 && (
+      <>
+        <button
+          type="button"
+          className="moverstoggle"
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+        >
+          {open ? "▾ Hide" : "▸ Show"} the biggest movers
+        </button>
+        {open && (
+          <RankTable
+            rows={movers}
+            metrics={metrics}
+            factors={factors}
+            history={history?.tickers ?? {}}
+            scrollRef={scrollRef}
+            tag="movers"
+            className="moverswrap"
+            columns={MOVER_COLUMNS}
+          />
+        )}
+      </>
+    )}
+    </>
   );
 }

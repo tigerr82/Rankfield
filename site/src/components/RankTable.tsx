@@ -24,12 +24,20 @@ interface Props {
   emptyState?: React.ReactNode;
   /** Tag tickers with their segment (the portfolio, when it spans segments). */
   showSegment?: boolean;
+  /** A fixed set of columns for a secondary table: it ignores the user's column
+   *  choices and widths, and its headers neither sort nor resize, so it can sit
+   *  beside the main table without touching its state. */
+  columns?: Column[];
 }
 
-export function RankTable({ rows, metrics, factors, history, scrollRef, tag, className, emptyState, showSegment }: Props) {
+export function RankTable({ rows, metrics, factors, history, scrollRef, tag, className, emptyState, showSegment, columns: fixedColumns }: Props) {
   const { mode, hiddenColumns, widths, setWidths, sortKey, sortDir, setSort, holdings, toggleHolding } = useApp();
   const [open, setOpen] = useState<string | null>(null);
-  const columns = useMemo(() => activeColumns(mode, hiddenColumns), [mode, hiddenColumns]);
+  const columns = useMemo(
+    () => fixedColumns ?? activeColumns(mode, hiddenColumns),
+    [fixedColumns, mode, hiddenColumns],
+  );
+  const fixed = fixedColumns !== undefined;
   // The price dates actually behind these rows. Taken as the most common value
   // rather than the first row's, so one stock that did not trade on the scoring
   // date cannot relabel the whole column.
@@ -90,7 +98,7 @@ export function RankTable({ rows, metrics, factors, history, scrollRef, tag, cla
       <table>
         <colgroup>
           {columns.map((c) => (
-            <col key={c.key} style={{ width: `${widths[c.key] ?? c.width}px` }} />
+            <col key={c.key} style={{ width: `${(!fixed && widths[c.key]) || c.width}px` }} />
           ))}
         </colgroup>
         <thead>
@@ -99,10 +107,10 @@ export function RankTable({ rows, metrics, factors, history, scrollRef, tag, cla
               <HeaderCell
                 key={c.key}
                 column={c}
-                isLast={i === columns.length - 1}
+                isLast={fixed || i === columns.length - 1}
                 sub={c.subheader?.(headerDates) ?? null}
-                sorted={sortKey === c.key ? sortDir : 0}
-                onSort={() => !c.nosort && setSort(c.key)}
+                sorted={!fixed && sortKey === c.key ? sortDir : 0}
+                onSort={() => !fixed && !c.nosort && setSort(c.key)}
                 columns={columns}
                 widths={widths}
                 setWidths={setWidths}

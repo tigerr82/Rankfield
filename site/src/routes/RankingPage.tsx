@@ -120,7 +120,14 @@ export function RankingPage() {
       ) : (
         <>
           {/* What moved since last month, above the table it describes. */}
-          <MonthSummary rows={ranked} scores={scores} history={history} />
+          <MonthSummary
+            rows={ranked}
+            scores={scores}
+            history={history}
+            metrics={scores.metrics}
+            factors={scores.factors}
+            scrollRef={scrollRef}
+          />
           {/* Names the table and the scope, so the heading always says what the rows are. */}
           <div className="mainlabel">
             {segmentTitle(scores.segments_meta, app.segment)} ·{" "}

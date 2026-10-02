@@ -4,12 +4,12 @@ import type { HistoryIndex, ScoresPayload, StockRow } from "../data/types";
  *  place for the full list, and the Rank risers sort already orders it. */
 export const SHOWN = 3;
 
-export interface MonthSummary {
+export interface MonthSummary<T extends StockRow = StockRow> {
   entered: number;
   left: number;
   typical: number | null;
-  risers: StockRow[];
-  fallers: StockRow[];
+  risers: T[];
+  fallers: T[];
 }
 
 function median(values: number[]): number | null {
@@ -30,16 +30,16 @@ function median(values: number[]): number | null {
  * Companies that left are not in the payload at all; they are found by asking
  * the history index who had a record last month and has none now.
  */
-export function monthSummary(
-  rows: StockRow[],
+export function monthSummary<T extends StockRow>(
+  rows: T[],
   scores: ScoresPayload,
   history: HistoryIndex | null,
-): MonthSummary | null {
+): MonthSummary<T> | null {
   if (!history || history.months.length < 2) return null;
   const changed = rows.filter(
     (r) => !r.is_new && typeof r.rank_change === "number" && r.rank_change !== 0,
   );
-  const byMove = (a: StockRow, b: StockRow) => (b.rank_change ?? 0) - (a.rank_change ?? 0);
+  const byMove = (a: T, b: T) => (b.rank_change ?? 0) - (a.rank_change ?? 0);
   const scoredNow = new Set<string>();
   for (const segment of Object.values(scores.segments)) {
     for (const row of segment) scoredNow.add(row.ticker);

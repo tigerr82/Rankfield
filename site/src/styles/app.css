@@ -1001,6 +1001,22 @@ footer.pf a { color: var(--ink-2); }
 .mosumlink { color: var(--ink-2); text-decoration: none; font-weight: 600; }
 .mosumlink:hover { color: var(--accent); text-decoration: underline; }
 
+.moverstoggle {
+  display: block;
+  margin: 8px 18px 0;
+  padding: 3px 10px;
+  background: none;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: var(--t-small);
+  color: var(--accent);
+  cursor: pointer;
+}
+.moverstoggle:hover { background: var(--accent-soft); }
+.moverswrap { margin-top: 8px; }
+
 @media (max-width: 767px) {
   .mosum { margin: 10px 10px -2px; gap: 3px 12px; }
+  .moverstoggle { margin: 8px 10px 0; }
 }
