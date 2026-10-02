@@ -973,3 +973,31 @@ footer.pf a { color: var(--ink-2); }
     border-right: none;
   }
 }
+
+/* What changed since last month, one line above the table. Sits in the same
+   quiet register as the other notes: it is context for the table, not a
+   headline competing with it. */
+.mosum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+  margin: 12px 18px -4px;
+  font-size: var(--t-small);
+  color: var(--ink-3);
+}
+.mosum b { color: var(--ink-2); font-weight: 600; }
+.mosumlabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.mosumgroup .mono { color: var(--ink-3); }
+.mosumlink { color: var(--ink-2); text-decoration: none; font-weight: 600; }
+.mosumlink:hover { color: var(--accent); text-decoration: underline; }
+
+@media (max-width: 767px) {
+  .mosum { margin: 10px 10px -2px; gap: 3px 12px; }
+}
