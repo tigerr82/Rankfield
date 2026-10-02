@@ -9,20 +9,29 @@ name: Monthly score
 #
 #   * GitHub's scheduled runs are best effort. On 2026-10-02 the 06:00 trigger
 #     simply never fired - no run, no failure, nothing to retry. Runs on the
-#     hour are the most likely to be dropped, so the schedule asks on four
-#     consecutive days at 07:17 UTC, a minute nobody else picks.
-#   * The first attempt that runs does the work; the rest find the month's
-#     record already committed and stop in a second. Four independent chances
-#     turn a dropped trigger from a lost month into a late morning.
-#   * If all four were somehow dropped, the month is still missing on the 5th
-#     and the next month's run would not fix it - so the fifth attempt also
-#     reports, rather than quietly doing nothing.
+#     hour are the most likely to be dropped, so every attempt below sits on an
+#     odd minute.
+#   * The month must land on the 2nd, so all seven attempts are on the 2nd,
+#     spread from early morning to late evening UTC. The first one that runs
+#     does the work; the rest find the month's record already committed and
+#     stop in a second, so seven triggers still produce exactly one record.
+#   * Seven independent chances in one day make a lost month effectively
+#     impossible: every one of them would have to be dropped. If that happened,
+#     the last attempt reports it, and the weekly job - a different schedule on
+#     a different day - checks for the record and reports if it is missing.
 #
 # This workflow deploys the site itself when it is done: a push made with the
 # built-in token never triggers another workflow.
 on:
   schedule:
-    - cron: "17 7 2-5 * *"
+    # Seven attempts, all on the 2nd, none on a round minute.
+    - cron: "17 5 2 * *"
+    - cron: "23 7 2 * *"
+    - cron: "41 9 2 * *"
+    - cron: "07 12 2 * *"
+    - cron: "33 15 2 * *"
+    - cron: "49 18 2 * *"
+    - cron: "11 22 2 * *"
   workflow_dispatch:
     inputs:
       as_of:
@@ -67,7 +76,10 @@ jobs:
           else
             echo "$month is missing; scoring it."
             echo "needed=true" >> "$GITHUB_OUTPUT"
-            if [ "$(date -u +%d)" = "05" ]; then
+            # The last attempt of the day finding the month still missing means
+            # every earlier trigger was dropped. Worth knowing even though this
+            # run is about to fix it.
+            if [ "$(date -u +%H)" -ge 22 ]; then
               echo "late=true" >> "$GITHUB_OUTPUT"
             fi
           fi
