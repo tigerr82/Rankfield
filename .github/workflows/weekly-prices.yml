@@ -17,7 +17,9 @@ name: Weekly price adjustment
 # means the real run could never correct it.
 on:
   schedule:
-    - cron: "0 7 * * 6"
+    # Not on the hour: GitHub drops scheduled runs under load, and :00 is where
+    # the load is. See the note in monthly-score.yml.
+    - cron: "41 7 * * 6"
   workflow_dispatch:
 
 concurrency:
@@ -44,6 +46,26 @@ jobs:
 
       - name: Scoring engine tests
         run: python -m pytest tests/ -q
+
+      - name: Check that last month's record exists
+        # The two schedules cover each other: if every one of the monthly
+        # triggers was dropped, nothing fails and nothing reports - the month
+        # just quietly goes missing. This job runs every Saturday, so it is the
+        # one place that notices.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          month=$(date -u -d "$(date -u +%Y-%m-01) -1 day" +%Y-%m)
+          day=$(date -u +%d)
+          if [ -f "data/history/scores_$month.json" ] || [ "$day" -lt 06 ]; then
+            echo "$month is recorded, or it is too early in the month to tell."
+            exit 0
+          fi
+          if gh issue list --state open --search "in:title $month missing" --json number --jq 'length' | grep -qv '^0$'; then
+            echo "already reported"
+            exit 0
+          fi
+          gh issue create             --title "Monthly record for $month missing"             --body "The weekly price run checked on $(date -u +%Y-%m-%d) and data/history/scores_$month.json does not exist, so every scheduled attempt for that month was dropped. Run the monthly workflow manually: ${{ github.server_url }}/${{ github.repository }}/actions/workflows/monthly-score.yml"
 
       - name: Refresh prices
         shell: bash                     # pipefail, so tee cannot hide a failure

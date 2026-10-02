@@ -71,8 +71,9 @@ data/
 site/                      React + Vite + TypeScript front end
   src/data/repository.ts   the single data-access module - no component fetches a URL
 .github/workflows/
-  monthly-score.yml        cron 0 6 2 * *  - full scoring run; pushing its data triggers the deploy
-  weekly-prices.yml        cron 0 7 * * 6  - re-adjusts the scoring-date prices for splits/dividends
+  monthly-score.yml        cron 17 7 2-5 * * - full scoring run, four chances (see the file);
+                                             deploys the site itself when it commits
+  weekly-prices.yml        cron 41 7 * * 6 - re-adjusts the scoring-date prices for splits/dividends
                                              (it does not show newer prices - those arrive monthly)
   deploy-site.yml          on push         - tests, build, publish to GitHub Pages
   tests.yml                on push         - Python and TypeScript test suites

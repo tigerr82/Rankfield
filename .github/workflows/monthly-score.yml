@@ -1,18 +1,28 @@
 name: Monthly score
 
-# Scoring date is the last trading day of the prior month; the run happens on
-# the 2nd at 06:00 UTC to give the sources a day to settle.
+# Scoring date is the last trading day of the prior month; the run happens a
+# day or two later to give the sources time to settle.
 #
 # A missed month is a permanent hole in history - there is no external source to
-# reconstruct past Rankfield scores from - so the job retries rather than
-# skipping, and history files are append-only.
+# reconstruct past Rankfield scores from - so this job is built to survive a
+# missed trigger:
 #
-# This workflow does not deploy. It pushes the new data to main, which triggers
-# deploy-site.yml; keeping one deploying workflow stops two runs racing for
-# Pages.
+#   * GitHub's scheduled runs are best effort. On 2026-10-02 the 06:00 trigger
+#     simply never fired - no run, no failure, nothing to retry. Runs on the
+#     hour are the most likely to be dropped, so the schedule asks on four
+#     consecutive days at 07:17 UTC, a minute nobody else picks.
+#   * The first attempt that runs does the work; the rest find the month's
+#     record already committed and stop in a second. Four independent chances
+#     turn a dropped trigger from a lost month into a late morning.
+#   * If all four were somehow dropped, the month is still missing on the 5th
+#     and the next month's run would not fix it - so the fifth attempt also
+#     reports, rather than quietly doing nothing.
+#
+# This workflow deploys the site itself when it is done: a push made with the
+# built-in token never triggers another workflow.
 on:
   schedule:
-    - cron: "0 6 2 * *"
+    - cron: "17 7 2-5 * *"
   workflow_dispatch:
     inputs:
       as_of:
@@ -34,7 +44,47 @@ permissions:
   issues: write   # the data-drift report opens an issue when there is something to review
 
 jobs:
+  # Is this month's record already in the repo? Four scheduled attempts must
+  # produce one month, not four. A manual run always proceeds - that is the
+  # point of asking for it.
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      needed: ${{ steps.look.outputs.needed }}
+      month: ${{ steps.look.outputs.month }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: look
+        run: |
+          month=$(date -u -d "$(date -u +%Y-%m-01) -1 day" +%Y-%m)
+          echo "month=$month" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "manual run: proceeding whatever is on disk"
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          elif [ -f "data/history/scores_$month.json" ]; then
+            echo "$month is already recorded; nothing to do."
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "$month is missing; scoring it."
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+            if [ "$(date -u +%d)" = "05" ]; then
+              echo "late=true" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+      - name: Say so if this is the last scheduled attempt
+        # Reaching the 5th with the month still missing means the first three
+        # triggers were dropped. The run below will still produce it, but the
+        # near-miss is worth seeing.
+        if: steps.look.outputs.late == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create             --title "Monthly run reached its last scheduled attempt (${{ steps.look.outputs.month }})"             --body "The scheduled runs on the 2nd, 3rd and 4th did not produce ${{ steps.look.outputs.month }}. The attempt on the 5th is scoring it now: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
   score:
+    needs: check
+    if: needs.check.outputs.needed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 180
     steps:
