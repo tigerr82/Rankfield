@@ -46,12 +46,16 @@ export function DeltaCell({
     );
   }
   const cls = value > 0 ? "up" : value < 0 ? "down" : "flat";
-  const arrow = value > 0 ? "▲" : value < 0 ? "▼" : "·";
+  // A rank that did not move reads as a plain 0; the dot marked "flat" for the
+  // price column, where a change of exactly zero is a different kind of rare.
+  const arrow = value > 0 ? "▲" : value < 0 ? "▼" : digits === 0 ? "" : "·";
   return (
     <span className={`delta ${cls}`} title={title}>
-      <span className="ar" aria-hidden="true">
-        {arrow}
-      </span>
+      {arrow && (
+        <span className="ar" aria-hidden="true">
+          {arrow}
+        </span>
+      )}
       {value > 0 ? "+" : ""}
       {value.toFixed(digits)}
       {suffix}
