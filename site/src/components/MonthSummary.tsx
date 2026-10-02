@@ -40,10 +40,10 @@ const MOVER_COLUMNS: Column[] = [
   ...MOVER_KEYS.map((key) => ({ ...COLUMNS.find((c) => c.key === key)!, nosort: true, sticky: false, cls: undefined })),
   {
     key: "_was",
-    header: "Last mo.",
+    header: "Last mo. rank",
     title: "Rank last month",
     align: "r",
-    width: 62,
+    width: 96,
     nosort: true,
     render: (row) => (row.rank_change === null ? "" : (row.rank + row.rank_change).toLocaleString()),
   },
