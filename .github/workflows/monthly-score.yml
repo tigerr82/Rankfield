@@ -135,7 +135,7 @@ jobs:
         env:
           RANKFIELD_USER_AGENT: ${{ secrets.RANKFIELD_USER_AGENT }}
         shell: bash                     # pipefail, so tee cannot hide a failure
-        run: python scripts/fetch_universe.py ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }} 2>&1 | tee -a "$RUNNER_TEMP/run.log"
+        run: python scripts/fetch_universe.py ${{ inputs.as_of && format('--as-of {0}', inputs.as_of) || '' }} ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }} 2>&1 | tee -a "$RUNNER_TEMP/run.log"
 
       - name: Fetch prices
         env:

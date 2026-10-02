@@ -16,8 +16,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from rankfield.config import DATA_DIR, ensure_dirs, load_settings, user_agent, write_json
+from rankfield.config import DATA_DIR, HISTORY_DIR, ensure_dirs, load_settings, user_agent, write_json
 from rankfield.providers import get_fundamentals_provider, get_universe_provider
+from rankfield.retention import clears, previous_scored
+from rankfield.util import last_day_of_prior_month
 
 # Securities that are not an operating company's common equity. Rankfield ranks
 # businesses, so units, warrants, preferreds, funds and blank-cheque shells are
@@ -39,6 +41,7 @@ def is_common_stock(name: str) -> bool:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--limit", type=int, default=0, help="debug: cap the universe size")
+    parser.add_argument("--as-of", default=None, help="scoring date; decides which month counts as 'last month'")
     args = parser.parse_args()
 
     ensure_dirs()
@@ -54,11 +57,16 @@ def main() -> int:
     funnel.append({"stage": "common stock (units, warrants, funds, SPACs removed)", "count": len(common)})
 
     floor = uni_cfg["market_cap_floor_usd"]
-    big = [x for x in common if x.market_cap and x.market_cap >= floor]
-    funnel.append({"stage": f"market cap >= ${floor/1e9:.0f}B", "count": len(big)})
+    ratio = uni_cfg.get("market_cap_retention_ratio", 1.0)
+    scoring_date = date.fromisoformat(args.as_of) if args.as_of else last_day_of_prior_month(date.today())
+    scored_last_month = previous_scored(HISTORY_DIR, scoring_date)
+    big = [x for x in common if clears(x.market_cap, floor, was_scored=x.ticker in scored_last_month, ratio=ratio)]
+    kept_under = sorted(x.ticker for x in big if x.market_cap < floor)
+    funnel.append({"stage": f"market cap >= ${floor/1e9:.0f}B, or >= {ratio:.0%} of it if scored last month", "count": len(big)})
     # Who sat just under the floor, so that a company which leaves the ranking
     # for it can be told exactly how far under it was rather than "not found".
-    below_floor = {x.ticker: x.market_cap for x in common if x.market_cap and x.market_cap < floor}
+    below_floor = {x.ticker: x.market_cap for x in common
+                   if x.market_cap and x.market_cap < floor and x.ticker not in set(kept_under)}
 
     # Dual-class de-duplication: one line per company, keyed on CIK rather than
     # on name heuristics. GOOG/GOOGL are one business counted twice.
@@ -105,6 +113,7 @@ def main() -> int:
         "dropped_share_classes": dropped_classes,
         "unmatched_tickers": sorted(r.ticker for r in no_cik),
         "below_floor": below_floor,
+        "kept_below_floor": kept_under,
         "listings": deduped,
     }
     path = write_json(DATA_DIR / "universe.json", payload)

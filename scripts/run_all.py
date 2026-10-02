@@ -40,7 +40,7 @@ def main() -> int:
     limit = ["--limit", str(args.limit)] if args.limit else []
 
     timings = {
-        "1/5 universe": stage("1/5  Universe, sector and market cap", ["fetch_universe.py", *limit]),
+        "1/5 universe": stage("1/5  Universe, sector and market cap", ["fetch_universe.py", *as_of, *limit]),
         "2/5 prices": stage("2/5  Adjusted closes and liquidity", ["fetch_prices.py", *as_of, *limit]),
         "3/5 fundamentals": stage("3/5  EDGAR fundamentals (point-in-time)", ["fetch_fundamentals.py", *as_of, *limit]),
         "4/5 scores": stage("4/5  Scoring, history and coverage report",

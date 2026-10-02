@@ -43,7 +43,12 @@ def http_json(
     retries: int = 4,
     allow_404: bool = False,
 ):
-    """GET JSON with backoff. Returns None on an allowed 404."""
+    """GET JSON with backoff. Returns None only on an allowed 404.
+
+    A request that still fails after every retry raises. It used to return None
+    whenever 404s were allowed, so a truncated download was read as "this
+    company has no filings" and the company was dropped from the ranking.
+    """
     headers = {"User-Agent": user_agent, "Accept": "application/json"}
     last_err: Exception | None = None
     for attempt in range(retries):
@@ -61,9 +66,25 @@ def http_json(
         except Exception as exc:  # noqa: BLE001 - retried below, raised at the end
             last_err = exc
             time.sleep(min(2 ** attempt, 20))
-    if allow_404:
-        return None
     raise RuntimeError(f"GET failed after {retries} attempts: {url} ({last_err})")
+
+
+def retry_failed(items, run_pass, is_transient, *, passes: int = 3, pause: float = 20.0, log=print):
+    """Re-run the items whose failure may have been a moment's trouble.
+
+    `run_pass(items)` processes them and leaves its failures wherever the caller
+    keeps them; `is_transient()` returns the items that failed in a way worth
+    trying again (a dropped connection, a truncated download), never the ones
+    that failed because the data is genuinely not there. Each pass waits longer
+    than the last, so a service that is briefly struggling has time to recover.
+    """
+    for number in range(1, passes + 1):
+        again = is_transient()
+        if not again:
+            return
+        log(f"  retrying {len(again)} failed downloads (pass {number} of {passes})")
+        time.sleep(pause * number)
+        run_pass(again)
 
 
 # ---------------------------------------------------------------- dates

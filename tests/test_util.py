@@ -142,3 +142,46 @@ class TestStats:
 
     def test_mean_of_nothing_is_none(self):
         assert mean([]) is None
+
+
+# ---- a failed download is an error, not "no data"
+
+class _Resp:
+    def __init__(self, status, payload=None, bad_json=False):
+        self.status_code, self._payload, self._bad = status, payload, bad_json
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise RuntimeError(f"HTTP {self.status_code}")
+
+    def json(self):
+        if self._bad:
+            raise ValueError("Compressed file ended before the end-of-stream marker was reached")
+        return self._payload
+
+
+def test_a_truncated_download_raises_even_when_404_is_allowed(monkeypatch):
+    import pytest
+    from rankfield import util
+    monkeypatch.setattr(util.time, "sleep", lambda s: None)
+    monkeypatch.setattr(util.requests, "get", lambda *a, **k: _Resp(200, bad_json=True))
+    with pytest.raises(RuntimeError):
+        util.http_json("http://x", user_agent="t", allow_404=True, retries=2)
+
+
+def test_a_real_404_is_still_no_data_when_allowed(monkeypatch):
+    from rankfield import util
+    monkeypatch.setattr(util.requests, "get", lambda *a, **k: _Resp(404))
+    assert util.http_json("http://x", user_agent="t", allow_404=True) is None
+
+
+def test_retry_failed_stops_once_nothing_is_left_to_retry():
+    from rankfield import util
+    pending, ran = ["A", "B"], []
+
+    def run_pass(batch):
+        ran.append(list(batch))
+        pending.pop()          # one succeeds per pass
+
+    util.retry_failed(pending, run_pass, lambda: list(pending), passes=5, pause=0, log=lambda *_: None)
+    assert ran == [["A", "B"], ["A"]]

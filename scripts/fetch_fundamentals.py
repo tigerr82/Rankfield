@@ -22,7 +22,7 @@ from rankfield.config import CACHE_DIR, DATA_DIR, ensure_dirs, load_settings, re
 from rankfield.facts import FactSet
 from rankfield.metrics import REVENUE, compute_metrics
 from rankfield.providers import get_fundamentals_provider
-from rankfield.util import last_day_of_prior_month
+from rankfield.util import last_day_of_prior_month, retry_failed
 
 
 def main() -> int:
@@ -63,7 +63,7 @@ def main() -> int:
             raw = edgar.company_facts(listing["cik"], use_cache=not args.no_cache)
         except Exception as exc:  # noqa: BLE001
             with lock:
-                failures.append({"ticker": ticker, "reason": f"fetch failed: {exc}"[:200]})
+                failures.append({"ticker": ticker, "reason": f"fetch failed: {exc}"[:200], "transient": True})
             return
         if not raw or not raw.get("facts"):
             with lock:
@@ -92,8 +92,21 @@ def main() -> int:
                 print(f"  ...{done[0]}/{len(listings)}", flush=True)
 
     print(f"fundamentals as of {as_of} for {len(listings)} companies")
-    with ThreadPoolExecutor(max_workers=args.workers) as pool:
-        list(pool.map(work, listings))
+    def run_pass(batch: list[dict]) -> None:
+        with ThreadPoolExecutor(max_workers=args.workers) as pool:
+            list(pool.map(work, batch))
+
+    def failed_downloads() -> list[dict]:
+        return [l for l in listings if any(f["ticker"] == l["ticker"] and f.get("transient") for f in failures)]
+
+    def retry_pass(batch: list[dict]) -> None:
+        # Drop the earlier failure record: the retry either succeeds or writes a new one.
+        retried = {l["ticker"] for l in batch}
+        failures[:] = [f for f in failures if f["ticker"] not in retried]
+        run_pass(batch)
+
+    run_pass(listings)
+    retry_failed(listings, retry_pass, failed_downloads)
 
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

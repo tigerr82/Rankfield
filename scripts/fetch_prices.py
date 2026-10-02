@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from rankfield.config import DATA_DIR, ensure_dirs, load_settings, read_json, user_agent, write_json
 from rankfield.providers import get_price_provider
-from rankfield.util import last_day_of_prior_month
+from rankfield.util import last_day_of_prior_month, retry_failed
 
 
 def main() -> int:
@@ -55,7 +55,7 @@ def main() -> int:
         try:
             series = provider.history(ticker, range_="1y")
         except Exception as exc:  # noqa: BLE001 - recorded, never silently dropped
-            failures.append({"ticker": ticker, "reason": str(exc)[:200]})
+            failures.append({"ticker": ticker, "reason": str(exc)[:200], "transient": True})
             return
         if not series:
             failures.append({"ticker": ticker, "reason": "no price series returned"})
@@ -88,8 +88,20 @@ def main() -> int:
             "splits_in_window": series.splits,
         }
 
-    with ThreadPoolExecutor(max_workers=settings["http"]["price_workers"]) as pool:
-        list(pool.map(work, listings))
+    def run_pass(batch: list[dict]) -> None:
+        with ThreadPoolExecutor(max_workers=settings["http"]["price_workers"]) as pool:
+            list(pool.map(work, batch))
+
+    def failed_downloads() -> list[dict]:
+        return [l for l in listings if any(f["ticker"] == l["ticker"] and f.get("transient") for f in failures)]
+
+    def retry_pass(batch: list[dict]) -> None:
+        retried = {l["ticker"] for l in batch}
+        failures[:] = [f for f in failures if f["ticker"] not in retried]
+        run_pass(batch)
+
+    run_pass(listings)
+    retry_failed(listings, retry_pass, failed_downloads)
 
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

@@ -34,10 +34,17 @@ from rankfield.scoring import SEGMENTS, classify_segment, rank_stability, score_
 from rankfield.util import last_day_of_prior_month, month_key
 
 
-def build_rows(universe, fundamentals, prices, settings, funnel, excluded):
+def build_rows(universe, fundamentals, prices, settings, funnel, excluded, prior_scored=frozenset()):
     """Apply the structural-hygiene and liquidity filters, recording a count at
-    every stage so the funnel is auditable."""
+    every stage so the funnel is auditable.
+
+    `prior_scored` is last month's scored tickers: a company already ranked keeps
+    its place until its volume falls clearly below the floor, not by a rounding."""
     cfg = settings["universe"]
+    adv_ratio = cfg.get("adv_retention_ratio", 1.0)
+    fund_failed = {f["ticker"]: f["reason"] for f in fundamentals.get("failures", [])}
+    price_failed = {f["ticker"]: f["reason"] for f in prices.get("failures", [])}
+    kept_on_volume = 0
     rows = []
     as_of = date.fromisoformat(fundamentals["as_of"])
     stage_counts = {"stale_filer": 0, "no_fundamentals": 0, "no_price": 0, "foreign_filer": 0,
@@ -50,11 +57,15 @@ def build_rows(universe, fundamentals, prices, settings, funnel, excluded):
 
         if not fund:
             stage_counts["no_fundamentals"] += 1
-            excluded.append({"ticker": ticker, "stage": "fundamentals", "reason": "no XBRL facts on file"})
+            # The download failing and the company having no filings are different
+            # facts; the first must never be reported as the second.
+            excluded.append({"ticker": ticker, "stage": "fundamentals",
+                             "reason": fund_failed.get(ticker, "no XBRL facts on file")})
             continue
         if not price:
             stage_counts["no_price"] += 1
-            excluded.append({"ticker": ticker, "stage": "price", "reason": "no adjusted close resolved"})
+            excluded.append({"ticker": ticker, "stage": "price",
+                             "reason": price_failed.get(ticker, "no adjusted close resolved")})
             continue
         if not fund["files_domestic_forms"]:
             stage_counts["foreign_filer"] += 1
@@ -86,7 +97,9 @@ def build_rows(universe, fundamentals, prices, settings, funnel, excluded):
             })
             continue
         adv = price.get("adv_dollar")
-        if adv is None or adv < cfg["adv_dollar_floor"]:
+        if adv is not None and adv < cfg["adv_dollar_floor"] and ticker in prior_scored                 and adv >= cfg["adv_dollar_floor"] * adv_ratio:
+            kept_on_volume += 1
+        elif adv is None or adv < cfg["adv_dollar_floor"]:
             stage_counts["illiquid"] += 1
             excluded.append({
                 "ticker": ticker, "stage": "liquidity",
@@ -111,7 +124,10 @@ def build_rows(universe, fundamentals, prices, settings, funnel, excluded):
     funnel.append({"stage": "files 10-K/10-Q (foreign private issuers removed)", "count": len(universe["listings"]) - sum([stage_counts["no_fundamentals"], stage_counts["no_price"], stage_counts["foreign_filer"]])})
     funnel.append({"stage": f"at least {cfg['min_quarters_filed']} periodic filings", "count": len(rows) + stage_counts["illiquid"] + stage_counts["stale_filer"]})
     funnel.append({"stage": f"latest report within {cfg['max_report_age_days']} days", "count": len(rows) + stage_counts["illiquid"]})
-    funnel.append({"stage": f"average daily dollar volume >= ${cfg['adv_dollar_floor']/1e6:.0f}M", "count": len(rows)})
+    funnel.append({"stage": f"average daily dollar volume >= ${cfg['adv_dollar_floor']/1e6:.0f}M, "
+                            f"or >= {adv_ratio:.0%} of it if scored last month "
+                            f"({kept_on_volume} kept on the second condition)",
+                   "count": len(rows)})
     return rows
 
 
@@ -158,9 +174,19 @@ def main() -> int:
     run_date = date.today()
     prior_scoring_date = last_day_of_prior_month(scoring_date.replace(day=1))
 
+    # Last month's record, read first: the eligibility floors give a company
+    # already ranked some room, and the comparison further down needs it too.
+    prior = read_json(HISTORY_DIR / f"scores_{month_key(prior_scoring_date)}.json")
+    prior_by_ticker = {}
+    if prior:
+        for seg in prior.get("segments", {}).values():
+            for r in seg:
+                prior_by_ticker[r["ticker"]] = r
+
     funnel = list(universe["funnel"])
     excluded: list[dict] = []
-    rows = build_rows(universe, fundamentals, prices, settings, funnel, excluded)
+    rows = build_rows(universe, fundamentals, prices, settings, funnel, excluded,
+                      prior_scored=frozenset(prior_by_ticker))
 
     # ---- model validity: three separate tables, never ranked against each other
     segmented: dict[str, list[dict]] = {k: [] for k in SEGMENTS}
@@ -192,13 +218,7 @@ def main() -> int:
     funnel.append({"stage": f"coverage >= {settings['universe']['coverage_threshold']:.0%} of applicable metrics",
                    "count": sum(len(r["scored"]) for r in results.values())})
 
-    # ---- month-over-month, against the previous run's stored record
-    prior = read_json(HISTORY_DIR / f"scores_{month_key(prior_scoring_date)}.json")
-    prior_by_ticker = {}
-    if prior:
-        for seg in prior.get("segments", {}).values():
-            for r in seg:
-                prior_by_ticker[r["ticker"]] = r
+    # ---- month-over-month, against the previous run's stored record (read above)
 
     def emit(row: dict) -> dict:
         listing, price = row["listing"], row["price"]
