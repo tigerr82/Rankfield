@@ -32,6 +32,36 @@ SEGMENTS = {
 
 FINANCIAL_SECTORS = {"Finance", "Real Estate"}
 
+# Inside the financials table a bank, an insurer, a broker and an asset manager
+# run different balance sheets: a bank holds 6-9% equity against assets because
+# that is what a bank is, an insurer 20% or more, an asset manager 30%. Pooled
+# in one cohort the equity and leverage metrics ranked every large bank in the
+# bottom third (Bank of America 216th, Goldman Sachs 233rd of 288) and rewarded
+# an insurer for being an insurer. Each is therefore ranked against its own kind
+# (2.2). Percentiles, and the decile within a peer group, are taken inside it;
+# the composite is a percentile, so it stays comparable across groups exactly as
+# it does across the sectors of the operating table.
+BROKER_INDUSTRY = re.compile(r"(broker|investment banker)", re.IGNORECASE)
+INSURER_INDUSTRY = re.compile(r"insur", re.IGNORECASE)
+BANK_INDUSTRY = re.compile(r"(bank|savings institution|consumer services|finance companies)", re.IGNORECASE)
+
+
+def peer_group(listing: dict, segment: str | None) -> str | None:
+    """The cohort a stock is ranked within: its sector, except in financials,
+    where it is the kind of financial business. None means no peer group."""
+    sector = listing.get("sector")
+    if not sector or segment != "financials":
+        return sector or None
+    industry = listing.get("industry") or ""
+    if BROKER_INDUSTRY.search(industry):
+        return "Brokers & capital markets"
+    if INSURER_INDUSTRY.search(industry):
+        return "Insurers"
+    if BANK_INDUSTRY.search(industry):
+        return "Banks & lenders"
+    return "Asset managers & other"
+
+
 # Growth is only rewarded where it is funded at a return above the cost of
 # capital. Which return that is depends on the segment: invested capital is
 # meaningless for a bank, and a REIT earns its return in funds from operations.
@@ -122,7 +152,7 @@ def score_segment(
     # ---- cohorts: sector within segment, with a documented fallback
     cohorts: dict[str, list[int]] = {}
     for i, r in enumerate(rows):
-        cohorts.setdefault(r["listing"].get("sector") or "(unclassified)", []).append(i)
+        cohorts.setdefault(peer_group(r["listing"], r.get("segment")) or "(unclassified)", []).append(i)
     small = [s for s, idx in cohorts.items() if len(idx) < min_cohort]
     fallback_idx = [i for s in small for i in cohorts[s]]
     for s in small:
@@ -134,7 +164,8 @@ def score_segment(
     bases: list[dict[str, str]] = [{} for _ in rows]
 
     for cohort_name, idx in cohorts.items():
-        basis = "universe" if cohort_name == "(segment-wide)" else "sector"
+        in_financials = bool(rows) and rows[0].get("segment") == "financials"
+        basis = "universe" if cohort_name == "(segment-wide)" else ("peer group" if in_financials else "sector")
         for key in metric_keys:
             spec = METRICS_BY_KEY[key]
             raw = [rows[i]["values"].get(key) for i in idx]
@@ -214,6 +245,7 @@ def score_segment(
             "factors": factors,
             "coverage": round(coverage, 3),
             "applicable_metrics": applicable,
+            "peer_group": peer_group(r["listing"], r.get("segment")),
         }
         if coverage < coverage_threshold:
             record["insufficient_reason"] = (
@@ -265,7 +297,7 @@ def assign_sector_deciles(scored: list[dict]) -> None:
     # itself and put a stock ranked 721st of 1,246 in the default view.
     by_sector: dict[str, list[dict]] = {}
     for r in scored:
-        sector = r["listing"].get("sector")
+        sector = peer_group(r["listing"], r.get("segment"))
         if not sector:
             r["sector_decile"] = None
             r["sector_rank"] = None

@@ -185,3 +185,14 @@ def test_retry_failed_stops_once_nothing_is_left_to_retry():
 
     util.retry_failed(pending, run_pass, lambda: list(pending), passes=5, pause=0, log=lambda *_: None)
     assert ran == [["A", "B"], ["A"]]
+
+
+def test_average_volume_is_measured_at_the_scoring_date_not_today():
+    from rankfield.providers.prices_yahoo import PriceSeries
+    s = PriceSeries(ticker="X")
+    s.dates = ["2026-08-28", "2026-08-31", "2026-09-01", "2026-09-02"]
+    s.closes = [10.0, 10.0, 10.0, 10.0]
+    s.volumes = [1_000_000.0, 1_000_000.0, 5_000_000.0, 5_000_000.0]
+    from datetime import date
+    assert s.avg_dollar_volume(2, as_of=date(2026, 8, 31)) == 10_000_000.0   # August's own
+    assert s.avg_dollar_volume(2) == 50_000_000.0                             # today's

@@ -329,6 +329,17 @@ class TestAbandonedTags:
         return {"start": f"{year}-01-01", "end": f"{year}-12-31", "val": val,
                 "filed": f"{year + 1}-02-15", "form": "10-K", "accn": f"a{year}"}
 
+    def test_jpmorgans_whole_long_term_debt_tag_is_read(self):
+        # JPMorgan stopped using LongTermDebt in 2014 and tags its $460B under this
+        # name, current maturities included. Unread, only its short-term
+        # borrowings counted and debt/equity read 0.19 instead of about 1.5.
+        fs = build(LongTermDebtNoncurrent=None, LongTermDebtCurrent=None, ShortTermBorrowings=50.0)
+        self.add(fs, "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities",
+                 [{"end": "2025-12-31", "val": 5000.0, "filed": "2026-02-15", "form": "10-K", "accn": "a"}])
+        value, how = total_debt(fs)
+        assert how == "longtermdebt+short"
+        assert value == 5000.0 + 50.0   # plus the short-term borrowings it does not include
+
     def test_a_stale_combined_debt_tag_falls_through_to_current_components(self):
         fs = build()
         self.add(fs, "DebtLongtermAndShorttermCombinedAmount",

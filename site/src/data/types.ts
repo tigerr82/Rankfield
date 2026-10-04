@@ -64,6 +64,8 @@ export interface StockRow {
   price_change_abs: number | null;
   composite: number | null;
   rank: number;
+  /** The cohort this stock is ranked within: its sector, or in financials the kind of business. */
+  peer_group?: string | null;
   sector_decile: number | null;
   sector_rank: number | null;
   factors: Record<FactorKey, number | null>;

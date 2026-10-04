@@ -6,7 +6,7 @@
   "block_scored_drop_pct": 5,
   "recently_abandoned_days": 450
  },
- "scored_now": 1667,
+ "scored_now": 1668,
  "recently_abandoned_tags": [
   {
    "ticker": "AVGO",
@@ -242,14 +242,8 @@
  ],
  "status": "warn",
  "scored_prior": 1653,
- "scored_change_pct": 0.85,
- "dropped_out": [
-  {
-   "ticker": "GBTG",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  }
- ],
+ "scored_change_pct": 0.91,
+ "dropped_out": [],
  "metrics_lost": [
   {
    "ticker": "ASAN",

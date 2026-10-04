@@ -6,6 +6,7 @@ from rankfield.scoring import (
     assign_sector_deciles,
     classify_segment,
     composite_of,
+    peer_group,
     rank_stability,
     score_segment,
     weight_combinations,
@@ -426,3 +427,46 @@ class TestTheHurdleCeiling:
 
     def test_above_the_hurdle_the_percentile_stands(self):
         assert self.score(0.20)["T11"] == 100.0
+
+
+class TestPeerGroups:
+    """Inside financials a bank, an insurer, a broker and an asset manager are
+    ranked against their own kind, because their balance sheets differ by nature."""
+
+    @staticmethod
+    def group(industry, segment="financials", sector="Finance"):
+        return peer_group({"sector": sector, "industry": industry}, segment)
+
+    def test_each_kind_of_financial_business_gets_its_own_group(self):
+        assert self.group("Major Banks") == "Banks & lenders"
+        assert self.group("Savings Institutions") == "Banks & lenders"
+        assert self.group("Finance: Consumer Services") == "Banks & lenders"
+        assert self.group("Property-Casualty Insurers") == "Insurers"
+        assert self.group("Life Insurance") == "Insurers"
+        assert self.group("Investment Managers") == "Asset managers & other"
+
+    def test_an_investment_banker_is_a_broker_not_a_bank(self):
+        assert self.group("Investment Bankers/Brokers/Service") == "Brokers & capital markets"
+
+    def test_outside_financials_the_peer_group_is_the_sector(self):
+        assert self.group("Major Banks", segment="operating", sector="Technology") == "Technology"
+
+    def test_no_sector_means_no_peer_group(self):
+        assert peer_group({"sector": None, "industry": "Major Banks"}, "financials") is None
+
+    def test_a_banks_leverage_is_ranked_against_banks_not_insurers(self):
+        def row(ticker, industry, equity_assets):
+            return {"ticker": ticker, "segment": "financials",
+                    "listing": {"sector": "Finance", "industry": industry},
+                    "values": {"equity_assets": equity_assets}, "missing": {}}
+        banks = [row(f"B{i}", "Major Banks", 0.06 + i * 0.002) for i in range(12)]
+        insurers = [row(f"I{i}", "Life Insurance", 0.20 + i * 0.01) for i in range(12)]
+        scored = score_segment(
+            banks + insurers, weights=EQUAL, winsor=(5, 95), roic_hurdle=0.09,
+            min_cohort=12, coverage_threshold=0.0, metric_applicability=0.0)
+        by = {r["ticker"]: r for r in scored["scored"] + scored["insufficient"]}
+        # The best bank is top of its own group despite holding far less equity
+        # than the worst insurer.
+        assert by["B11"]["percentiles"]["equity_assets"] > 90
+        assert by["I0"]["percentiles"]["equity_assets"] < 10
+        assert by["B11"]["peer_group"] == "Banks & lenders"

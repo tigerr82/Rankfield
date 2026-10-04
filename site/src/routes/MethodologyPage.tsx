@@ -238,7 +238,16 @@ if ROIC <= ${hurdle}% (hurdle):   min(p, 50)   (never above the midpoint)`}</pre
             earnings-based set Realty Income fell 53 → 155 and American Tower 111 → 293, and Crown
             Castle, SBA and Iron Mountain dropped out entirely on negative book equity. Leverage is
             read as debt/assets and net debt/FFO for the same reason. Growth stays conditioned on a
-            return above the 9% hurdle — return on equity for financials, FFO over assets for REITs.
+            return above the 9% hurdle — return on equity for financials, FFO over assets for REITs.{" "}
+            <b>Inside the financials table each kind of business is ranked against its own kind,
+            since methodology 2.2:</b> banks and lenders, insurers, brokers and capital-markets
+            firms, and asset managers. A bank holds 6–9% equity against its assets because that is
+            what a bank is; an insurer holds 20% or more and an asset manager 30%. Pooled in one
+            cohort, the equity and leverage measures ranked every large bank in the bottom third
+            for being a bank — Bank of America 216th and Goldman Sachs 233rd of 288 — and credited
+            an insurer for being an insurer. The score is still a percentile, so it remains
+            comparable across the groups exactly as it is across the sectors of the operating
+            table; the &ldquo;top 10% per sector&rdquo; view takes the top tenth of each group.
           </li>
           <li>
             <b>Data coverage.</b> A stock resolving fewer than 70% of the metrics applicable to its

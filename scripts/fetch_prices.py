@@ -84,7 +84,7 @@ def main() -> int:
             "prior_price": round(prior[1], 4) if prior else None,
             "change_pct": round(change_pct, 4) if change_pct is not None else None,
             "change_abs": round(now[1] - prior[1], 4) if prior else None,
-            "adv_dollar": series.avg_dollar_volume(63),
+            "adv_dollar": series.avg_dollar_volume(63, as_of=scoring_date),
             "splits_in_window": series.splits,
         }
 

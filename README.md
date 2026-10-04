@@ -17,8 +17,8 @@ runtime API calls, no server, no database — and no recurring cost.
 |---|---|
 | Listed on NYSE/NASDAQ | 6,780 |
 | Common stock, above $1B (or within 80% of it if already ranked), one line per company | 2,264 |
-| Scored | **1,667** (1,259 operating · 288 banks & insurers · 79 REITs · 41 pre-revenue) |
-| Routed to *Insufficient data* | 187 |
+| Scored | **1,668** (1,259 operating · 289 banks & insurers · 79 REITs · 41 pre-revenue) |
+| Routed to *Insufficient data* | 186 |
 | Metric coverage across scored stocks | **94%** |
 | Cost | $0 |
 
@@ -129,8 +129,45 @@ REIT is scored on funds from operations rather than on depreciated earnings.
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There have
-been sixteen: fifteen to the first month, before any comparison depended on it, and one to the
-second, within hours of its publication.
+been seventeen: fifteen to the first month, before any comparison depended on it, and two to the
+second, within days of its publication.
+
+**2026-10 — methodology 2.2: financials ranked against their own kind, JPMorgan's debt read, and
+both months regenerated.** A reader asked why JPMorgan scored so low. Auditing the answer found
+two defects and one thing that is not a defect.
+
+- *JPMorgan's debt was a fifth of itself.* JPMorgan, US Bancorp and others tag their whole
+  long-term debt, current maturities included, as
+  `LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities`, and abandoned `LongTermDebt`
+  years ago (JPMorgan's last was 2014). Unread, JPMorgan's $460B of long-term debt vanished and
+  only its $72B of short-term borrowings counted: debt/equity 0.19 against about 1.4. The tag is
+  read now.
+- *Banks were ranked against insurers.* The financials table pooled banks, insurers, brokers and
+  asset managers in one cohort. A bank holds 6-9% equity against assets because that is what a
+  bank is; an insurer 20% or more. The equity and leverage measures therefore ranked every large
+  bank in the bottom third for being a bank - Bank of America 216th, Goldman Sachs 233rd of 288 -
+  and credited insurers for being insurers. Each business is now ranked against its own kind:
+  banks and lenders (164), insurers (69), brokers and capital markets (23), asset managers (32).
+  The table stays one table, and the score stays a percentile, so it is as comparable across the
+  groups as the operating table's score is across its sectors.
+- *Average volume was today's volume.* The liquidity floor measured the 63 sessions ending on
+  the day the code ran, not on the scoring date, so a regenerated August was judged on September's
+  volume. It is measured at the scoring date now.
+
+Not a defect: JPMorgan still scores low, 46.0 and 179th of 289, and for reasons that are now true.
+Valuation is 27 (it trades at about 2.4 times book, a higher multiple than most of its group) and
+Health is 9 (it holds 7.5% equity against assets, less than the median of a group that is mostly
+community banks). Whether equity over assets should compare a global systemic
+bank with a small community lender is a question about the metric, not about this
+correction, and is left open.
+
+Weights are unchanged; the version moved to 2.2 because the way percentiles are taken changed.
+Effect on September: a median of 17 places in the financials table, 44 names by more than 50;
+the average Major Bank 48.1 -> 51.0 and the average insurer 55.4 -> 50.1; JPMorgan 150 -> 179
+(the debt now counts), Bank of America 216 -> 199, Wells Fargo 212 -> 183, Morgan Stanley 233 ->
+203. The operating table moved a median of one place; General Motors and two other companies are
+scored now that failed downloads are retried. Both months regenerated from
+fresh EDGAR downloads; the earlier records are in git.
 
 **2026-10 — the 2026-09 record was regenerated once, on 2026-10-03, under two eligibility
 corrections.** Writing "who left the ranking and why" for the first month-over-month comparison

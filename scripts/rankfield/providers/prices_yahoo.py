@@ -43,13 +43,21 @@ class PriceSeries:
                 return self.dates[i], self.closes[i]
         return None
 
-    def avg_dollar_volume(self, days: int = 63) -> float | None:
-        n = min(days, len(self.closes))
+    def avg_dollar_volume(self, days: int = 63, as_of: date | None = None) -> float | None:
+        """Average daily dollar volume over the `days` sessions ending at `as_of`
+        (the latest session when omitted). Point-in-time: a month scored after the
+        fact must be measured on the volume that month saw, not on today's - it
+        was the latter that dropped OPKO from a regenerated August record."""
+        end = len(self.closes)
+        if as_of is not None:
+            target = as_of.isoformat()
+            end = sum(1 for d in self.dates if d <= target)
+        n = min(days, end)
         if n == 0:
             return None
         pairs = [
             self.closes[i] * self.volumes[i]
-            for i in range(len(self.closes) - n, len(self.closes))
+            for i in range(end - n, end)
             if self.closes[i] is not None and self.volumes[i] is not None
         ]
         return sum(pairs) / len(pairs) if pairs else None

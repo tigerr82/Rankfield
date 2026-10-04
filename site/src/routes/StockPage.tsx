@@ -97,7 +97,7 @@ export function StockPage() {
             value={live?.toFixed(1) ?? DASH}
             sub={
               isDefaultWeights(weights)
-                ? `rank ${row.rank} in its table · decile ${row.sector_decile ?? DASH} of its sector`
+                ? `rank ${row.rank} in its table · decile ${row.sector_decile ?? DASH} of its ${row.peer_group && row.peer_group !== row.sector ? `peer group (${row.peer_group})` : "sector"}`
                 : `official score ${row.composite?.toFixed(1) ?? DASH} at ${row.weights_version} weights — the session weighting is exploratory and is not stored`
             }
           />

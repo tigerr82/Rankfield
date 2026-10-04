@@ -118,6 +118,11 @@ DEBT_LT_CURRENT = [
 DEBT_SHORT = ["ShortTermBorrowings", "OtherShortTermBorrowings", "CommercialPaper"]
 DEBT_LT_TOTAL = [
     "LongTermDebt",
+    # JPMorgan, US Bancorp and others tag their whole long-term debt, current
+    # maturities included, under this name and stopped using LongTermDebt years
+    # ago (JPMorgan's last was 2014). Unread, JPMorgan's $460B read as the $72B
+    # of short-term borrowings alone - a debt/equity of 0.19 instead of about 1.5.
+    "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities",
     "SeniorNotes", "UnsecuredDebt", "SecuredDebt", "ConvertibleDebt", "NotesPayable", "LoansPayable",
     "DebtAndCapitalLeaseObligations",
     "ConvertibleNotesPayable",

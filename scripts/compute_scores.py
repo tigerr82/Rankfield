@@ -245,6 +245,7 @@ def main() -> int:
             "price_change_abs": price["change_abs"],
             "composite": composite,
             "rank": row.get("rank"),
+            "peer_group": row.get("peer_group"),
             "sector_decile": row.get("sector_decile"),
             "sector_rank": row.get("sector_rank"),
             "factors": row["factors"],
