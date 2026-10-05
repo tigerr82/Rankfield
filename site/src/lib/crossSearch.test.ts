@@ -38,4 +38,9 @@ describe("crossSearch", () => {
   it("returns nothing for an empty search", () => {
     expect(crossSearch(scores, "  ", "operating")).toEqual([]);
   });
+
+  it("can look only in the unranked list, or only in the ranked tables", () => {
+    expect(crossSearch(scores, "jpm", "operating", "unranked").map((h) => h.ticker)).toEqual(["JPMI"]);
+    expect(crossSearch(scores, "jpm", "operating", "ranked").map((h) => h.ticker)).toEqual(["JPM"]);
+  });
 });

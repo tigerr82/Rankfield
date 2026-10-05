@@ -11,7 +11,7 @@ export interface CrossHit {
 }
 
 /**
- * Companies matching a search in every table except the one on screen.
+ * Companies matching a search in the tables that are not the one on screen.
  *
  * The table already filters itself, so it is left out here: the point is to find
  * a company that is not in the table the reader happens to be looking at -
@@ -22,6 +22,7 @@ export function crossSearch(
   scores: ScoresPayload,
   query: string,
   current: SegmentKey | "insufficient",
+  include: "ranked" | "unranked" | "both" = "both",
 ): CrossHit[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
@@ -29,12 +30,12 @@ export function crossSearch(
     ticker.toLowerCase().includes(q) || name.toLowerCase().includes(q);
   const hits: CrossHit[] = [];
   for (const [table, rows] of Object.entries(scores.segments) as [SegmentKey, ScoresPayload["segments"][SegmentKey]][]) {
-    if (table === current) continue;
+    if (table === current || include === "unranked") continue;
     for (const row of rows) {
       if (matches(row.ticker, row.name)) hits.push({ ticker: row.ticker, name: row.name, table, rank: row.rank });
     }
   }
-  if (current !== "insufficient") {
+  if (current !== "insufficient" && include !== "ranked") {
     for (const row of scores.insufficient) {
       if (matches(row.ticker, row.name)) hits.push({ ticker: row.ticker, name: row.name, table: "insufficient", rank: null });
     }

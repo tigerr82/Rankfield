@@ -14,7 +14,10 @@ import { useApp } from "../state/AppState";
  */
 export function OtherTables({ scores }: { scores: ScoresPayload }) {
   const { query, segment, setSegment } = useApp();
-  const hits = useMemo(() => crossSearch(scores, query, segment), [scores, query, segment]);
+  // With a ranked table open the search already covers every ranked table in the
+  // table itself, so only the unranked list is left to mention here.
+  const include = segment === "insufficient" ? "ranked" : "unranked";
+  const hits = useMemo(() => crossSearch(scores, query, segment, include), [scores, query, segment, include]);
   if (!hits.length) return null;
 
   const label = (table: string) =>
@@ -24,7 +27,7 @@ export function OtherTables({ scores }: { scores: ScoresPayload }) {
 
   return (
     <div className="othertabs" role="note">
-      <span className="mosumlabel">Also in other tables</span>
+      <span className="mosumlabel">{include === "unranked" ? "Also unranked" : "Also in other tables"}</span>
       {hits.slice(0, SHOWN_OTHER).map((h) => (
         <span key={h.ticker} className="othertab">
           <Link to={`/stock/${h.ticker}`} className="mosumlink">

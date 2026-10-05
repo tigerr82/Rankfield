@@ -54,6 +54,26 @@ export function RankingPage() {
     [ranked, query, sectors, ranges, chgMin, sortKey, sortDir, scope],
   );
 
+  // A search looks at every ranked table, not only the one that is open: the
+  // reader typing a company expects to find it, whichever tab is selected.
+  // Only the query applies - a sector or score filter left on in the rail must
+  // not hide the company that was asked for.
+  const searching = app.query.trim() !== "" && app.segment !== "insufficient";
+  const searchRows = useMemo(() => {
+    if (!searching || !scores) return [];
+    const everyone = (Object.values(scores.segments) as StockRow[][]).flatMap((rows) =>
+      rankRows(rows, app.weights, official),
+    );
+    return filterAndSort(everyone, {
+      ...app,
+      sectors: [],
+      chgMin: CHG_ANY,
+      ranges: { composite: 0, quality: 0, growth: 0, valuation: 0, health: 0 },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searching, scores, query, app.weights, official, sortKey, sortDir]);
+  const shownRows = searching ? searchRows : visible;
+
   // Row counts for both scopes under the current filters, shown on the scope
   // switch itself so each option says what it will do before it is clicked.
   const scopeCounts = useMemo(
@@ -123,30 +143,48 @@ export function RankingPage() {
       ) : (
         <>
           {/* What moved since last month, above the table it describes. */}
-          <MonthSummary
-            rows={ranked}
-            scores={scores}
-            history={history}
-            metrics={scores.metrics}
-            factors={scores.factors}
-            scrollRef={scrollRef}
-          />
+          {!searching && (
+            <MonthSummary
+              rows={ranked}
+              scores={scores}
+              history={history}
+              metrics={scores.metrics}
+              factors={scores.factors}
+              scrollRef={scrollRef}
+            />
+          )}
           {/* Names the table and the scope, so the heading always says what the rows are. */}
           <div className="mainlabel">
-            {segmentTitle(scores.segments_meta, app.segment)} ·{" "}
-            {app.scope === "top_decile" ? "Top 10% per sector" : "All"}{" "}
-            <span className="mono">({visible.length.toLocaleString()})</span>
+            {searching ? (
+              "Search · every table"
+            ) : (
+              <>
+                {segmentTitle(scores.segments_meta, app.segment)} ·{" "}
+                {app.scope === "top_decile" ? "Top 10% per sector" : "All"}
+              </>
+            )}{" "}
+            <span className="mono">({shownRows.length.toLocaleString()})</span>
           </div>
           <RankTable
-            rows={visible}
+            rows={shownRows}
+            showSegment={searching}
             metrics={scores.metrics}
             factors={scores.factors}
             history={history.tickers}
             scrollRef={scrollRef}
             tag="main"
-            emptyState={<EmptyResult scope={app.scope} noun={segmentNoun(app.segment)} />}
+            emptyState={
+              searching ? (
+                <div className="emptyq">
+                  <strong>No ranked company matches “{app.query.trim()}”.</strong>
+                  It may be unranked for lack of data - see the note above - or not in the product.
+                </div>
+              ) : (
+                <EmptyResult scope={app.scope} noun={segmentNoun(app.segment)} />
+              )
+            }
           />
-          {app.scope === "top_decile" && visible.length > 0 && (
+          {!searching && app.scope === "top_decile" && visible.length > 0 && (
             <p className="note" style={{ margin: "10px 18px 0", maxWidth: "80ch" }}>
               Showing the top decile within each sector ({visible.length} of {ranked.length} scored
               stocks in this table). A global top-N would be dominated by whichever sectors score
