@@ -1018,7 +1018,32 @@ footer.pf a { color: var(--ink-2); }
 .moverstoggle:hover { background: var(--accent-soft); }
 .moverswrap { margin-top: 8px; }
 
+/* Matches for the search in the tables that are not on screen. */
+.othertabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+  margin: 12px 18px -4px;
+  padding: 7px 10px;
+  background: var(--accent-soft);
+  border-radius: var(--radius);
+  font-size: var(--t-small);
+  color: var(--ink-2);
+}
+.othertab { white-space: nowrap; }
+.othertabgo {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 @media (max-width: 767px) {
   .mosum { margin: 10px 10px -2px; gap: 3px 12px; }
   .moverstoggle { margin: 8px 10px 0; }
+  .othertabs { margin: 10px 10px -2px; gap: 3px 12px; }
 }

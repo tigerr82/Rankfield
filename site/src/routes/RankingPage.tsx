@@ -5,6 +5,7 @@ import { Chips } from "../components/Chips";
 import { FilterRail } from "../components/FilterRail";
 import { PortfolioSection } from "../components/PortfolioSection";
 import { MonthSummary } from "../components/MonthSummary";
+import { OtherTables } from "../components/OtherTables";
 import { SharedPortfolioBanner } from "../components/SharedPortfolio";
 import { RankTable } from "../components/RankTable";
 import { Shell, useScrollRef } from "../components/Shell";
@@ -110,6 +111,8 @@ export function RankingPage() {
         windowStart={scores.meta.prior_scoring_date}
         windowEnd={scores.meta.scoring_date}
       />
+
+      <OtherTables scores={scores} />
 
       {app.segment === "insufficient" ? (
         <InsufficientTable
