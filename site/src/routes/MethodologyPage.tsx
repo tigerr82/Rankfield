@@ -244,9 +244,9 @@ if ROIC <= ${hurdle}% (hurdle):   min(p, 50)   (never above the midpoint)`}</pre
             bank is; an insurer holds 20% or more. Pooled in one table, the shared measures
             ranked every large bank in the bottom third for being a bank — Bank of America 216th
             and Goldman Sachs 233rd of 288 — and said little about what makes one bank better
-            than another. Banks and lenders are now read on net interest income over assets, the
-            efficiency ratio, the growth of net interest income, tangible book value and credit
-            cost; insurers on the loss ratio, benefits and expenses over revenue, investment
+            than another. Banks and lenders are now read on the efficiency ratio, the growth of net
+            interest income, price to tangible book measured against the return on tangible equity,
+            and credit cost; insurers on the loss ratio, benefits and expenses over revenue, investment
             income over assets, premium growth and claim reserves over equity; brokers and asset
             managers on net margin, operating margin and compensation over revenue. Each is
             added to the return and capital measures all three share, and every one comes from
@@ -255,7 +255,9 @@ if ROIC <= ${hurdle}% (hurdle):   min(p, 50)   (never above the midpoint)`}</pre
             bank KPIs that the filings do not carry uniformly — loans, non-performing loans and
             regulatory capital ratios — and the asset manager&apos;s assets under management are
             not used, rather than approximated badly. Inside a table a stock is ranked against
-            its closest kind: deposit-taking banks apart from card and consumer lenders,
+            its closest kind: banks by size — large, regional and community — apart from card and
+            consumer lenders, which are lenders only on evidence (a fund, or a spread of at least 4%
+            of assets: a credit bureau or a miner under the same label is an operating company),
             property-casualty insurers apart from life insurers, brokers apart from asset
             managers.
           </li>

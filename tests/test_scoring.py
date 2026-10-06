@@ -441,10 +441,13 @@ class TestPeerGroups:
     def group(industry, segment, sector="Finance"):
         return peer_group({"sector": sector, "industry": industry}, segment)
 
-    def test_a_bank_and_a_card_lender_are_different_cohorts(self):
-        assert self.group("Major Banks", "banks") == "Banks"
-        assert self.group("Savings Institutions", "banks") == "Banks"
-        assert self.group("Finance: Consumer Services", "banks") == "Consumer & specialty lenders"
+    def test_banks_are_compared_by_size_and_a_card_lender_is_its_own_cohort(self):
+        def bank(cap, industry="Major Banks"):
+            return peer_group({"sector": "Finance", "industry": industry, "market_cap": cap}, "banks")
+        assert bank(886e9) == "Large banks"
+        assert bank(8e9) == "Regional banks"
+        assert bank(1.2e9) == "Community banks"
+        assert bank(5e10, "Finance: Consumer Services") == "Consumer & specialty lenders"
 
     def test_insurers_split_into_property_casualty_and_life(self):
         assert self.group("Property-Casualty Insurers", "insurers") == "Property & casualty insurers"
@@ -461,25 +464,70 @@ class TestPeerGroups:
         assert peer_group({"sector": None, "industry": "Major Banks"}, "banks") is None
 
     def test_a_cohort_ranks_its_own_kind(self):
-        def row(ticker, industry, nim):
+        def row(ticker, cap, efficiency):
             return {"ticker": ticker, "segment": "banks",
-                    "listing": {"sector": "Finance", "industry": industry},
-                    "values": {"nim_proxy": nim}, "missing": {}}
-        banks = [row(f"B{i}", "Major Banks", 0.02 + i * 0.001) for i in range(12)]
-        lenders = [row(f"L{i}", "Finance: Consumer Services", 0.10 + i * 0.01) for i in range(12)]
+                    "listing": {"sector": "Finance", "industry": "Major Banks", "market_cap": cap},
+                    "values": {"efficiency": efficiency}, "missing": {}}
+        large = [row(f"G{i}", 30e9 + i, 0.60 + i * 0.001) for i in range(12)]
+        small = [row(f"S{i}", 1.5e9 + i, 0.50 + i * 0.001) for i in range(12)]
         scored = score_segment(
-            banks + lenders, weights=EQUAL, winsor=(5, 95), roic_hurdle=0.09,
+            large + small, weights=EQUAL, winsor=(5, 95), roic_hurdle=0.09,
             min_cohort=12, coverage_threshold=0.0, metric_applicability=0.0)
         by = {r["ticker"]: r for r in scored["scored"] + scored["insufficient"]}
-        # The best bank is top of the banks although a card lender earns five times its margin.
-        assert by["B11"]["percentiles"]["nim_proxy"] > 90
-        assert by["L0"]["percentiles"]["nim_proxy"] < 10
-        assert by["B11"]["peer_group"] == "Banks"
+        # The most efficient large bank is top of the large banks although every community bank is
+        # more efficient than every large one.
+        assert by["G0"]["percentiles"]["efficiency"] > 90
+        assert by["S11"]["percentiles"]["efficiency"] < 10
+        assert by["G0"]["peer_group"] == "Large banks"
 
     def test_a_kpi_applies_only_to_the_table_it_was_written_for(self):
         from rankfield.scoring import applicable_metrics
-        row = lambda seg: {"segment": seg, "values": {"loss_ratio": 0.6, "nim_proxy": 0.03}}
+        row = lambda seg: {"segment": seg, "values": {"loss_ratio": 0.6, "efficiency": 0.55}}
         insurers, _ = applicable_metrics([row("insurers")] * 3, min_resolution=0.0)
         banks, _ = applicable_metrics([row("banks")] * 3, min_resolution=0.0)
-        assert "loss_ratio" in insurers and "nim_proxy" not in insurers
-        assert "nim_proxy" in banks and "loss_ratio" not in banks
+        assert "loss_ratio" in insurers and "efficiency" not in insurers
+        assert "efficiency" in banks and "loss_ratio" not in banks
+
+
+class TestBanksAreOnlyBanks:
+    """2.4: a label that covers lenders also covers credit bureaus and miners."""
+
+    LISTING = {"sector": "Finance", "industry": "Finance: Consumer Services"}
+
+    def test_a_data_company_under_the_same_label_is_an_operating_company(self):
+        assert classify_segment(self.LISTING, 1e10, {"nii_assets": None, "is_fund": 0.0}) == "operating"
+
+    def test_a_lender_is_a_bank_on_the_strength_of_its_spread(self):
+        assert classify_segment(self.LISTING, 1e10, {"nii_assets": 0.06, "is_fund": 0.0}) == "banks"
+        assert classify_segment(self.LISTING, 1e10, {"nii_assets": 0.013, "is_fund": 0.0}) == "operating"  # a mortgage originator
+
+    def test_a_fund_stays_with_the_lenders(self):
+        assert classify_segment(self.LISTING, 1e9, {"nii_assets": None, "is_fund": 1.0}) == "banks"
+
+    def test_a_deposit_bank_never_needs_the_evidence(self):
+        assert classify_segment({"sector": "Finance", "industry": "Major Banks"}, 1e10, {}) == "banks"
+
+
+class TestPriceToBookAgainstReturn:
+    def test_an_earned_premium_is_not_read_as_dear(self):
+        import math
+        from rankfield.scoring import derive_ptbv_gap
+
+        def bank(i, rotce, multiple):
+            return {"ticker": f"B{i}", "segment": "banks",
+                    "listing": {"sector": "Finance", "industry": "Major Banks", "market_cap": 5e9},
+                    "values": {"rotce": rotce, "tbv_yield": 1 / multiple}}
+        # Multiples follow return exactly, except bank 0, which earns 9% and trades cheap.
+        rows = [bank(i, 0.05 + i * 0.01, math.exp(0.5 + 8 * (0.05 + i * 0.01))) for i in range(1, 12)]
+        rows.append(bank(0, 0.09, 1.0))
+        derive_ptbv_gap(rows)
+        gaps = {r["ticker"]: r["values"]["ptbv_gap"] for r in rows}
+        assert gaps["B0"] > 0.5                 # cheaper than its return justifies
+        assert abs(gaps["B11"]) < 1.0           # the premium bank is not penalised for the premium
+
+    def test_too_few_banks_gives_no_gap(self):
+        from rankfield.scoring import derive_ptbv_gap
+        rows = [{"ticker": "X", "segment": "banks", "listing": {"sector": "Finance", "industry": "Major Banks", "market_cap": 1e9},
+                 "values": {"rotce": 0.1, "tbv_yield": 0.5}}]
+        derive_ptbv_gap(rows)
+        assert rows[0]["values"]["ptbv_gap"] is None

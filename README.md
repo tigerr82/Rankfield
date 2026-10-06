@@ -17,8 +17,8 @@ runtime API calls, no server, no database — and no recurring cost.
 |---|---|
 | Listed on NYSE/NASDAQ | 6,780 |
 | Common stock, above $1B (or within 80% of it if already ranked), one line per company | 2,264 |
-| Scored | **1,668** (1,259 operating · 165 banks · 69 insurers · 55 brokers & asset managers · 79 REITs · 41 pre-revenue) |
-| Routed to *Insufficient data* | 186 |
+| Scored | **1,661** (1,280 operating · 137 banks · 69 insurers · 55 brokers & asset managers · 79 REITs · 41 pre-revenue) |
+| Routed to *Insufficient data* | 193 |
 | Metric coverage across scored stocks | **94%** |
 | Cost | $0 |
 
@@ -129,8 +129,47 @@ REIT is scored on funds from operations rather than on depreciated earnings.
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There have
-been eighteen: fifteen to the first month, before any comparison depended on it, and three to the
+been nineteen: fifteen to the first month, before any comparison depended on it, and four to the
 second, within days of its publication.
+
+**2026-10 — methodology 2.4: the banks table corrected, and both months regenerated.** A reader
+asked why JPMorgan, one of the best-run banks in the world, ranked 125th of 165 banks. Its
+operating measures were the best in the table - return on equity 97.6th percentile, earnings
+stability 94th, efficiency 81st - and the way the table was built pulled it down:
+
+- *Net interest income over total assets was a poor margin proxy.* Total assets include trading
+  and securities balances, so it penalised a bank for the shape of its balance sheet; across the
+  banks it correlated -0.37 with size. It is no longer a score.
+- *Two price-to-book yields counted one measure twice, and read an earned premium as a dear price.*
+  The best return in the group trades at the highest multiple of book, so a plain book yield marked
+  JPMorgan down for being good. They are replaced by one measure: log(price / tangible book)
+  regressed on return on tangible equity within the bank's group, scored as the distance below that
+  line.
+- *Banks were compared with every size of bank.* A global bank funds itself, holds capital and earns
+  its margin differently from a community lender, and equity over assets is structurally lower for
+  the large. Banks are now ranked against banks of their own size - large (16, market cap over
+  $20 billion), regional (51) and community (59) - with the card and consumer lenders (11) apart.
+  The list is still one list, sorted on one score; the groups decide only whom each measure is
+  taken against, as sectors do in the operating table.
+- *The banks table held 28 companies that are not banks.* Nasdaq files credit bureaus, S&P Global
+  and Moody's, Coinbase, bitcoin miners, fintech marketplaces and mortgage originators under
+  "consumer services", and they were scored on net interest income and efficiency ratios. A
+  company under that label (or "finance companies") is now a lender only on evidence - it holds
+  its assets at fair value like a fund, or earns a spread of at least 4% of assets - and the rest
+  are scored as operating companies. Seven of them have too little operating data to score and now
+  sit in *Insufficient data*, where before they were ranked on measures that did not describe them.
+
+Weights are unchanged; the version moved to 2.4 because the Valuation, Quality and Health inputs of
+the banks table changed, and so did who is in it. JPMorgan 125th of 165 -> 55th of 137 (54.2),
+Bank of America 139th -> 83rd, Wells Fargo 136th -> 49th; the large banks now span 2nd to 132nd.
+Both months regenerated from fresh EDGAR downloads, each with its own scoring date; the 2.3 records
+are in git.
+
+Limits, stated: regulatory capital ratios (CET1) are tagged by none of the fifteen largest banks, so
+capital is judged on equity over assets within the large banks. Citigroup is not ranked: it filed
+its 10-Qs in May and August, but the SEC's structured data for it stops at December 2025, which the
+200-day freshness rule rejects. The consumer-lender group has 11 companies, one short of the
+twelve a cohort needs, so its percentiles are taken against the whole banks table and marked SEG.
 
 **2026-10 — methodology 2.3: three financial tables, each scored on its own KPIs, and both months
 regenerated.** 2.2 ranked a bank against banks but still scored it on nine measures shared with

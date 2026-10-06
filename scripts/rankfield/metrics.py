@@ -320,7 +320,7 @@ FINANCIAL_METRICS = [
      "formula": "Trailing net income / market cap - the inverse of the price/earnings ratio, so a "
                 "loss ranks at the bottom instead of dropping out."},
     {"key": "book_yield", "label": "Book Yield", "short": "B/P", "factor": "valuation",
-     "higher_better": True, "unit": "pct", "not_for_segments": ["operating", "pre_revenue"],
+     "higher_better": True, "unit": "pct", "not_for_segments": ["operating", "pre_revenue", "banks"],
      "formula": "Shareholders' equity / market cap - the inverse of price/book."},
     {"key": "equity_assets", "label": "Equity / Assets", "short": "EQ/A", "factor": "health",
      "higher_better": True, "unit": "pct", "not_for_segments": ["operating", "pre_revenue", "reits"],
@@ -374,10 +374,6 @@ KPI_INSURERS = ["insurers"]
 KPI_CAPITAL = ["capital_markets"]
 NEW_FINANCIAL_METRICS = [
     # ---- banks
-    {"key": "nim_proxy", "label": "Net Interest Income / Assets", "short": "NII/A", "factor": "quality",
-     "higher_better": True, "unit": "pct", "for_segments": KPI_BANKS, "coverage_optional": True,
-     "formula": "Trailing net interest income / total assets - the spread a bank earns on what it holds, "
-                "the usual net interest margin without needing average earning assets."},
     {"key": "efficiency", "label": "Efficiency Ratio", "short": "Effic.", "factor": "quality",
      "higher_better": False, "unit": "pct", "for_segments": KPI_BANKS, "coverage_optional": True,
      "formula": "Non-interest expense / (net interest income + non-interest income). Lower is better: "
@@ -386,10 +382,12 @@ NEW_FINANCIAL_METRICS = [
      "higher_better": True, "unit": "pp", "for_segments": KPI_BANKS, "coverage_optional": True,
      "formula": "(net interest income now - three years ago) / total assets / 3 - the growth of the "
                 "core earnings engine, scaled by assets like the profit measure."},
-    {"key": "tbv_yield", "label": "Tangible Book Yield", "short": "TB/P", "factor": "valuation",
-     "higher_better": True, "unit": "pct", "for_segments": KPI_BANKS, "coverage_optional": True,
-     "formula": "(equity - preferred - goodwill - other intangibles) / market cap - the inverse of "
-                "price / tangible book, the multiple banks are valued on."},
+    {"key": "ptbv_gap", "label": "Price / tangible book vs return", "short": "PTBV gap", "factor": "valuation",
+     "higher_better": True, "unit": "x", "for_segments": KPI_BANKS, "coverage_optional": True,
+     "formula": "How much cheaper than its return on tangible equity justifies. Across the bank's peer "
+                "group, log(price / tangible book) is regressed on return on tangible equity; this is the "
+                "distance below that line. A bank that earns more is expected to trade at a higher "
+                "multiple, so a premium it has earned is not read as expensive."},
     {"key": "credit_cost", "label": "Credit Cost / Revenue", "short": "Cr cost", "factor": "health",
      "higher_better": False, "unit": "pct", "for_segments": KPI_BANKS, "coverage_optional": True,
      "formula": "Provision for credit losses / (net interest income + non-interest income). Lower is "
@@ -1421,18 +1419,23 @@ def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) ->
     nii = _val(fs.ttm(NET_INTEREST_INCOME))
     nonint_income = _val(fs.ttm(NONINTEREST_INCOME))
     nonint_expense = _val(fs.ttm(NONINTEREST_EXPENSE))
-    values["nim_proxy"] = safe_div(nii, assets) if (nii is not None and assets) else None
+    # Not a registry metric: net interest income over assets decides whether a lender is
+    # a lender (classification), but as a score it penalised a bank for holding trading
+    # assets, correlating -0.37 with size.
+    values["nii_assets"] = safe_div(nii, assets) if (nii is not None and assets) else None
     bank_revenue = (nii + nonint_income) if (nii is not None and nonint_income is not None) else None
     values["efficiency"] = _ratio(nonint_expense, bank_revenue)
     provision = _val(fs.ttm(CREDIT_PROVISION))
     values["credit_cost"] = (provision / bank_revenue) if (provision is not None and bank_revenue and bank_revenue > 0) else None
     goodwill = _val(fs.instant(GOODWILL))
     values["tbv_yield"] = None
+    values["rotce"] = None
     if goodwill is not None and equity is not None and market_cap:
         other = _val(fs.instant(OTHER_INTANGIBLES)) or 0.0
         preferred = _val(fs.instant(PREFERRED_EQUITY)) or 0.0
         tangible = equity - preferred - goodwill - other
         values["tbv_yield"] = tangible / market_cap if tangible > 0 else None
+        values["rotce"] = (net_income / tangible) if (tangible > 0 and net_income is not None) else None
     nii_years = fs.annual_series(NET_INTEREST_INCOME, 4)
     values["nii_growth"] = (
         (nii_years[0]["val"] - nii_years[3]["val"]) / assets / 3
@@ -1454,16 +1457,20 @@ def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) ->
         else None
     )
     values["reserves_equity"] = _ratio(_val(fs.instant(CLAIM_RESERVES)), equity)
+    # Funds report their holdings at fair value; a bank or a lender does not.
+    values["is_fund"] = 1.0 if fs.instant(["InvestmentOwnedAtFairValue"]) is not None else 0.0
 
     op_reported = _val(fs.ttm(OPERATING_INCOME_REPORTED))
     values["op_margin"] = (op_reported / kpi_revenue) if (op_reported is not None and kpi_revenue and kpi_revenue > 0) else None
     values["comp_ratio"] = _ratio(_val(fs.ttm(COMPENSATION)), kpi_revenue)
     values["net_margin"] = (net_income / kpi_revenue) if (net_income is not None and kpi_revenue and kpi_revenue > 0) else None
-    for key in ("nim_proxy", "efficiency", "credit_cost", "tbv_yield", "nii_growth", "loss_ratio",
+    for key in ("efficiency", "credit_cost", "tbv_yield", "rotce", "nii_assets", "ptbv_gap", "nii_growth", "loss_ratio",
                 "cost_ratio", "invest_yield", "premium_growth", "reserves_equity", "op_margin", "comp_ratio",
                 "net_margin"):
         if values.get(key) is None:
-            missing[key] = "a figure this measure needs is not tagged in the company's filings"
+            missing[key] = ("worked out within the bank's peer group, from tangible book and return"
+                            if key == "ptbv_gap"
+                            else "a figure this measure needs is not tagged in the company's filings")
 
     # Name every figure rejected as stale, so a metric missing because the filer
     # abandoned a tag can be told apart from one it never reported.

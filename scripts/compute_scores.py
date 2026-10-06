@@ -191,7 +191,7 @@ def main() -> int:
     # ---- model validity: three separate tables, never ranked against each other
     segmented: dict[str, list[dict]] = {k: [] for k in SEGMENTS}
     for row in rows:
-        row["segment"] = classify_segment(row["listing"], row["revenue_ttm"])
+        row["segment"] = classify_segment(row["listing"], row["revenue_ttm"], row["values"])
         segmented[row["segment"]].append(row)
     for key, label in SEGMENTS.items():
         funnel.append({"stage": f"segment: {label}", "count": len(segmented[key])})

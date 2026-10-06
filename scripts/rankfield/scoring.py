@@ -47,6 +47,12 @@ BANK_INDUSTRY = re.compile(r"(bank|savings institution|consumer services|finance
 LENDER_INDUSTRY = re.compile(r"(consumer services|finance companies)", re.IGNORECASE)
 LIFE_INDUSTRY = re.compile(r"(life|accident|health)", re.IGNORECASE)
 FINANCIAL_SEGMENT_KEYS = ("banks", "insurers", "capital_markets")
+LARGE_BANK_CAP = 20e9
+REGIONAL_BANK_CAP = 3e9
+# A "consumer services" or "finance company" label covers lenders and also credit bureaus,
+# crypto miners, funds and mortgage originators. It is a lender, scored as a bank, only on
+# evidence: a fund (holdings at fair value) or a spread of at least 4% of assets.
+LENDER_MIN_SPREAD = 0.04
 
 
 def financial_segment(industry: str) -> str:
@@ -69,7 +75,14 @@ def peer_group(listing: dict, segment: str | None) -> str | None:
         return sector or None
     industry = listing.get("industry") or ""
     if segment == "banks":
-        return "Consumer & specialty lenders" if LENDER_INDUSTRY.search(industry) else "Banks"
+        if LENDER_INDUSTRY.search(industry):
+            return "Consumer & specialty lenders"
+        # Banks are compared by size: a global bank funds itself, holds capital and earns its
+        # margin differently from a community bank, and ranking one against the other penalised
+        # the large for being large. Market cap stands in for balance-sheet size.
+        cap = listing.get("market_cap") or 0
+        return "Large banks" if cap >= LARGE_BANK_CAP else "Regional banks" if cap >= REGIONAL_BANK_CAP \
+            else "Community banks"
     if segment == "insurers":
         return "Life & health insurers" if LIFE_INDUSTRY.search(industry) else "Property & casualty insurers"
     return "Brokers & capital markets" if BROKER_INDUSTRY.search(industry) else "Asset managers & other"
@@ -103,7 +116,7 @@ BIOTECH_INDUSTRY = re.compile(r"(biotechnolog|pharmaceutical preparation|medicin
 PRE_REVENUE_CEILING = 10_000_000  # annualised revenue below which a biotech is pre-revenue
 
 
-def classify_segment(listing: dict, revenue_ttm: float | None) -> str:
+def classify_segment(listing: dict, revenue_ttm: float | None, values: dict | None = None) -> str:
     """Model validity, the most important filter.
 
     The four factors assume a normal operating company. Banks, insurers, REITs
@@ -115,7 +128,14 @@ def classify_segment(listing: dict, revenue_ttm: float | None) -> str:
     sector = listing.get("sector") or ""
     industry = listing.get("industry") or ""
     if sector in FINANCIAL_SECTORS and FINANCIAL_INDUSTRY.search(industry):
-        return "reits" if REIT_INDUSTRY.search(industry) else financial_segment(industry)
+        if REIT_INDUSTRY.search(industry):
+            return "reits"
+        segment = financial_segment(industry)
+        if segment == "banks" and LENDER_INDUSTRY.search(industry) and values is not None:
+            is_lender = bool(values.get("is_fund")) or (values.get("nii_assets") or 0) >= LENDER_MIN_SPREAD
+            if not is_lender:
+                return "operating"
+        return segment
     if BIOTECH_INDUSTRY.search(industry):
         if revenue_ttm is None or revenue_ttm < PRE_REVENUE_CEILING:
             return "pre_revenue"
@@ -150,6 +170,39 @@ def applicable_metrics(rows: list[dict], *, min_resolution: float = 0.40) -> tup
     return keys, resolution
 
 
+def derive_ptbv_gap(rows: list[dict]) -> None:
+    """Price / tangible book against what the bank's return justifies, within its peer group.
+
+    A bank that earns a high return on tangible equity is worth a higher multiple of it, so a
+    plain tangible-book yield read a premium that had been earned as a price that was dear
+    (JPMorgan, the best return in its group, scored 6th percentile). Within each peer group
+    log(price / tangible book) is regressed on return on tangible equity; the gap is the distance
+    below the line, positive where the bank is cheaper than its return justifies.
+    """
+    import math
+    if not rows or rows[0].get("segment") != "banks":
+        return
+    groups: dict[str, list[dict]] = {}
+    for r in rows:
+        r["values"]["ptbv_gap"] = None
+        groups.setdefault(peer_group(r["listing"], "banks") or "", []).append(r)
+    for members in groups.values():
+        pts = [(min(max(r["values"]["rotce"], -0.2), 0.4), math.log(1 / r["values"]["tbv_yield"]), r)
+               for r in members
+               if r["values"].get("rotce") is not None and (r["values"].get("tbv_yield") or 0) > 0]
+        if len(pts) < 8:
+            continue
+        n = len(pts)
+        mx = sum(x for x, _, _ in pts) / n
+        my = sum(y for _, y, _ in pts) / n
+        sxx = sum((x - mx) ** 2 for x, _, _ in pts)
+        if sxx == 0:
+            continue
+        slope = sum((x - mx) * (y - my) for x, y, _ in pts) / sxx
+        for x, y, r in pts:
+            r["values"]["ptbv_gap"] = (my + slope * (x - mx)) - y
+
+
 def score_segment(
     rows: list[dict],
     *,
@@ -162,6 +215,7 @@ def score_segment(
 ) -> dict:
     """Score one model-validity segment. Returns scored rows and the rows
     routed out for insufficient coverage."""
+    derive_ptbv_gap(rows)
     metric_keys, resolution = applicable_metrics(rows, min_resolution=metric_applicability)
 
     # ---- cohorts: sector within segment, with a documented fallback
