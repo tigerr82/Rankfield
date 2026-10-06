@@ -25,47 +25,61 @@ from .util import mean, percentile_ranks, winsorize
 
 SEGMENTS = {
     "operating": "Operating companies",
-    "financials": "Banks, insurers & asset managers",
+    "banks": "Banks & lenders",
+    "insurers": "Insurers",
+    "capital_markets": "Brokers & asset managers",
     "reits": "REITs & property",
     "pre_revenue": "Pre-revenue / biotech",
 }
 
 FINANCIAL_SECTORS = {"Finance", "Real Estate"}
 
-# Inside the financials table a bank, an insurer, a broker and an asset manager
-# run different balance sheets: a bank holds 6-9% equity against assets because
-# that is what a bank is, an insurer 20% or more, an asset manager 30%. Pooled
-# in one cohort the equity and leverage metrics ranked every large bank in the
-# bottom third (Bank of America 216th, Goldman Sachs 233rd of 288) and rewarded
-# an insurer for being an insurer. Each is therefore ranked against its own kind
-# (2.2). Percentiles, and the decile within a peer group, are taken inside it;
-# the composite is a percentile, so it stays comparable across groups exactly as
-# it does across the sectors of the operating table.
-BROKER_INDUSTRY = re.compile(r"(broker|investment banker)", re.IGNORECASE)
+# A bank, an insurer, a broker and an asset manager run different balance sheets
+# and are judged on different things: a bank holds 6-9% equity against assets and
+# is read on its margin and efficiency, an insurer holds 20% or more and is read
+# on its loss ratio, a manager on its operating margin. Pooled in one table the
+# equity and leverage measures ranked every large bank in the bottom third for
+# being a bank (2.2); they are now three tables of their own (2.3), each scored on
+# its own KPIs, and inside each the stock is ranked against its closest kind.
 INSURER_INDUSTRY = re.compile(r"insur", re.IGNORECASE)
+BROKER_INDUSTRY = re.compile(r"(broker|investment banker)", re.IGNORECASE)
 BANK_INDUSTRY = re.compile(r"(bank|savings institution|consumer services|finance companies)", re.IGNORECASE)
+LENDER_INDUSTRY = re.compile(r"(consumer services|finance companies)", re.IGNORECASE)
+LIFE_INDUSTRY = re.compile(r"(life|accident|health)", re.IGNORECASE)
+FINANCIAL_SEGMENT_KEYS = ("banks", "insurers", "capital_markets")
+
+
+def financial_segment(industry: str) -> str:
+    """Which financial table an industry label belongs in. Insurance first: an
+    insurance broker is an insurer, and \"Investment Bankers\" is not a bank."""
+    if INSURER_INDUSTRY.search(industry):
+        return "insurers"
+    if BROKER_INDUSTRY.search(industry):
+        return "capital_markets"
+    if BANK_INDUSTRY.search(industry):
+        return "banks"
+    return "capital_markets"
 
 
 def peer_group(listing: dict, segment: str | None) -> str | None:
-    """The cohort a stock is ranked within: its sector, except in financials,
-    where it is the kind of financial business. None means no peer group."""
+    """The cohort a stock is ranked within: its sector, except in the financial
+    tables, where it is the closest kind of business. None means no peer group."""
     sector = listing.get("sector")
-    if not sector or segment != "financials":
+    if not sector or segment not in FINANCIAL_SEGMENT_KEYS:
         return sector or None
     industry = listing.get("industry") or ""
-    if BROKER_INDUSTRY.search(industry):
-        return "Brokers & capital markets"
-    if INSURER_INDUSTRY.search(industry):
-        return "Insurers"
-    if BANK_INDUSTRY.search(industry):
-        return "Banks & lenders"
-    return "Asset managers & other"
+    if segment == "banks":
+        return "Consumer & specialty lenders" if LENDER_INDUSTRY.search(industry) else "Banks"
+    if segment == "insurers":
+        return "Life & health insurers" if LIFE_INDUSTRY.search(industry) else "Property & casualty insurers"
+    return "Brokers & capital markets" if BROKER_INDUSTRY.search(industry) else "Asset managers & other"
 
 
 # Growth is only rewarded where it is funded at a return above the cost of
 # capital. Which return that is depends on the segment: invested capital is
 # meaningless for a bank, and a REIT earns its return in funds from operations.
-HURDLE_METRIC = {"operating": "roic", "pre_revenue": "roic", "financials": "roe", "reits": "ffo_assets"}
+HURDLE_METRIC = {"operating": "roic", "pre_revenue": "roic", "banks": "roe", "insurers": "roe",
+                 "capital_markets": "roe", "reits": "ffo_assets"}
 HURDLE_LABEL = {"roic": "ROIC", "roe": "Return on equity", "ffo_assets": "FFO on assets"}
 
 # The sector label alone is not enough. The Nasdaq screener files ten education
@@ -101,7 +115,7 @@ def classify_segment(listing: dict, revenue_ttm: float | None) -> str:
     sector = listing.get("sector") or ""
     industry = listing.get("industry") or ""
     if sector in FINANCIAL_SECTORS and FINANCIAL_INDUSTRY.search(industry):
-        return "reits" if REIT_INDUSTRY.search(industry) else "financials"
+        return "reits" if REIT_INDUSTRY.search(industry) else financial_segment(industry)
     if BIOTECH_INDUSTRY.search(industry):
         if revenue_ttm is None or revenue_ttm < PRE_REVENUE_CEILING:
             return "pre_revenue"
@@ -125,7 +139,8 @@ def applicable_metrics(rows: list[dict], *, min_resolution: float = 0.40) -> tup
     keys = []
     segment = rows[0].get("segment") if rows else None
     for m in METRICS:
-        if segment in m.get("not_for_segments", ()):
+        if segment in m.get("not_for_segments", ()) or (
+                m.get("for_segments") and segment not in m["for_segments"]):
             resolution[m["key"]] = 0.0
             continue
         n = sum(1 for r in rows if r["values"].get(m["key"]) is not None)
@@ -164,7 +179,7 @@ def score_segment(
     bases: list[dict[str, str]] = [{} for _ in rows]
 
     for cohort_name, idx in cohorts.items():
-        in_financials = bool(rows) and rows[0].get("segment") == "financials"
+        in_financials = bool(rows) and rows[0].get("segment") in FINANCIAL_SEGMENT_KEYS
         basis = "universe" if cohort_name == "(segment-wide)" else ("peer group" if in_financials else "sector")
         for key in metric_keys:
             spec = METRICS_BY_KEY[key]

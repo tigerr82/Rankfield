@@ -184,7 +184,8 @@ export function Toolbar({ segmentsMeta, counts, shown, total, scopeCounts }: Pro
 
 function shortLabel(label: string): string {
   if (label.startsWith("Operating")) return "Operating";
-  if (label.startsWith("Financials")) return "Financials";
+  if (label.startsWith("Banks")) return "Banks";
+  if (label.startsWith("Brokers")) return "Brokers & managers";
   if (label.startsWith("Pre-revenue")) return "Pre-revenue";
   return label;
 }
@@ -192,7 +193,9 @@ function shortLabel(label: string): string {
 /** The selected table, as the noun the scope switch and the counter use. */
 export function segmentNoun(segment: string): string {
   if (segment === "operating") return "operating";
-  if (segment === "financials") return "financials";
+  if (segment === "banks") return "banks";
+  if (segment === "insurers") return "insurers";
+  if (segment === "capital_markets") return "brokers and managers";
   if (segment === "reits") return "REITs";
   if (segment === "pre_revenue") return "pre-revenue";
   return "stocks";

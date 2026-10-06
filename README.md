@@ -17,7 +17,7 @@ runtime API calls, no server, no database — and no recurring cost.
 |---|---|
 | Listed on NYSE/NASDAQ | 6,780 |
 | Common stock, above $1B (or within 80% of it if already ranked), one line per company | 2,264 |
-| Scored | **1,668** (1,259 operating · 289 banks & insurers · 79 REITs · 41 pre-revenue) |
+| Scored | **1,668** (1,259 operating · 165 banks · 69 insurers · 55 brokers & asset managers · 79 REITs · 41 pre-revenue) |
 | Routed to *Insufficient data* | 186 |
 | Metric coverage across scored stocks | **94%** |
 | Cost | $0 |
@@ -129,8 +129,49 @@ REIT is scored on funds from operations rather than on depreciated earnings.
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There have
-been seventeen: fifteen to the first month, before any comparison depended on it, and two to the
+been eighteen: fifteen to the first month, before any comparison depended on it, and three to the
 second, within days of its publication.
+
+**2026-10 — methodology 2.3: three financial tables, each scored on its own KPIs, and both months
+regenerated.** 2.2 ranked a bank against banks but still scored it on nine measures shared with
+insurers and brokers, almost none of which said what makes one bank better than another, and the
+financials sat in one table whose ranks compared different businesses. Banks and lenders (165),
+insurers (69) and brokers and asset managers (55) are now tables of their own, each ranked
+separately, with the return and capital measures all three share (return on equity and assets,
+earnings yield, book yield, equity over assets, profit growth, earnings variability, revenue
+growth) plus the KPIs analysts use for that kind of business:
+
+- *Banks and lenders:* net interest income over assets (a margin proxy), efficiency ratio, growth
+  of net interest income, tangible book yield, credit cost over revenue. Debt over equity is not
+  used: a bank's debt is its raw material.
+- *Insurers:* loss ratio, benefits and expenses over revenue, net investment income over assets,
+  premium growth, claim reserves over equity.
+- *Brokers and asset managers:* net margin, operating margin, compensation over revenue.
+
+All are computed from the SEC filings every other metric uses and update when a company files. None
+is required (`coverage_optional`), so a filer missing a tag is scored on the rest. The standard bank
+KPIs the filings do not carry uniformly - loans, non-performing loans, CET1 and other regulatory
+ratios, each tagged by a third or fewer of banks - and an asset manager's assets under management, which
+are not tagged at all, are not approximated. Inside a table a stock is ranked against its closest
+kind (deposit-taking banks apart from card and consumer lenders, property-casualty apart from life
+and health insurers, brokers apart from asset managers). Operating margin resolves for 40% of the
+brokers and managers, at the applicability line, and is used only where the data supports it; in
+this run it fell just below, so that table is read on net margin and compensation.
+
+Two choices were tried and dropped before this record: deposits over assets, which penalised a
+universal bank for funding itself with something other than deposits, and a single shared table.
+
+A limit to read honestly: a bank's health is judged here on equity over assets and credit cost,
+because the regulatory capital ratios are unavailable, and equity over assets is structurally lower
+for a global bank than for a community lender. JPMorgan ranks 125th of 165 banks (41.8), Bank of
+America 139th, Wells Fargo 136th, with Health scores of 14, 10 and 24; it is a limit of the data
+and the metric, not a verdict, and the comparison stays within banks.
+
+Weights are unchanged; the version moved to 2.3 because the Quality, Growth, Valuation and Health
+inputs of three tables changed. Both months regenerated from fresh EDGAR downloads, with their own
+scoring dates; the 2.2 records are in git. One company, Safehold, is kept in September on the
+retention line although the regenerated August record does not hold it, because September's universe
+was built before August was regenerated.
 
 **2026-10 — methodology 2.2: financials ranked against their own kind, JPMorgan's debt read, and
 both months regenerated.** A reader asked why JPMorgan scored so low. Auditing the answer found

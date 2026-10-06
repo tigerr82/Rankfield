@@ -239,15 +239,25 @@ if ROIC <= ${hurdle}% (hurdle):   min(p, 50)   (never above the midpoint)`}</pre
             Castle, SBA and Iron Mountain dropped out entirely on negative book equity. Leverage is
             read as debt/assets and net debt/FFO for the same reason. Growth stays conditioned on a
             return above the 9% hurdle — return on equity for financials, FFO over assets for REITs.{" "}
-            <b>Inside the financials table each kind of business is ranked against its own kind,
-            since methodology 2.2:</b> banks and lenders, insurers, brokers and capital-markets
-            firms, and asset managers. A bank holds 6–9% equity against its assets because that is
-            what a bank is; an insurer holds 20% or more and an asset manager 30%. Pooled in one
-            cohort, the equity and leverage measures ranked every large bank in the bottom third
-            for being a bank — Bank of America 216th and Goldman Sachs 233rd of 288 — and credited
-            an insurer for being an insurer. The score is still a percentile, so it remains
-            comparable across the groups exactly as it is across the sectors of the operating
-            table; the &ldquo;top 10% per sector&rdquo; view takes the top tenth of each group.
+            <b>Since methodology 2.3 the financial businesses are three tables, each scored on
+            its own KPIs.</b> A bank holds 6–9% equity against its assets because that is what a
+            bank is; an insurer holds 20% or more. Pooled in one table, the shared measures
+            ranked every large bank in the bottom third for being a bank — Bank of America 216th
+            and Goldman Sachs 233rd of 288 — and said little about what makes one bank better
+            than another. Banks and lenders are now read on net interest income over assets, the
+            efficiency ratio, the growth of net interest income, tangible book value and credit
+            cost; insurers on the loss ratio, benefits and expenses over revenue, investment
+            income over assets, premium growth and claim reserves over equity; brokers and asset
+            managers on net margin, operating margin and compensation over revenue. Each is
+            added to the return and capital measures all three share, and every one comes from
+            the same SEC filings as everything else, so it updates when the company files. None
+            is required: a company whose filing lacks a tag is scored on the rest. The standard
+            bank KPIs that the filings do not carry uniformly — loans, non-performing loans and
+            regulatory capital ratios — and the asset manager&apos;s assets under management are
+            not used, rather than approximated badly. Inside a table a stock is ranked against
+            its closest kind: deposit-taking banks apart from card and consumer lenders,
+            property-casualty insurers apart from life insurers, brokers apart from asset
+            managers.
           </li>
           <li>
             <b>Data coverage.</b> A stock resolving fewer than 70% of the metrics applicable to its

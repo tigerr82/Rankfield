@@ -6,7 +6,9 @@ const row = (ticker: string, name: string, rank = 1) => ({ ticker, name, rank })
 const scores = {
   segments: {
     operating: [row("AAPL", "Apple Inc."), row("JPMX", "Jpm Holdings Operating")],
-    financials: [row("JPM", "JPMorgan Chase & Co."), row("BAC", "Bank of America")],
+    banks: [row("JPM", "JPMorgan Chase & Co."), row("BAC", "Bank of America")],
+    insurers: [],
+    capital_markets: [],
     reits: [row("PLD", "Prologis")],
     pre_revenue: [],
   },
@@ -16,11 +18,11 @@ const scores = {
 describe("crossSearch", () => {
   it("finds a company in a table that is not on screen", () => {
     const hits = crossSearch(scores, "jpmorgan", "operating");
-    expect(hits.map((h) => [h.ticker, h.table])).toEqual([["JPM", "financials"]]);
+    expect(hits.map((h) => [h.ticker, h.table])).toEqual([["JPM", "banks"]]);
   });
 
   it("leaves out the table on screen, which already filters itself", () => {
-    const hits = crossSearch(scores, "jpm", "financials");
+    const hits = crossSearch(scores, "jpm", "banks");
     expect(hits.map((h) => h.ticker)).not.toContain("JPM");
   });
 

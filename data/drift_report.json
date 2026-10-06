@@ -106,6 +106,12 @@
   },
   {
    "ticker": "FERG",
+   "concept": "InterestIncomeExpenseNet",
+   "last_reported": "2025-07-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "FERG",
    "concept": "NetCashProvidedByUsedInOperatingActivities",
    "last_reported": "2025-07-31",
    "candidates": {}
@@ -141,9 +147,21 @@
    "candidates": {}
   },
   {
+   "ticker": "FTI",
+   "concept": "ProvisionForLoanLossesExpensed",
+   "last_reported": "2025-09-30",
+   "candidates": {}
+  },
+  {
    "ticker": "FUL",
    "concept": "OperatingIncomeLoss",
    "last_reported": "2025-08-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "GMED",
+   "concept": "InterestIncomeExpenseNet",
+   "last_reported": "2025-09-30",
    "candidates": {}
   },
   {
@@ -180,6 +198,12 @@
    }
   },
   {
+   "ticker": "IDT",
+   "concept": "InterestIncomeExpenseNet",
+   "last_reported": "2026-01-31",
+   "candidates": {}
+  },
+  {
    "ticker": "NUVB",
    "concept": "CostOfGoodsAndServicesSold",
    "last_reported": "2025-09-30",
@@ -194,6 +218,12 @@
   {
    "ticker": "OXY",
    "concept": "CostOfGoodsAndServicesSold",
+   "last_reported": "2025-09-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "QTWO",
+   "concept": "ProvisionForLoanLossesExpensed",
    "last_reported": "2025-09-30",
    "candidates": {}
   },
@@ -230,6 +260,12 @@
   {
    "ticker": "VLO",
    "concept": "PaymentsToAcquireProductiveAssets",
+   "last_reported": "2025-09-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "WD",
+   "concept": "ProvisionForLoanLossesExpensed",
    "last_reported": "2025-09-30",
    "candidates": {}
   },

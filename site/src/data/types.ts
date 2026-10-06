@@ -1,5 +1,5 @@
 export type FactorKey = "quality" | "growth" | "valuation" | "health";
-export type SegmentKey = "operating" | "financials" | "reits" | "pre_revenue";
+export type SegmentKey = "operating" | "banks" | "insurers" | "capital_markets" | "reits" | "pre_revenue";
 
 export interface MetricSpec {
   key: string;
@@ -64,7 +64,7 @@ export interface StockRow {
   price_change_abs: number | null;
   composite: number | null;
   rank: number;
-  /** The cohort this stock is ranked within: its sector, or in financials the kind of business. */
+  /** The cohort this stock is ranked within: its sector, or in the financial tables its closest kind of business. */
   peer_group?: string | null;
   sector_decile: number | null;
   sector_rank: number | null;

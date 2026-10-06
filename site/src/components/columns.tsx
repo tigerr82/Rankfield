@@ -16,7 +16,9 @@ export interface ColumnContext {
 
 const SEGMENT_TAGS: Record<string, [string, string]> = {
   operating: ["OPR", "Ranked within Operating companies"],
-  financials: ["FIN", "Ranked within Banks, insurers & asset managers"],
+  banks: ["BNK", "Ranked within Banks & lenders"],
+  insurers: ["INS", "Ranked within Insurers"],
+  capital_markets: ["CAP", "Ranked within Brokers & asset managers"],
   reits: ["REI", "Ranked within REITs & property"],
   pre_revenue: ["PRE", "Ranked within Pre-revenue / biotech"],
 };

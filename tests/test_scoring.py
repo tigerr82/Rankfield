@@ -47,8 +47,8 @@ class TestCompositeOf:
 
 
 class TestClassifySegment:
-    def test_a_bank_is_a_financial(self):
-        assert classify_segment({"sector": "Finance", "industry": "Major Banks"}, 1e9) == "financials"
+    def test_a_bank_is_a_bank(self):
+        assert classify_segment({"sector": "Finance", "industry": "Major Banks"}, 1e9) == "banks"
 
     def test_a_reit_has_its_own_segment(self):
         # 2.0: depreciation on buildings that hold their value makes an
@@ -58,8 +58,12 @@ class TestClassifySegment:
         ) == "reits"
 
     def test_a_bank_is_a_financial_and_not_a_reit(self):
-        assert classify_segment({"sector": "Finance", "industry": "Major Banks"}, 1e10) == "financials"
-        assert classify_segment({"sector": "Finance", "industry": "Life Insurance"}, 1e10) == "financials"
+        assert classify_segment({"sector": "Finance", "industry": "Major Banks"}, 1e10) == "banks"
+        assert classify_segment({"sector": "Finance", "industry": "Life Insurance"}, 1e10) == "insurers"
+        assert classify_segment({"sector": "Finance", "industry": "Investment Managers"}, 1e10) == "capital_markets"
+        assert classify_segment({"sector": "Finance", "industry": "Investment Bankers/Brokers/Service"}, 1e10) == "capital_markets"
+        # an insurance broker is an insurer, not a broker
+        assert classify_segment({"sector": "Finance", "industry": "Insurance Agents, Brokers & Service"}, 1e10) == "insurers"
 
     def test_an_education_company_misfiled_under_real_estate_is_an_operating_company(self):
         # Nasdaq files Grand Canyon, Stride, Perdoceo and Strayer under
@@ -296,7 +300,8 @@ class TestFactorCompositionV11:
         # income over the latest year. dGPOA must never return to it.
         from rankfield.metrics import METRICS
         operating_growth = [m["key"] for m in METRICS if m["factor"] == "growth"
-                            and "operating" not in (m.get("not_for_segments") or [])]
+                            and "operating" not in (m.get("not_for_segments") or [])
+                            and "operating" in (m.get("for_segments") or ["operating"])]
         assert operating_growth == ["rev_growth", "op_inc_change"]
 
     def test_delta_gpoa_belongs_to_quality(self):
@@ -430,43 +435,51 @@ class TestTheHurdleCeiling:
 
 
 class TestPeerGroups:
-    """Inside financials a bank, an insurer, a broker and an asset manager are
-    ranked against their own kind, because their balance sheets differ by nature."""
+    """The financial tables rank a stock against its closest kind of business."""
 
     @staticmethod
-    def group(industry, segment="financials", sector="Finance"):
+    def group(industry, segment, sector="Finance"):
         return peer_group({"sector": sector, "industry": industry}, segment)
 
-    def test_each_kind_of_financial_business_gets_its_own_group(self):
-        assert self.group("Major Banks") == "Banks & lenders"
-        assert self.group("Savings Institutions") == "Banks & lenders"
-        assert self.group("Finance: Consumer Services") == "Banks & lenders"
-        assert self.group("Property-Casualty Insurers") == "Insurers"
-        assert self.group("Life Insurance") == "Insurers"
-        assert self.group("Investment Managers") == "Asset managers & other"
+    def test_a_bank_and_a_card_lender_are_different_cohorts(self):
+        assert self.group("Major Banks", "banks") == "Banks"
+        assert self.group("Savings Institutions", "banks") == "Banks"
+        assert self.group("Finance: Consumer Services", "banks") == "Consumer & specialty lenders"
 
-    def test_an_investment_banker_is_a_broker_not_a_bank(self):
-        assert self.group("Investment Bankers/Brokers/Service") == "Brokers & capital markets"
+    def test_insurers_split_into_property_casualty_and_life(self):
+        assert self.group("Property-Casualty Insurers", "insurers") == "Property & casualty insurers"
+        assert self.group("Life Insurance", "insurers") == "Life & health insurers"
 
-    def test_outside_financials_the_peer_group_is_the_sector(self):
-        assert self.group("Major Banks", segment="operating", sector="Technology") == "Technology"
+    def test_a_broker_and_an_asset_manager_are_different_cohorts(self):
+        assert self.group("Investment Bankers/Brokers/Service", "capital_markets") == "Brokers & capital markets"
+        assert self.group("Investment Managers", "capital_markets") == "Asset managers & other"
+
+    def test_outside_the_financial_tables_the_peer_group_is_the_sector(self):
+        assert self.group("Major Banks", "operating", sector="Technology") == "Technology"
 
     def test_no_sector_means_no_peer_group(self):
-        assert peer_group({"sector": None, "industry": "Major Banks"}, "financials") is None
+        assert peer_group({"sector": None, "industry": "Major Banks"}, "banks") is None
 
-    def test_a_banks_leverage_is_ranked_against_banks_not_insurers(self):
-        def row(ticker, industry, equity_assets):
-            return {"ticker": ticker, "segment": "financials",
+    def test_a_cohort_ranks_its_own_kind(self):
+        def row(ticker, industry, nim):
+            return {"ticker": ticker, "segment": "banks",
                     "listing": {"sector": "Finance", "industry": industry},
-                    "values": {"equity_assets": equity_assets}, "missing": {}}
-        banks = [row(f"B{i}", "Major Banks", 0.06 + i * 0.002) for i in range(12)]
-        insurers = [row(f"I{i}", "Life Insurance", 0.20 + i * 0.01) for i in range(12)]
+                    "values": {"nim_proxy": nim}, "missing": {}}
+        banks = [row(f"B{i}", "Major Banks", 0.02 + i * 0.001) for i in range(12)]
+        lenders = [row(f"L{i}", "Finance: Consumer Services", 0.10 + i * 0.01) for i in range(12)]
         scored = score_segment(
-            banks + insurers, weights=EQUAL, winsor=(5, 95), roic_hurdle=0.09,
+            banks + lenders, weights=EQUAL, winsor=(5, 95), roic_hurdle=0.09,
             min_cohort=12, coverage_threshold=0.0, metric_applicability=0.0)
         by = {r["ticker"]: r for r in scored["scored"] + scored["insufficient"]}
-        # The best bank is top of its own group despite holding far less equity
-        # than the worst insurer.
-        assert by["B11"]["percentiles"]["equity_assets"] > 90
-        assert by["I0"]["percentiles"]["equity_assets"] < 10
-        assert by["B11"]["peer_group"] == "Banks & lenders"
+        # The best bank is top of the banks although a card lender earns five times its margin.
+        assert by["B11"]["percentiles"]["nim_proxy"] > 90
+        assert by["L0"]["percentiles"]["nim_proxy"] < 10
+        assert by["B11"]["peer_group"] == "Banks"
+
+    def test_a_kpi_applies_only_to_the_table_it_was_written_for(self):
+        from rankfield.scoring import applicable_metrics
+        row = lambda seg: {"segment": seg, "values": {"loss_ratio": 0.6, "nim_proxy": 0.03}}
+        insurers, _ = applicable_metrics([row("insurers")] * 3, min_resolution=0.0)
+        banks, _ = applicable_metrics([row("banks")] * 3, min_resolution=0.0)
+        assert "loss_ratio" in insurers and "nim_proxy" not in insurers
+        assert "nim_proxy" in banks and "loss_ratio" not in banks

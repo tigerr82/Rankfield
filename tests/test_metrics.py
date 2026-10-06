@@ -87,7 +87,11 @@ class TestHealthyBaseline:
         # The fixture files annual reports only; the operating-income change needs
         # quarters and is covered by TestOperatingIncomeChange.
         result = run()
-        unresolved = [k for k in METRIC_KEYS if result["values"][k] is None and k != "op_inc_change"]
+        # The bank, insurer and broker KPIs (2.3) read tags an industrial never files.
+        from rankfield.metrics import NEW_FINANCIAL_METRICS
+        kind_specific = {m["key"] for m in NEW_FINANCIAL_METRICS}
+        unresolved = [k for k in METRIC_KEYS
+                      if result["values"][k] is None and k != "op_inc_change" and k not in kind_specific]
         assert unresolved == [], f"unexpectedly missing: {unresolved} ({result['missing']})"
 
     def test_values_are_in_plausible_ranges(self):

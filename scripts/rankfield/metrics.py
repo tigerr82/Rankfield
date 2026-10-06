@@ -148,6 +148,22 @@ DEBT_COMPONENT_TAGS = frozenset({
     "ConvertibleLongTermNotesPayable", "SeniorLongTermNotes", "ConvertibleNotesPayable",
 })
 ALL_DEBT = DEBT_COMBINED + DEBT_LT_NONCURRENT + DEBT_LT_CURRENT + DEBT_SHORT + DEBT_LT_TOTAL
+# ---- methodology 2.3 inputs
+NET_INTEREST_INCOME = ["InterestIncomeExpenseNet"]
+NONINTEREST_INCOME = ["NoninterestIncome"]
+NONINTEREST_EXPENSE = ["NoninterestExpense"]
+CREDIT_PROVISION = ["ProvisionForLoanLeaseAndOtherLosses", "ProvisionForLoanLossesExpensed",
+                    "ProvisionForCreditLosses"]
+GOODWILL = ["Goodwill"]
+OTHER_INTANGIBLES = ["IntangibleAssetsNetExcludingGoodwill", "FiniteLivedIntangibleAssetsNet"]
+PREFERRED_EQUITY = ["PreferredStockValue"]
+PREMIUMS_EARNED = ["PremiumsEarnedNet"]
+CLAIMS_INCURRED = ["PolicyholderBenefitsAndClaimsIncurredNet"]
+BENEFITS_LOSSES_EXPENSES = ["BenefitsLossesAndExpenses"]
+CLAIM_RESERVES = ["LiabilityForClaimsAndClaimsAdjustmentExpense"]
+NET_INVESTMENT_INCOME = ["NetInvestmentIncome"]
+COMPENSATION = ["LaborAndRelatedExpense", "SalariesWagesAndOfficersCompensation"]
+OPERATING_INCOME_REPORTED = ["OperatingIncomeLoss"]
 EPS_DILUTED = ["EarningsPerShareDiluted", "EarningsPerShareBasicAndDiluted", "EarningsPerShareBasic"]
 
 # Every tag some list above reads, and the name patterns used to spot a tag a
@@ -265,7 +281,7 @@ METRICS: list[dict] = [
                 "conditioned like all Growth metrics. Not applied to pre-revenue companies."},
 
     {"key": "debt_equity", "label": "Debt / Equity", "short": "D/E", "factor": "health",
-     "higher_better": False, "unit": "x",
+     "higher_better": False, "unit": "x", "not_for_segments": ["banks"],
      "formula": "Total debt / total shareholders' equity. Null when equity is negative."},
     {"key": "net_debt_ebitda", "label": "Net Debt / EBITDA", "short": "ND/EBITDA", "factor": "health",
      "higher_better": False, "unit": "x",
@@ -290,6 +306,8 @@ METRICS: list[dict] = [
 # business, not leverage, and subtracting cash from its market value is
 # meaningless. Yields against market cap and equity are the standard tools, and
 # they are what these metrics use.
+FINANCIAL_SEGMENTS = ["banks", "insurers", "capital_markets"]
+
 FINANCIAL_METRICS = [
     {"key": "roe", "label": "Return on Equity", "short": "ROE", "factor": "quality",
      "higher_better": True, "unit": "pct", "not_for_segments": ["operating", "pre_revenue", "reits"],
@@ -315,21 +333,21 @@ FINANCIAL_METRICS = [
     # ---- REITs: funds from operations, because depreciation on buildings that
     # hold their value is not an economic cost.
     {"key": "ffo_assets", "label": "FFO / Assets", "short": "FFO/A", "factor": "quality",
-     "higher_better": True, "unit": "pct", "not_for_segments": ["operating", "pre_revenue", "financials"],
+     "higher_better": True, "unit": "pct", "not_for_segments": ["operating", "pre_revenue", *FINANCIAL_SEGMENTS],
      "formula": "Funds from operations (net income + depreciation and amortisation, one-off items "
                 "removed) / total assets."},
     {"key": "ffo_yield", "label": "FFO Yield", "short": "FFO/P", "factor": "valuation",
-     "higher_better": True, "unit": "pct", "not_for_segments": ["operating", "pre_revenue", "financials"],
+     "higher_better": True, "unit": "pct", "not_for_segments": ["operating", "pre_revenue", *FINANCIAL_SEGMENTS],
      "formula": "Funds from operations / market cap - the REIT equivalent of an earnings yield."},
     {"key": "debt_assets", "label": "Debt / Assets", "short": "D/A", "factor": "health",
-     "higher_better": False, "unit": "pct", "not_for_segments": ["operating", "pre_revenue", "financials"],
+     "higher_better": False, "unit": "pct", "not_for_segments": ["operating", "pre_revenue", *FINANCIAL_SEGMENTS],
      "formula": "Total debt / total assets. Used instead of debt/equity because a leveraged REIT's "
                 "book equity can be negative while the business is sound."},
     {"key": "net_debt_ffo", "label": "Net debt / FFO", "short": "ND/FFO", "factor": "health",
-     "higher_better": False, "unit": "x", "not_for_segments": ["operating", "pre_revenue", "financials"],
+     "higher_better": False, "unit": "x", "not_for_segments": ["operating", "pre_revenue", *FINANCIAL_SEGMENTS],
      "formula": "(total debt - cash) / funds from operations. Null where FFO is not positive."},
     {"key": "ffo_growth", "label": "Change in FFO / assets", "short": "dFFO", "factor": "growth",
-     "higher_better": True, "unit": "pp", "not_for_segments": ["operating", "pre_revenue", "financials"],
+     "higher_better": True, "unit": "pp", "not_for_segments": ["operating", "pre_revenue", *FINANCIAL_SEGMENTS],
      "formula": "(FFO now - FFO three years ago) / total assets / 3."},
 ]
 # The operating-company metrics that these two segments are no longer scored on.
@@ -337,7 +355,78 @@ NOT_FOR_FINANCIALS = ["roic", "gpoa", "delta_gpoa", "ebit_ev", "ebitda_ev", "fcf
                       "net_debt_ebitda", "altman_z", "op_inc_change"]
 for _m in METRICS:
     if _m["key"] in NOT_FOR_FINANCIALS:
-        _m["not_for_segments"] = sorted(set((_m.get("not_for_segments") or []) + ["financials", "reits"]))
+        _m["not_for_segments"] = sorted(set((_m.get("not_for_segments") or []) + [*FINANCIAL_SEGMENTS, "reits"]))
+# ---------------------------------------------------------------------------
+# Methodology 2.3: each kind of financial business is judged on its own KPIs.
+#
+# Banks, insurers and brokers shared nine general metrics, and almost none of
+# them said what makes one bank better than another. These are the measures
+# analysts use for each kind, restricted to the ones the SEC's XBRL feed carries
+# for most filers - the same quarterly source as everything else, so they update
+# on the same cadence. Loans, non-performing loans and CET1 are the standard
+# bank KPIs but fewer than a third of banks tag them in a uniform way, and
+# assets under management are not tagged at all; they are not used.
+#
+# Every one is coverage-optional: a company whose filing lacks a tag is scored on
+# the rest rather than being dropped.
+KPI_BANKS = ["banks"]
+KPI_INSURERS = ["insurers"]
+KPI_CAPITAL = ["capital_markets"]
+NEW_FINANCIAL_METRICS = [
+    # ---- banks
+    {"key": "nim_proxy", "label": "Net Interest Income / Assets", "short": "NII/A", "factor": "quality",
+     "higher_better": True, "unit": "pct", "for_segments": KPI_BANKS, "coverage_optional": True,
+     "formula": "Trailing net interest income / total assets - the spread a bank earns on what it holds, "
+                "the usual net interest margin without needing average earning assets."},
+    {"key": "efficiency", "label": "Efficiency Ratio", "short": "Effic.", "factor": "quality",
+     "higher_better": False, "unit": "pct", "for_segments": KPI_BANKS, "coverage_optional": True,
+     "formula": "Non-interest expense / (net interest income + non-interest income). Lower is better: "
+                "the cost of earning a dollar of revenue."},
+    {"key": "nii_growth", "label": "Change in net interest income / assets", "short": "dNII", "factor": "growth",
+     "higher_better": True, "unit": "pp", "for_segments": KPI_BANKS, "coverage_optional": True,
+     "formula": "(net interest income now - three years ago) / total assets / 3 - the growth of the "
+                "core earnings engine, scaled by assets like the profit measure."},
+    {"key": "tbv_yield", "label": "Tangible Book Yield", "short": "TB/P", "factor": "valuation",
+     "higher_better": True, "unit": "pct", "for_segments": KPI_BANKS, "coverage_optional": True,
+     "formula": "(equity - preferred - goodwill - other intangibles) / market cap - the inverse of "
+                "price / tangible book, the multiple banks are valued on."},
+    {"key": "credit_cost", "label": "Credit Cost / Revenue", "short": "Cr cost", "factor": "health",
+     "higher_better": False, "unit": "pct", "for_segments": KPI_BANKS, "coverage_optional": True,
+     "formula": "Provision for credit losses / (net interest income + non-interest income). Lower is "
+                "better: the share of revenue a bank sets aside for loans that will not be repaid. A "
+                "release counts as negative."},
+    # ---- insurers
+    {"key": "loss_ratio", "label": "Loss Ratio", "short": "Loss", "factor": "quality",
+     "higher_better": False, "unit": "pct", "for_segments": KPI_INSURERS, "coverage_optional": True,
+     "formula": "Policyholder benefits and claims incurred / premiums earned. Lower is better: the share "
+                "of each premium dollar paid out in claims."},
+    {"key": "cost_ratio", "label": "Benefits & Expenses / Revenue", "short": "Cost", "factor": "quality",
+     "higher_better": False, "unit": "pct", "for_segments": KPI_INSURERS, "coverage_optional": True,
+     "formula": "Total benefits, losses and expenses / total revenue - a combined ratio that includes "
+                "investment income, so under 100% means an operating profit. Lower is better."},
+    {"key": "invest_yield", "label": "Net Investment Income / Assets", "short": "Inv/A", "factor": "quality",
+     "higher_better": True, "unit": "pct", "for_segments": KPI_INSURERS, "coverage_optional": True,
+     "formula": "Trailing net investment income / total assets - what the float earns."},
+    {"key": "premium_growth", "label": "Premium Growth (3-yr)", "short": "Prem gr", "factor": "growth",
+     "higher_better": True, "unit": "pct", "for_segments": KPI_INSURERS, "coverage_optional": True,
+     "formula": "Compound annual growth of premiums earned over three fiscal years."},
+    {"key": "reserves_equity", "label": "Claim Reserves / Equity", "short": "Res/Eq", "factor": "health",
+     "higher_better": False, "unit": "x", "for_segments": KPI_INSURERS, "coverage_optional": True,
+     "formula": "Liability for claims and claim adjustment expense / shareholders' equity - how much "
+                "uncertain obligation each dollar of capital stands behind. Null where equity is negative."},
+    # ---- brokers and asset managers
+    {"key": "op_margin", "label": "Operating Margin", "short": "Op mgn", "factor": "quality",
+     "higher_better": True, "unit": "pct", "for_segments": KPI_CAPITAL, "coverage_optional": True,
+     "formula": "Trailing operating income / revenue."},
+    {"key": "net_margin", "label": "Net Margin", "short": "Net mgn", "factor": "quality",
+     "higher_better": True, "unit": "pct", "for_segments": KPI_CAPITAL, "coverage_optional": True,
+     "formula": "Trailing net income (one-off items removed) / revenue."},
+    {"key": "comp_ratio", "label": "Compensation / Revenue", "short": "Comp", "factor": "quality",
+     "higher_better": False, "unit": "pct", "for_segments": KPI_CAPITAL, "coverage_optional": True,
+     "formula": "Compensation and related expense / revenue. Lower is better: people are the largest "
+                "cost of a brokerage or an asset manager."},
+]
+FINANCIAL_METRICS += NEW_FINANCIAL_METRICS
 METRICS += FINANCIAL_METRICS
 
 METRIC_KEYS = [m["key"] for m in METRICS]
@@ -1321,6 +1410,60 @@ def compute_metrics(fs: FactSet, *, market_cap: float, tax_clamp=(0.0, 0.35)) ->
     else:
         missing["profit_growth"] = "fewer than 4 fiscal years of earnings, or no total assets"
         missing["ffo_growth"] = missing["profit_growth"]
+
+    # ---- methodology 2.3: the KPIs of a bank, an insurer, a broker or manager.
+    # Computed for everyone and read only by the segments the registry names.
+    def _ratio(num, den):
+        if num is not None and den is not None and den > 0:
+            return num / den
+        return None
+
+    nii = _val(fs.ttm(NET_INTEREST_INCOME))
+    nonint_income = _val(fs.ttm(NONINTEREST_INCOME))
+    nonint_expense = _val(fs.ttm(NONINTEREST_EXPENSE))
+    values["nim_proxy"] = safe_div(nii, assets) if (nii is not None and assets) else None
+    bank_revenue = (nii + nonint_income) if (nii is not None and nonint_income is not None) else None
+    values["efficiency"] = _ratio(nonint_expense, bank_revenue)
+    provision = _val(fs.ttm(CREDIT_PROVISION))
+    values["credit_cost"] = (provision / bank_revenue) if (provision is not None and bank_revenue and bank_revenue > 0) else None
+    goodwill = _val(fs.instant(GOODWILL))
+    values["tbv_yield"] = None
+    if goodwill is not None and equity is not None and market_cap:
+        other = _val(fs.instant(OTHER_INTANGIBLES)) or 0.0
+        preferred = _val(fs.instant(PREFERRED_EQUITY)) or 0.0
+        tangible = equity - preferred - goodwill - other
+        values["tbv_yield"] = tangible / market_cap if tangible > 0 else None
+    nii_years = fs.annual_series(NET_INTEREST_INCOME, 4)
+    values["nii_growth"] = (
+        (nii_years[0]["val"] - nii_years[3]["val"]) / assets / 3
+        if len(nii_years) >= 4 and assets and nii_years[0]["val"] is not None and nii_years[3]["val"] is not None
+        else None
+    )
+
+    premiums = _val(fs.ttm(PREMIUMS_EARNED))
+    kpi_revenue = _val(fs.ttm(REVENUE))
+    values["loss_ratio"] = _ratio(_val(fs.ttm(CLAIMS_INCURRED)), premiums)
+    values["cost_ratio"] = _ratio(_val(fs.ttm(BENEFITS_LOSSES_EXPENSES)), kpi_revenue)
+    inv_income = _val(fs.ttm(NET_INVESTMENT_INCOME))
+    values["invest_yield"] = safe_div(inv_income, assets) if (inv_income is not None and assets) else None
+    prem_years = fs.annual_series(PREMIUMS_EARNED, 4)
+    values["premium_growth"] = (
+        (prem_years[0]["val"] / prem_years[3]["val"]) ** (1 / 3) - 1
+        if len(prem_years) >= 4 and prem_years[0]["val"] and prem_years[3]["val"]
+        and prem_years[0]["val"] > 0 and prem_years[3]["val"] > 0
+        else None
+    )
+    values["reserves_equity"] = _ratio(_val(fs.instant(CLAIM_RESERVES)), equity)
+
+    op_reported = _val(fs.ttm(OPERATING_INCOME_REPORTED))
+    values["op_margin"] = (op_reported / kpi_revenue) if (op_reported is not None and kpi_revenue and kpi_revenue > 0) else None
+    values["comp_ratio"] = _ratio(_val(fs.ttm(COMPENSATION)), kpi_revenue)
+    values["net_margin"] = (net_income / kpi_revenue) if (net_income is not None and kpi_revenue and kpi_revenue > 0) else None
+    for key in ("nim_proxy", "efficiency", "credit_cost", "tbv_yield", "nii_growth", "loss_ratio",
+                "cost_ratio", "invest_yield", "premium_growth", "reserves_equity", "op_margin", "comp_ratio",
+                "net_margin"):
+        if values.get(key) is None:
+            missing[key] = "a figure this measure needs is not tagged in the company's filings"
 
     # Name every figure rejected as stale, so a metric missing because the filer
     # abandoned a tag can be told apart from one it never reported.

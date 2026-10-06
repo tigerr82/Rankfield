@@ -24,6 +24,10 @@ export function RowExpansion({
 }) {
   const byFactor = new Map<string, MetricSpec[]>();
   for (const spec of metrics) {
+    // Only the measures this company's table is scored on: a bank is not shown
+    // a loss ratio, an insurer no efficiency ratio, and nobody a row of dashes
+    // for an industrial's EBIT/EV.
+    if (!(spec.key in row.metrics)) continue;
     if (!byFactor.has(spec.factor)) byFactor.set(spec.factor, []);
     byFactor.get(spec.factor)!.push(spec);
   }
