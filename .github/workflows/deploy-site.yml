@@ -12,6 +12,10 @@ name: Deploy site
 # `workflow_call` when they finish - relying on their push to trigger it left
 # the site serving the previous month's data while the new data sat in the repo
 # (2026-09-27).
+#
+# Only a change under site/, data/ or this file deploys: an empty commit rebuilds the
+# checks and nothing else. A run cancelled by the runner is re-triggered by
+# touching this file (2026-10-05, when two search commits were cancelled).
 on:
   push:
     branches: [main]
