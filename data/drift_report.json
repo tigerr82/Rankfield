@@ -6,7 +6,7 @@
   "block_scored_drop_pct": 5,
   "recently_abandoned_days": 450
  },
- "scored_now": 1661,
+ "scored_now": 1659,
  "recently_abandoned_tags": [
   {
    "ticker": "AVGO",
@@ -278,8 +278,19 @@
  ],
  "status": "warn",
  "scored_prior": 1646,
- "scored_change_pct": 0.91,
- "dropped_out": [],
+ "scored_change_pct": 0.79,
+ "dropped_out": [
+  {
+   "ticker": "BLFS",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "WBD",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  }
+ ],
  "metrics_lost": [
   {
    "ticker": "ASAN",
