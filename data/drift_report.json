@@ -6,7 +6,7 @@
   "block_scored_drop_pct": 5,
   "recently_abandoned_days": 450
  },
- "scored_now": 1659,
+ "scored_now": 1657,
  "recently_abandoned_tags": [
   {
    "ticker": "AVGO",
@@ -278,10 +278,20 @@
  ],
  "status": "warn",
  "scored_prior": 1646,
- "scored_change_pct": 0.79,
+ "scored_change_pct": 0.67,
  "dropped_out": [
   {
    "ticker": "BLFS",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "CCO",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "QRVO",
    "reason": "no longer eligible (universe, price, filing or liquidity filters)",
    "candidates": {}
   },
