@@ -130,7 +130,7 @@ export function RowExpansion({
       {history.length <= 1 && (
         <div className="miss" style={{ borderTopStyle: "solid", color: "var(--ink-3)" }}>
           Score history begins accumulating from the first run. Month 2 gives the first change
-          value; the trend column becomes meaningful around months 4–6.
+          value; the Rank trend column becomes meaningful around months 4–6.
         </div>
       )}
     </div>
