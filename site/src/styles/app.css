@@ -504,7 +504,13 @@ body.resizing { cursor: col-resize; user-select: none; }
 td[data-col="quality"], td[data-col="growth"], td[data-col="valuation"], td[data-col="health"],
 td[data-col="composite"] { padding-left: 3px; padding-right: 3px; }
 td[data-col="quality"] .sc, td[data-col="growth"] .sc, td[data-col="valuation"] .sc,
-td[data-col="health"] .sc { min-width: 34px; padding: 2px 3px; }
+td[data-col="health"] .sc, td[data-col="composite"] .sc {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 2px 3px;
+  vertical-align: middle;
+}
 
 /* change cells: never colour alone - always a sign and an arrow too */
 .delta { font-family: var(--font-mono); font-weight: 600; font-size: 12.3px; }
