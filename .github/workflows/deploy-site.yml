@@ -39,7 +39,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # The tip of main, not the commit the run was started from. A scoring or price
+      # run calls this workflow after pushing its own commit, and a plain checkout
+      # takes the commit the run STARTED at - the one before - so the site was
+      # rebuilt from the old data (2026-11-02: the October record sat in the repo
+      # while the site still showed September).
       - uses: actions/checkout@v4
+        with:
+          ref: main
 
       # `enablement: true` turns Pages on via the API, so there is no manual
       # Settings step before the first deploy.
