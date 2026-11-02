@@ -17,8 +17,8 @@ runtime API calls, no server, no database — and no recurring cost.
 |---|---|
 | Listed on NYSE/NASDAQ | 6,780 |
 | Common stock, above $1B (or within 80% of it if already ranked), one line per company | 2,264 |
-| Scored | **1,661** (1,280 operating · 137 banks · 69 insurers · 55 brokers & asset managers · 79 REITs · 41 pre-revenue) |
-| Routed to *Insufficient data* | 193 |
+| Scored | **1,647** (1,268 operating · 135 banks · 70 insurers · 54 brokers & asset managers · 80 REITs · 40 pre-revenue) |
+| Routed to *Insufficient data* | 185 |
 | Metric coverage across scored stocks | **94%** |
 | Cost | $0 |
 
@@ -129,8 +129,46 @@ REIT is scored on funds from operations rather than on depreciated earnings.
 ## Corrections to the record
 
 History is append-only, so any rewrite of a stored month is logged here. There have
-been nineteen: fifteen to the first month, before any comparison depended on it, and four to the
-second, within days of its publication.
+been twenty: fifteen to the first month, before any comparison depended on it, four to the
+second, within days of its publication, and one to the third, within hours of it.
+
+**2026-11 — the 2026-10 record regenerated once, on 2026-11-02, so that a company the SEC's data
+has fallen behind on is not dropped.** The first monthly run under 2.4 scored 1,612 companies,
+2.95% fewer than September, and 35 of the 62 that left were excluded by the 200-day freshness rule:
+their newest readable report was for the period ending 2026-03-31. Among them were Prologis,
+Verisk, Abbott, Humana, Clorox and most of the large US utilities.
+None had stopped reporting. The SEC's filing index lists their 10-Qs for June 30 (filed 2026-07-29
+for Prologis and Verisk) and Prologis's for September 30 (filed 2026-10-28), but the SEC's
+structured data - the XBRL facts every metric here is computed from - stops in March for them. It was
+checked outside this code, against the SEC's own companyfacts file, downloaded again on the day: the
+gap is the source's. (For Verisk the SEC's aggregated frames file carries the June figures while its
+per-company file does not.) A company lost to a gap in its source is the removal this project
+refuses to make without a reason.
+
+A company scored last month whose newest report is older than 200 days is now kept, on the last
+report that can be read and no longer than 300 days old, if the SEC's filing index shows a newer
+10-Q or 10-K that the structured data lacks. The row carries a note saying so, and the Coverage page
+lists each one with the report it was scored on and the report the SEC lists; it returns to its
+current report the day the SEC publishes it. A company that was not ranked the month before is not
+carried, and a company with no newer filing on record is still dropped as stale (63 of the 107
+looked up). The filing index is read only for the companies whose readable report is stale, in
+`fetch_fundamentals` from now on, and by `scripts/annotate_newer_filings.py` for a fundamentals file
+built before the rule.
+
+Weights and factor definitions are unchanged (2.4). October rescored on the fundamentals the monthly
+run had just downloaded, with only those 107 companies looked up again; scoring ran on the whole file,
+because a percentile moves when a company joins its cohort. Effect: 1,612 -> 1,647 scored, drift
+-2.95% -> -0.84%, and 27 companies left the ranking, every one for a stated reason: 14 left the
+listing feed (acquired or merged), 11 fell under 80% of the $1 billion floor, one missed the volume
+line and one scored on too few metrics. The first October record is in git.
+
+Not fixed: Citigroup's structured data stops at December 2025. It was not ranked in September, so
+there was nothing to carry.
+
+The same day, the monthly run was found to have scored October correctly and published September: the
+deploy workflow checked out the commit the run started at, not the commit the run had just pushed, so
+the site was rebuilt from the previous state. The weekly price run, which publishes the same way,
+had the same lag. The checkout takes the tip of `main` now.
 
 **2026-10 — methodology 2.4: the banks table corrected, and both months regenerated.** A reader
 asked why JPMorgan, one of the best-run banks in the world, ranked 125th of 165 banks. Its

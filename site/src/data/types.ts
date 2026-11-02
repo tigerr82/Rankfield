@@ -180,6 +180,8 @@ export interface CoverageReport {
   excluded: { ticker: string; stage: string; reason: string }[];
   /** Scored last month, not this month, each traced to the stage that removed it. */
   exits?: ExitRow[];
+  /** Kept on a stale report because the SEC's structured data lacks the newer one. */
+  data_lag?: { ticker: string; latest_report: string; form: string; filed: string; report_date: string }[];
   insufficient_data: InsufficientRow[];
   unresolved_metrics: { ticker: string; metric: string; reason: string }[];
   price_review: { ticker: string; change_pct: number; splits_in_window: unknown[]; note: string }[];

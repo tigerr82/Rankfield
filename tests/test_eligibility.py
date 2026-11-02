@@ -67,3 +67,43 @@ def test_a_failed_download_is_not_reported_as_missing_filings():
     excluded = []
     build_rows(universe, fund, {"prices": {}}, SETTINGS, [], excluded)
     assert "fetch failed" in excluded[0]["reason"]
+
+
+# ---- a company the SEC's structured data has fallen behind on is not a company that stopped reporting
+
+LAG = {"form": "10-Q", "filed": "2026-07-29", "report_date": "2026-06-30"}
+
+
+def lag_run(latest, *, was_scored, newer, carry_days=300):
+    settings = {"universe": {**SETTINGS["universe"], "carry_report_age_days": carry_days}}
+    fund = fundamentals(latest)
+    fund["as_of"] = "2026-10-31"
+    fund["companies"]["XYZ"]["newer_filing"] = newer
+    universe = {"listings": [{"ticker": "XYZ", "cik": "1"}]}
+    prices = {"prices": {"XYZ": {"adv_dollar": 1e9}}}
+    excluded, carried = [], []
+    rows = build_rows(universe, fund, prices, settings, [], excluded,
+                      prior_scored={"XYZ"} if was_scored else frozenset(), carried=carried)
+    return rows, excluded, carried
+
+
+def test_a_ranked_company_with_a_newer_filing_the_data_lacks_stays_and_is_flagged():
+    rows, excluded, carried = lag_run("2026-03-31", was_scored=True, newer=LAG)   # 214 days old
+    assert [r["ticker"] for r in rows] == ["XYZ"] and excluded == []
+    assert carried[0]["report_date"] == "2026-06-30"
+    assert "SEC's filing index" in rows[0]["notes"][-1] and rows[0]["data_lag"] == LAG
+
+
+def test_a_company_not_ranked_last_month_is_not_carried():
+    rows, excluded, _ = lag_run("2026-03-31", was_scored=False, newer=LAG)
+    assert rows == [] and "200 days" in excluded[0]["reason"]
+
+
+def test_a_company_with_no_newer_filing_on_record_is_still_stale():
+    rows, _, _ = lag_run("2026-03-31", was_scored=True, newer=None)
+    assert rows == []
+
+
+def test_the_carry_has_a_limit():
+    rows, _, _ = lag_run("2025-12-31", was_scored=True, newer=LAG)               # 304 days old
+    assert rows == []

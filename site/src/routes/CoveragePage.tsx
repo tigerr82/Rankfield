@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useCoverage, usePayload } from "../data/usePayload";
-import type { ExitRow } from "../data/types";
+import type { CoverageReport, ExitRow } from "../data/types";
 import { Shell, useScrollRef } from "../components/Shell";
 
 /**
@@ -67,6 +67,8 @@ export function CoveragePage() {
                 })}
               </tbody>
             </table>
+
+            {coverage.data_lag && coverage.data_lag.length > 0 && <DataLag rows={coverage.data_lag} />}
 
             {coverage.exits && coverage.exits.length > 0 && (
               <LeftTheRanking exits={coverage.exits} since={scores?.meta.prior_scoring_date ?? null} />
@@ -249,6 +251,46 @@ function LeftTheRanking({ exits, since }: { exits: ExitRow[]; since: string | nu
               <td className="al-l">{e.name ? e.name.replace(/\s+(Class [A-Z] )?(Common Stock|Ordinary Shares).*$/i, "") : ""}</td>
               <td className="al-r mono">{e.prior_rank != null ? e.prior_rank.toLocaleString() : "—"}</td>
               <td className="al-l">{e.reason}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  );
+}
+
+/**
+ * Companies scored on a report older than the freshness rule allows, because the SEC's
+ * structured data never received the newer one. The filing index shows they are still
+ * reporting; dropping them would have removed Prologis, Verisk and the utilities for a
+ * gap in the source, not for anything the companies did.
+ */
+function DataLag({ rows }: { rows: NonNullable<CoverageReport["data_lag"]> }) {
+  return (
+    <>
+      <h2>Scored on an older report: the SEC data is behind</h2>
+      <p>
+        {rows.length.toLocaleString()} companies ranked last month have a newer 10-Q or 10-K in the
+        SEC&apos;s filing index than its structured data carries, so they are kept on the last report
+        that could be read rather than dropped as having stopped reporting. They return to their
+        current report as soon as the SEC publishes it, and are carried for at most 300 days.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th className="al-l">Ticker</th>
+            <th className="al-l">Scored on the report for</th>
+            <th className="al-l">Newer report the SEC lists</th>
+            <th className="al-l">Filed</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.ticker} style={{ cursor: "default" }}>
+              <td className="al-l mono">{r.ticker}</td>
+              <td className="al-l mono">{r.latest_report}</td>
+              <td className="al-l mono">{r.form} · {r.report_date}</td>
+              <td className="al-l mono">{r.filed}</td>
             </tr>
           ))}
         </tbody>

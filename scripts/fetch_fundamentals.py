@@ -72,6 +72,17 @@ def main() -> int:
         fs = FactSet(raw, as_of, max_input_age_days=max_input_age)
         result = compute_metrics(fs, market_cap=listing.get("market_cap"), tax_clamp=tax_clamp)
         revenue = fs.ttm(REVENUE)
+        # A readable report older than the freshness rule: ask the filing index whether the
+        # company has filed something newer that the structured data never received.
+        newer = None
+        latest_bs = result["provenance"].get("latest_balance_sheet")
+        if latest_bs and (as_of - date.fromisoformat(latest_bs)).days > settings["universe"]["max_report_age_days"]:
+            try:
+                filing = edgar.newest_periodic_filing(listing["cik"], as_of)
+            except Exception:  # noqa: BLE001 - the index is a courtesy; its absence changes nothing
+                filing = None
+            if filing and filing["report_date"] > latest_bs:
+                newer = filing
         record = {
             "ticker": ticker,
             "cik": listing["cik"],
@@ -84,6 +95,7 @@ def main() -> int:
             "quarters_filed": fs.quarters_filed,
             "files_domestic_forms": fs.files_domestic_forms,
             "forms": sorted(fs.forms),
+            "newer_filing": newer,
         }
         with lock:
             out[ticker] = record

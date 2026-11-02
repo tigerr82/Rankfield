@@ -34,7 +34,7 @@ from rankfield.scoring import SEGMENTS, classify_segment, rank_stability, score_
 from rankfield.util import last_day_of_prior_month, month_key
 
 
-def build_rows(universe, fundamentals, prices, settings, funnel, excluded, prior_scored=frozenset()):
+def build_rows(universe, fundamentals, prices, settings, funnel, excluded, prior_scored=frozenset(), carried=None):
     """Apply the structural-hygiene and liquidity filters, recording a count at
     every stage so the funnel is auditable.
 
@@ -42,6 +42,7 @@ def build_rows(universe, fundamentals, prices, settings, funnel, excluded, prior
     its place until its volume falls clearly below the floor, not by a rounding."""
     cfg = settings["universe"]
     adv_ratio = cfg.get("adv_retention_ratio", 1.0)
+    carry_days = cfg.get("carry_report_age_days", cfg["max_report_age_days"])
     fund_failed = {f["ticker"]: f["reason"] for f in fundamentals.get("failures", [])}
     price_failed = {f["ticker"]: f["reason"] for f in prices.get("failures", [])}
     kept_on_volume = 0
@@ -88,7 +89,17 @@ def build_rows(universe, fundamentals, prices, settings, funnel, excluded, prior
         # its last report however old (IDACORP's latest was December 2025, Hub
         # Group's September 2025). Too old a report excludes it, with the date.
         latest = (fund.get("provenance") or {}).get("latest_balance_sheet")
-        if latest and (as_of - date.fromisoformat(latest)).days > cfg["max_report_age_days"]:
+        age = (as_of - date.fromisoformat(latest)).days if latest else 0
+        lag = fund.get("newer_filing")
+        # A company scored last month whose newest report the SEC's own filing index shows but its
+        # structured data lacks has not stopped reporting; it stays on its last readable report,
+        # flagged, for as long as that report is no older than the carry limit.
+        carry = bool(latest and age > cfg["max_report_age_days"] and ticker in prior_scored and lag
+                     and age <= carry_days)
+        if carry:
+            if carried is not None:
+                carried.append({"ticker": ticker, "latest_report": latest, **lag})
+        if latest and age > cfg["max_report_age_days"] and not carry:
             stage_counts["stale_filer"] += 1
             excluded.append({
                 "ticker": ticker, "stage": "structural hygiene",
@@ -115,7 +126,12 @@ def build_rows(universe, fundamentals, prices, settings, funnel, excluded, prior
             "values": fund["values"],
             "missing": dict(fund["missing"]),
             "provenance": fund["provenance"],
-            "notes": fund["notes"],
+            "notes": list(fund["notes"]) + (
+                [f"Scored on the report for the period ending {latest}: the SEC's filing index lists a "
+                 f"{lag['form']} for {lag['report_date']} filed {lag['filed']} that its structured data "
+                 "has not received, so this company has not stopped reporting."]
+                if carry else []),
+            "data_lag": lag if carry else None,
             "revenue_ttm": fund["revenue_ttm"],
         })
 
@@ -185,8 +201,9 @@ def main() -> int:
 
     funnel = list(universe["funnel"])
     excluded: list[dict] = []
+    data_lag: list[dict] = []
     rows = build_rows(universe, fundamentals, prices, settings, funnel, excluded,
-                      prior_scored=frozenset(prior_by_ticker))
+                      prior_scored=frozenset(prior_by_ticker), carried=data_lag)
 
     # ---- model validity: three separate tables, never ranked against each other
     segmented: dict[str, list[dict]] = {k: [] for k in SEGMENTS}
@@ -380,6 +397,8 @@ def main() -> int:
         },
         "applicable_metrics_by_segment": {k: results[k]["applicable_metrics"] for k in SEGMENTS},
         "excluded": excluded,
+        # Kept on a stale report because the SEC's structured data lacks the newer one.
+        "data_lag": data_lag,
         # Scored last month, not this month, each traced to the stage that removed it.
         "exits": exits,
         "insufficient_data": insufficient_out,

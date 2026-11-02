@@ -10,6 +10,7 @@
     "adv_retention_ratio": 0.8,
     "min_quarters_filed": 8,
     "max_report_age_days": 200,
+    "carry_report_age_days": 300,
     "coverage_threshold": 0.7,
     "min_sector_cohort": 12,
     "segment_metric_applicability": 0.4

@@ -26,6 +26,7 @@ from ..util import RateLimiter, http_json
 
 TICKER_MAP_URL = "https://www.sec.gov/files/company_tickers.json"
 FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
+SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
 
 
 class EdgarFundamentals:
@@ -84,3 +85,27 @@ class EdgarFundamentals:
             with gzip.open(path, "wt", encoding="utf-8") as fh:
                 json.dump(payload, fh)
         return payload
+
+    # ---------------------------------------------------------- filing index
+
+    def newest_periodic_filing(self, cik: str, as_of) -> dict | None:
+        """The newest 10-K or 10-Q the company had filed by `as_of`, from the SEC's filing index.
+
+        Independent of the structured-data API: for some filers (Prologis, Verisk, Citigroup in
+        2026) the index lists a report that the XBRL facts never received, which is how a company
+        with a current filing can look as if it had stopped reporting.
+        """
+        payload = http_json(
+            SUBMISSIONS_URL.format(cik=cik), user_agent=self.user_agent, limiter=self.limiter, allow_404=True,
+        )
+        if not payload:
+            return None
+        recent = (payload.get("filings") or {}).get("recent") or {}
+        cutoff = as_of.isoformat()
+        best = None
+        for form, filed, period in zip(recent.get("form", []), recent.get("filingDate", []),
+                                       recent.get("reportDate", [])):
+            if form in ("10-K", "10-Q") and filed <= cutoff and period:
+                if best is None or period > best["report_date"]:
+                    best = {"form": form, "filed": filed, "report_date": period}
+        return best

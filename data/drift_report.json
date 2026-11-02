@@ -6,7 +6,7 @@
   "block_scored_drop_pct": 5,
   "recently_abandoned_days": 450
  },
- "scored_now": 1612,
+ "scored_now": 1647,
  "recently_abandoned_tags": [
   {
    "ticker": "BBT",
@@ -180,6 +180,12 @@
    "candidates": {}
   },
   {
+   "ticker": "SLG",
+   "concept": "IncomeTaxExpenseBenefit",
+   "last_reported": "2025-09-30",
+   "candidates": {}
+  },
+  {
    "ticker": "TEX",
    "concept": "PaymentsToAcquireProductiveAssets",
    "last_reported": "2026-03-31",
@@ -224,13 +230,8 @@
  ],
  "status": "warn",
  "scored_prior": 1661,
- "scored_change_pct": -2.95,
+ "scored_change_pct": -0.84,
  "dropped_out": [
-  {
-   "ticker": "ABT",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
   {
    "ticker": "ABUS",
    "reason": "no longer eligible (universe, price, filing or liquidity filters)",
@@ -238,16 +239,6 @@
   },
   {
    "ticker": "ACA",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "ACHC",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "AEP",
    "reason": "no longer eligible (universe, price, filing or liquidity filters)",
    "candidates": {}
   },
@@ -302,57 +293,7 @@
    "candidates": {}
   },
   {
-   "ticker": "CLVT",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "CLX",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "CNP",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "D",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
    "ticker": "DDS",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "DUK",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "ED",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "ETR",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "EVRG",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "EXC",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "FE",
    "reason": "no longer eligible (universe, price, filing or liquidity filters)",
    "candidates": {}
   },
@@ -362,32 +303,7 @@
    "candidates": {}
   },
   {
-   "ticker": "GEF",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "HUM",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "HUN",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "HURN",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
    "ticker": "IBOC",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "KRC",
    "reason": "no longer eligible (universe, price, filing or liquidity filters)",
    "candidates": {}
   },
@@ -397,23 +313,8 @@
    "candidates": {}
   },
   {
-   "ticker": "LNT",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "MAA",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
    "ticker": "MEDP",
    "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)",
-   "candidates": {}
-  },
-  {
-   "ticker": "NEE",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
    "candidates": {}
   },
   {
@@ -427,37 +328,12 @@
    "candidates": {}
   },
   {
-   "ticker": "OGE",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
    "ticker": "OI",
    "reason": "no longer eligible (universe, price, filing or liquidity filters)",
    "candidates": {}
   },
   {
-   "ticker": "OMF",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "PLD",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "PPL",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
    "ticker": "QRVO",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "QURE",
    "reason": "no longer eligible (universe, price, filing or liquidity filters)",
    "candidates": {}
   },
@@ -472,57 +348,12 @@
    "candidates": {}
   },
   {
-   "ticker": "REG",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "REYN",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "SLG",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "SO",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "SR",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "SRE",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
    "ticker": "TCBI",
    "reason": "no longer eligible (universe, price, filing or liquidity filters)",
    "candidates": {}
   },
   {
-   "ticker": "TXNM",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "UDR",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
    "ticker": "VPG",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "VRSK",
    "reason": "no longer eligible (universe, price, filing or liquidity filters)",
    "candidates": {}
   },
