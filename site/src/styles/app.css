@@ -497,6 +497,15 @@ body.resizing { cursor: col-resize; user-select: none; }
 .sc.na { background: transparent; color: var(--ink-3); font-weight: 400; }
 .sc.comp { font-size: 13px; min-width: 43px; }
 
+/* The score badges must fit their cells at any width the table is squeezed to. A badge is
+   about 45px wide and a factor column's share of the table can fall below that once the
+   table carries many columns; the badge was then clipped against the cell border and left a
+   stray dot and a hard vertical edge. Slightly tighter padding keeps it whole. */
+td[data-col="quality"], td[data-col="growth"], td[data-col="valuation"], td[data-col="health"],
+td[data-col="composite"] { padding-left: 3px; padding-right: 3px; }
+td[data-col="quality"] .sc, td[data-col="growth"] .sc, td[data-col="valuation"] .sc,
+td[data-col="health"] .sc { min-width: 34px; padding: 2px 3px; }
+
 /* change cells: never colour alone - always a sign and an arrow too */
 .delta { font-family: var(--font-mono); font-weight: 600; font-size: 12.3px; }
 .delta .ar { margin-right: 2px; font-size: 9px; }
