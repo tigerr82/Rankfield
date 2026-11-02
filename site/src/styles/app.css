@@ -501,6 +501,15 @@ body.resizing { cursor: col-resize; user-select: none; }
    about 45px wide and a factor column's share of the table can fall below that once the
    table carries many columns; the badge was then clipped against the cell border and left a
    stray dot and a hard vertical edge. Slightly tighter padding keeps it whole. */
+/* On a window narrower than the table's columns the table runs past its frame, and the frame's
+   rounded edge then ended in the middle of the table (over the Health column) with the last
+   columns hanging outside it. The frame takes at least the width of the columns instead, so it
+   always encloses the whole table; the page scrolls sideways, as it already did. Phones keep
+   their own scrolling frame below. */
+@media (min-width: 768px) {
+  .twrap, .pfwrap { min-width: min-content; }
+}
+
 td[data-col="quality"], td[data-col="growth"], td[data-col="valuation"], td[data-col="health"],
 td[data-col="composite"] { padding-left: 3px; padding-right: 3px; }
 td[data-col="quality"] .sc, td[data-col="growth"] .sc, td[data-col="valuation"] .sc,
