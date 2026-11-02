@@ -195,7 +195,7 @@ export function StockPage() {
         ) : (
           <div className="callout">
             History begins accumulating from the first run — there is one stored month so far. Month
-            2 gives the first change value, and the rank trend becomes readable around months 4–6. There is
+            2 gives the first change value, and the score trend becomes readable around months 4–6. There is
             no external source to reconstruct past Rankfield scores from, which is why the record is
             written from run 1 rather than added later.
           </div>

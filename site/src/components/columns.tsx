@@ -206,8 +206,8 @@ export const COLUMNS: Column[] = [
   },
   {
     key: "_spark",
-    header: "Rank trend",
-    title: "The score that sets the rank, over the trailing 12 months",
+    header: "Score trend",
+    title: "The composite score over the trailing 12 months",
     align: "l",
     width: 68,
     pro: true,
@@ -217,7 +217,7 @@ export const COLUMNS: Column[] = [
   {
     key: "_pricespark",
     header: "Price trend",
-    title: "Month-end price over the trailing months - the price beside the rank trend, drawn the same way",
+    title: "Month-end price over the trailing months - the price beside the score trend, drawn the same way",
     align: "l",
     width: 70,
     pro: true,

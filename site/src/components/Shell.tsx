@@ -92,7 +92,7 @@ export function AppHeader({ meta, coverage }: { meta?: ScoresMeta; coverage?: nu
                 className={mode === "pro" ? "on" : ""}
                 aria-pressed={mode === "pro"}
                 onClick={() => setMode("pro")}
-                title="Adds the four factor scores, rank change, rank trend and rank range, and their filters"
+                title="Adds the four factor scores, rank change, score trend and rank range, and their filters"
               >
                 Pro
               </button>
