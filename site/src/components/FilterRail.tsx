@@ -12,6 +12,9 @@ interface Props {
  * constraint is visible in one place. In Basic mode it holds exactly two
  * controls: sector and the overall score.
  */
+/** The four factor-score columns, which the Columns list can hide or restore in one click. */
+const FACTOR_COLUMNS = ["quality", "growth", "valuation", "health"];
+
 export function FilterRail({ sectorCounts, factors }: Props) {
   const { mode, sectors, toggleSector, ranges, setRange, chgMin, setChgMin, clearFilters,
           hiddenColumns, toggleColumn, resetWidths } = useApp();
@@ -88,15 +91,27 @@ export function FilterRail({ sectorCounts, factors }: Props) {
           <h3>Columns</h3>
           <p className="railhelp">Hide what you are not using. Remembered on this device.</p>
           {COLUMNS.filter((c) => !c.locked && (mode === "pro" || !c.pro)).map((c) => (
-            <label className="chk" key={c.key}>
+            <label className="chk" key={c.key} title={c.title}>
               <input
                 type="checkbox"
                 checked={!hiddenColumns.includes(c.key)}
                 onChange={() => toggleColumn(c.key)}
               />
-              <span>{c.title}</span>
+              <span>{c.header}</span>
             </label>
           ))}
+          <button
+            type="button"
+            className="linkbtn"
+            style={{ marginTop: 8, display: "block" }}
+            title="Hides Qual, Grow, Value and Hlth together, or brings them back"
+            onClick={() => {
+              const hidden = FACTOR_COLUMNS.every((k) => hiddenColumns.includes(k));
+              for (const k of FACTOR_COLUMNS) if (hidden === hiddenColumns.includes(k)) toggleColumn(k);
+            }}
+          >
+            {FACTOR_COLUMNS.every((k) => hiddenColumns.includes(k)) ? "Show factor scores" : "Hide factor scores"}
+          </button>
           <button type="button" className="linkbtn" style={{ marginTop: 8 }} onClick={resetWidths}>
             Reset column widths
           </button>

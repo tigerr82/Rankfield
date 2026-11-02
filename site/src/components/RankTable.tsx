@@ -28,9 +28,11 @@ interface Props {
    *  choices and widths, and its headers neither sort nor resize, so it can sit
    *  beside the main table without touching its state. */
   columns?: Column[];
+  /** Average one-month change by sector, for the Sector avg column. */
+  sectorAvg?: Map<string, number>;
 }
 
-export function RankTable({ rows, metrics, factors, history, scrollRef, tag, className, emptyState, showSegment, columns: fixedColumns }: Props) {
+export function RankTable({ rows, metrics, factors, history, scrollRef, tag, className, emptyState, showSegment, columns: fixedColumns, sectorAvg }: Props) {
   const { mode, hiddenColumns, widths, setWidths, sortKey, sortDir, setSort, holdings, toggleHolding } = useApp();
   const [open, setOpen] = useState<string | null>(null);
   const columns = useMemo(
@@ -57,8 +59,9 @@ export function RankTable({ rows, metrics, factors, history, scrollRef, tag, cla
       history,
       totalRows: rows.length,
       showSegment,
+      sectorAvg,
     }),
-    [heldSet, toggleHolding, history, rows.length, showSegment],
+    [heldSet, toggleHolding, history, rows.length, showSegment, sectorAvg],
   );
 
   // Flatten rows and any open expansion into one item list so the virtualizer

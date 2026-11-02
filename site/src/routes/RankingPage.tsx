@@ -13,6 +13,7 @@ import { Toolbar, segmentNoun } from "../components/Toolbar";
 import { TableSkeleton } from "../components/Skeleton";
 import { cleanName } from "../components/columns";
 import { dayMonth, marketCap, monthShort, percent } from "../lib/format";
+import { sectorPriceAverages } from "../lib/analytics";
 import { rankRows, type RankedRow } from "../lib/scoring";
 import { CHG_ANY, useApp } from "../state/AppState";
 
@@ -43,6 +44,12 @@ export function RankingPage() {
     }
     return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   }, [segmentRows, scores, app.segment]);
+
+  // Every ranked company, whichever tab is open: a sector's average must not change with the tab.
+  const sectorAvg = useMemo(
+    () => (scores ? sectorPriceAverages(Object.values(scores.segments).flat()) : undefined),
+    [scores],
+  );
 
   const { query, sectors, ranges, chgMin, sortKey, sortDir, scope } = app;
   const visible = useMemo(
@@ -173,6 +180,7 @@ export function RankingPage() {
             history={history.tickers}
             scrollRef={scrollRef}
             tag="main"
+            sectorAvg={sectorAvg}
             emptyState={
               searching ? (
                 <div className="emptyq">

@@ -58,14 +58,13 @@ export interface PortfolioSummary {
   note: string | null;
 }
 
-export function summarisePortfolio(
-  held: StockRow[],
-  universe: StockRow[],
-  events: WatchEvent[],
-  windowStart: string,
-  windowEnd: string,
-): PortfolioSummary {
-  const sectorAverages = new Map<string, number>();
+/**
+ * The average one-month price change of each sector, every ranked company counted equally.
+ * The same figure the portfolio summary compares its holdings against, and the one the
+ * "Sector avg" column shows, so the two cannot disagree.
+ */
+export function sectorPriceAverages(universe: StockRow[]): Map<string, number> {
+  const averages = new Map<string, number>();
   const bySector = new Map<string, number[]>();
   for (const row of universe) {
     if (row.price_change_pct == null) continue;
@@ -75,8 +74,19 @@ export function summarisePortfolio(
   }
   for (const [key, values] of bySector) {
     const m = mean(values);
-    if (m != null) sectorAverages.set(key, m);
+    if (m != null) averages.set(key, m);
   }
+  return averages;
+}
+
+export function summarisePortfolio(
+  held: StockRow[],
+  universe: StockRow[],
+  events: WatchEvent[],
+  windowStart: string,
+  windowEnd: string,
+): PortfolioSummary {
+  const sectorAverages = sectorPriceAverages(universe);
 
   const lines: HoldingLine[] = held.map((row) => {
     const sectorAvg = sectorAverages.get(row.sector ?? "(unclassified)") ?? null;

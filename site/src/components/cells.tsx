@@ -66,8 +66,19 @@ export function DeltaCell({
 /** Composite over the trailing months. Renders an honest empty state during the
  *  warm-up period rather than a flat line implying stability that has not been
  *  observed. */
-export function Sparkline({ points, width = 54, height = 16 }: { points: HistoryPoint[]; width?: number; height?: number }) {
-  const values = points.map((p) => p.composite).filter((v): v is number => v != null);
+export function Sparkline({
+  points,
+  width = 54,
+  height = 16,
+  field = "composite",
+}: {
+  points: HistoryPoint[];
+  width?: number;
+  height?: number;
+  /** What is drawn: the score (the default) or the month-end price. */
+  field?: "composite" | "price";
+}) {
+  const values = points.map((p) => p[field]).filter((v): v is number => v != null);
   if (values.length < 2) {
     return (
       <span className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }} title="History begins accumulating from the first run; a sparkline needs at least two months.">
@@ -84,7 +95,7 @@ export function Sparkline({ points, width = 54, height = 16 }: { points: History
     .join(" ");
   const rising = values[values.length - 1] >= values[0];
   return (
-    <svg className="spark" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-label={`Composite over ${values.length} months`}>
+    <svg className="spark" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-label={`${field === "price" ? "Price" : "Composite"} over ${values.length} months`}>
       <path d={d} fill="none" stroke={rising ? "var(--up)" : "var(--down)"} strokeWidth="1.3" />
     </svg>
   );

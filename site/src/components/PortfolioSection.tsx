@@ -1,6 +1,6 @@
 import { useMemo, type RefObject } from "react";
 import type { FactorSpec, HistoryPoint, MetricSpec, SegmentKey, StockRow } from "../data/types";
-import { summarisePortfolio } from "../lib/analytics";
+import { sectorPriceAverages, summarisePortfolio } from "../lib/analytics";
 import { percent } from "../lib/format";
 import { rankRows, type RankedRow, type Weights } from "../lib/scoring";
 import { useApp } from "../state/AppState";
@@ -45,6 +45,7 @@ export function PortfolioSection({ segments, metrics, factors, history, scrollRe
   // The benchmark is every scored stock, not the segment on screen: a figure
   // about your portfolio must not change when you switch tabs.
   const universe = useMemo(() => Object.values(segments).flat(), [segments]);
+  const sectorAvg = useMemo(() => sectorPriceAverages(universe), [universe]);
   const summary = useMemo(
     () => summarisePortfolio(heldRows, universe, watchEvents, windowStart, windowEnd),
     [heldRows, universe, watchEvents, windowStart, windowEnd],
@@ -126,6 +127,7 @@ export function PortfolioSection({ segments, metrics, factors, history, scrollRe
         history={history}
         scrollRef={scrollRef}
         tag="pf"
+        sectorAvg={sectorAvg}
         className="pfwrap"
         showSegment={mixedSegments}
         emptyState={
@@ -135,38 +137,6 @@ export function PortfolioSection({ segments, metrics, factors, history, scrollRe
           </div>
         }
       />
-
-      {summary.measurable > 0 && (
-        <div className="card" style={{ margin: "10px 0 0" }}>
-          <div className="sechead">
-            <h2>Per-holding contribution</h2>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th className="al-l" style={{ position: "static" }}>Ticker</th>
-                <th className="al-r" style={{ position: "static" }}>1-Mo %</th>
-                <th className="al-r" style={{ position: "static" }}>Sector avg</th>
-                <th className="al-r" style={{ position: "static" }}>vs sector</th>
-                <th className="al-l" style={{ position: "static" }}>Counted</th>
-              </tr>
-            </thead>
-            <tbody>
-              {summary.lines.map((line) => (
-                <tr key={line.ticker} style={{ cursor: "default" }}>
-                  <td className="al-l tk">{line.ticker}</td>
-                  <td className="al-r mono">{percent(line.changePct)}</td>
-                  <td className="al-r mono">{percent(line.sectorAvg)}</td>
-                  <td className="al-r mono">{percent(line.sectorAdjusted)}</td>
-                  <td className="al-l" style={{ fontSize: 11.5, color: "var(--ink-3)" }}>
-                    {line.heldAtWindowStart ? "yes" : `added after ${windowStart}`}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
     </section>
   );
 }

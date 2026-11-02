@@ -9,6 +9,8 @@ export interface ColumnContext {
   toggleHolding: (ticker: string) => void;
   history: Record<string, HistoryPoint[]>;
   totalRows: number;
+  /** Average one-month price change by sector, for the Sector avg column. */
+  sectorAvg?: Map<string, number>;
   /** Tag each ticker with its segment - set by the portfolio when it holds
    *  stocks from more than one, since each is ranked within its own. */
   showSegment?: boolean;
@@ -174,6 +176,18 @@ export const COLUMNS: Column[] = [
     ),
   },
   {
+    key: "sector_avg",
+    header: "Sector avg",
+    title: "Average one-month price change of every ranked company in the same sector, each counted equally - the yardstick for the 1-Mo % beside it",
+    align: "r",
+    width: 66,
+    nosort: true,
+    render: (row, ctx) => {
+      const avg = ctx.sectorAvg?.get(row.sector ?? "(unclassified)");
+      return avg == null ? DASH : <DeltaCell value={avg} suffix="%" title={`${row.sector ?? "No sector"}: average of the ranked companies in it`} />;
+    },
+  },
+  {
     key: "rank_change",
     header: "Δ Rank",
     title: "Rank change versus last month",
@@ -199,6 +213,16 @@ export const COLUMNS: Column[] = [
     pro: true,
     nosort: true,
     render: (row, ctx) => <Sparkline points={ctx.history[row.ticker] ?? []} />,
+  },
+  {
+    key: "_pricespark",
+    header: "Price trend",
+    title: "Month-end price over the trailing months - the price beside the score trend, drawn the same way",
+    align: "l",
+    width: 64,
+    pro: true,
+    nosort: true,
+    render: (row, ctx) => <Sparkline points={ctx.history[row.ticker] ?? []} field="price" />,
   },
   {
     key: "_stability",
