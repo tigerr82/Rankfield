@@ -1,19 +1,13 @@
 {
- "scoring_date": "2026-09-30",
- "prior_scoring_date": "2026-08-31",
+ "scoring_date": "2026-10-31",
+ "prior_scoring_date": "2026-09-30",
  "thresholds": {
   "warn_scored_drop_pct": 1,
   "block_scored_drop_pct": 5,
   "recently_abandoned_days": 450
  },
- "scored_now": 1657,
+ "scored_now": 1612,
  "recently_abandoned_tags": [
-  {
-   "ticker": "AVGO",
-   "concept": "CommercialPaper",
-   "last_reported": "2025-08-03",
-   "candidates": {}
-  },
   {
    "ticker": "BBT",
    "concept": "InterestExpense",
@@ -25,9 +19,21 @@
    }
   },
   {
+   "ticker": "BWA",
+   "concept": "InterestIncomeExpenseNet",
+   "last_reported": "2026-03-31",
+   "candidates": {}
+  },
+  {
    "ticker": "CCL",
    "concept": "CostOfRevenue",
    "last_reported": "2025-08-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "CMG",
+   "concept": "PreferredStockValue",
+   "last_reported": "2025-09-30",
    "candidates": {}
   },
   {
@@ -45,14 +51,20 @@
    }
   },
   {
-   "ticker": "CPB",
-   "concept": "LongTermDebtCurrent",
-   "last_reported": "2025-08-03",
+   "ticker": "DOC",
+   "concept": "CostOfGoodsAndServicesSold",
+   "last_reported": "2025-09-30",
    "candidates": {}
   },
   {
-   "ticker": "DOC",
-   "concept": "CostOfGoodsAndServicesSold",
+   "ticker": "DOW",
+   "concept": "PaymentsToAcquireProductiveAssets",
+   "last_reported": "2026-03-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "ECL",
+   "concept": "ShortTermBorrowings",
    "last_reported": "2025-09-30",
    "candidates": {}
   },
@@ -60,90 +72,6 @@
    "ticker": "ESE",
    "concept": "OperatingIncomeLoss",
    "last_reported": "2025-12-31",
-   "candidates": {}
-  },
-  {
-   "ticker": "FERG",
-   "concept": "AssetImpairmentCharges",
-   "last_reported": "2025-07-31",
-   "candidates": {}
-  },
-  {
-   "ticker": "FERG",
-   "concept": "CostOfGoodsAndServicesSold",
-   "last_reported": "2025-07-31",
-   "candidates": {}
-  },
-  {
-   "ticker": "FERG",
-   "concept": "DepreciationDepletionAndAmortization",
-   "last_reported": "2025-07-31",
-   "candidates": {}
-  },
-  {
-   "ticker": "FERG",
-   "concept": "GoodwillImpairmentLoss",
-   "last_reported": "2025-07-31",
-   "candidates": {}
-  },
-  {
-   "ticker": "FERG",
-   "concept": "GrossProfit",
-   "last_reported": "2025-07-31",
-   "candidates": {}
-  },
-  {
-   "ticker": "FERG",
-   "concept": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
-   "last_reported": "2025-07-31",
-   "candidates": {}
-  },
-  {
-   "ticker": "FERG",
-   "concept": "IncomeTaxExpenseBenefit",
-   "last_reported": "2025-07-31",
-   "candidates": {}
-  },
-  {
-   "ticker": "FERG",
-   "concept": "InterestIncomeExpenseNet",
-   "last_reported": "2025-07-31",
-   "candidates": {}
-  },
-  {
-   "ticker": "FERG",
-   "concept": "NetCashProvidedByUsedInOperatingActivities",
-   "last_reported": "2025-07-31",
-   "candidates": {}
-  },
-  {
-   "ticker": "FERG",
-   "concept": "NetIncomeLoss",
-   "last_reported": "2025-07-31",
-   "candidates": {}
-  },
-  {
-   "ticker": "FERG",
-   "concept": "OperatingIncomeLoss",
-   "last_reported": "2025-07-31",
-   "candidates": {}
-  },
-  {
-   "ticker": "FERG",
-   "concept": "PaymentsToAcquireProductiveAssets",
-   "last_reported": "2025-07-31",
-   "candidates": {}
-  },
-  {
-   "ticker": "FERG",
-   "concept": "RestructuringCostsAndAssetImpairmentCharges",
-   "last_reported": "2025-07-31",
-   "candidates": {}
-  },
-  {
-   "ticker": "FERG",
-   "concept": "Revenues",
-   "last_reported": "2025-07-31",
    "candidates": {}
   },
   {
@@ -171,12 +99,6 @@
    "candidates": {}
   },
   {
-   "ticker": "GWRE",
-   "concept": "SeniorNotesCurrent",
-   "last_reported": "2025-07-31",
-   "candidates": {}
-  },
-  {
    "ticker": "HAPN",
    "concept": "DepreciationDepletionAndAmortization",
    "last_reported": "2025-09-30",
@@ -185,6 +107,12 @@
      "CostOfGoodsAndServicesSoldDepreciationAndAmortization"
     ]
    }
+  },
+  {
+   "ticker": "HGTY",
+   "concept": "OperatingIncomeLoss",
+   "last_reported": "2025-09-30",
+   "candidates": {}
   },
   {
    "ticker": "HOPE",
@@ -198,9 +126,27 @@
    }
   },
   {
+   "ticker": "HXL",
+   "concept": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+   "last_reported": "2026-03-31",
+   "candidates": {}
+  },
+  {
    "ticker": "IDT",
    "concept": "InterestIncomeExpenseNet",
    "last_reported": "2026-01-31",
+   "candidates": {}
+  },
+  {
+   "ticker": "MIR",
+   "concept": "LongTermDebt",
+   "last_reported": "2025-09-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "NEOG",
+   "concept": "PreferredStockValue",
+   "last_reported": "2025-08-31",
    "candidates": {}
   },
   {
@@ -212,6 +158,12 @@
   {
    "ticker": "NUVB",
    "concept": "GrossProfit",
+   "last_reported": "2025-09-30",
+   "candidates": {}
+  },
+  {
+   "ticker": "OSW",
+   "concept": "LongTermDebtCurrent",
    "last_reported": "2025-09-30",
    "candidates": {}
   },
@@ -228,15 +180,9 @@
    "candidates": {}
   },
   {
-   "ticker": "RYN",
+   "ticker": "TEX",
    "concept": "PaymentsToAcquireProductiveAssets",
-   "last_reported": "2025-09-30",
-   "candidates": {}
-  },
-  {
-   "ticker": "SLG",
-   "concept": "IncomeTaxExpenseBenefit",
-   "last_reported": "2025-09-30",
+   "last_reported": "2026-03-31",
    "candidates": {}
   },
   {
@@ -252,9 +198,15 @@
    }
   },
   {
-   "ticker": "UNFI",
-   "concept": "LongTermDebtNoncurrent",
-   "last_reported": "2025-08-02",
+   "ticker": "UNF",
+   "concept": "InterestIncomeExpenseNet",
+   "last_reported": "2026-02-28",
+   "candidates": {}
+  },
+  {
+   "ticker": "VC",
+   "concept": "Goodwill",
+   "last_reported": "2025-09-30",
    "candidates": {}
   },
   {
@@ -268,20 +220,69 @@
    "concept": "ProvisionForLoanLossesExpensed",
    "last_reported": "2025-09-30",
    "candidates": {}
-  },
-  {
-   "ticker": "ZS",
-   "concept": "ConvertibleNotesPayableCurrent",
-   "last_reported": "2025-07-31",
-   "candidates": {}
   }
  ],
  "status": "warn",
- "scored_prior": 1646,
- "scored_change_pct": 0.67,
+ "scored_prior": 1661,
+ "scored_change_pct": -2.95,
  "dropped_out": [
   {
+   "ticker": "ABT",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "ABUS",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "ACA",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "ACHC",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "AEP",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "AEVA",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "ATKR",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "AVBP",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "BCAX",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
    "ticker": "BLFS",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "BW",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "CBZ",
    "reason": "no longer eligible (universe, price, filing or liquidity filters)",
    "candidates": {}
   },
@@ -291,7 +292,242 @@
    "candidates": {}
   },
   {
+   "ticker": "CECO",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "CHRN",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "CLVT",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "CLX",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "CNP",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "D",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "DDS",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "DUK",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "ED",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "ETR",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "EVRG",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "EXC",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "FE",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "FUN",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "GEF",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "HUM",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "HUN",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "HURN",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "IBOC",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "KRC",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "KVUE",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "LNT",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "MAA",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "MEDP",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)",
+   "candidates": {}
+  },
+  {
+   "ticker": "NEE",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "NPKI",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "OBK",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "OGE",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "OI",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "OMF",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "PLD",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "PPL",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
    "ticker": "QRVO",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "QURE",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "RAMP",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "RCAT",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "REG",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "REYN",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "SLG",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "SO",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "SR",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "SRE",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "TCBI",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "TXNM",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "UDR",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "VPG",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "VRSK",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "VRTS",
    "reason": "no longer eligible (universe, price, filing or liquidity filters)",
    "candidates": {}
   },
@@ -303,21 +539,94 @@
  ],
  "metrics_lost": [
   {
-   "ticker": "ASAN",
+   "ticker": "ARE",
+   "metric": "net_debt_ffo",
+   "reason": "total debt unavailable or funds from operations not positive",
+   "candidates": {}
+  },
+  {
+   "ticker": "DOW",
+   "metric": "fcf_ev",
+   "reason": "capital expenditure unavailable",
+   "candidates": {}
+  },
+  {
+   "ticker": "FDX",
+   "metric": "op_inc_change",
+   "reason": "total assets unavailable at the quarter ends",
+   "candidates": {
+    "cost_of_revenue": [
+     "CostOfPropertyRepairsAndMaintenance"
+    ]
+   }
+  },
+  {
+   "ticker": "GEV",
    "metric": "rev_growth",
    "reason": "ROIC unavailable, so growth cannot be judged against the cost of capital",
+   "candidates": {}
+  },
+  {
+   "ticker": "TEX",
+   "metric": "fcf_ev",
+   "reason": "capital expenditure unavailable",
    "candidates": {}
   }
  ],
  "metrics_lost_economic": [
   {
-   "ticker": "ASAN",
+   "ticker": "BHVN",
+   "metric": "debt_equity",
+   "reason": "negative shareholders' equity",
+   "candidates": {}
+  },
+  {
+   "ticker": "CNXC",
+   "metric": "net_debt_ebitda",
+   "reason": "EBITDA zero or negative",
+   "candidates": {}
+  },
+  {
+   "ticker": "FMC",
+   "metric": "debt_equity",
+   "reason": "negative shareholders' equity",
+   "candidates": {}
+  },
+  {
+   "ticker": "GDDY",
+   "metric": "debt_equity",
+   "reason": "negative shareholders' equity",
+   "candidates": {}
+  },
+  {
+   "ticker": "GEV",
    "metric": "roic",
    "reason": "invested capital zero or negative",
+   "candidates": {}
+  },
+  {
+   "ticker": "LFUS",
+   "metric": "net_debt_ebitda",
+   "reason": "EBITDA zero or negative",
+   "candidates": {}
+  },
+  {
+   "ticker": "LVS",
+   "metric": "debt_equity",
+   "reason": "negative shareholders' equity",
+   "candidates": {}
+  },
+  {
+   "ticker": "RBLX",
+   "metric": "debt_equity",
+   "reason": "negative shareholders' equity",
    "candidates": {}
   }
  ],
  "metrics_lost_by_metric": {
+  "fcf_ev": 2,
+  "net_debt_ffo": 1,
+  "op_inc_change": 1,
   "rev_growth": 1
  }
 }
