@@ -2,8 +2,9 @@ import { useState } from "react";
 import { usePayload } from "../data/usePayload";
 import { Shell, useScrollRef } from "../components/Shell";
 import {
-  approxTokensK, companyPrompt, packUrl, ROW_CHOICES, selectionPrompt, tablePrompt, TABLE_ROWS,
+  approxTokensK, companyPrompt, packMetricLines, packUrl, ROW_CHOICES, selectionPrompt, tablePrompt, TABLE_ROWS,
 } from "../lib/aiExport";
+import { loadMetricsCsv } from "../lib/pack";
 import { countEvent } from "../lib/track";
 import { useApp } from "../state/AppState";
 import type { SegmentKey, StockRow } from "../data/types";
@@ -30,7 +31,7 @@ export function AiPage() {
   const [rows, setRows] = useState<string>(String(TABLE_ROWS));
   const [picked, setPicked] = useState("");
   const [span, setSpan] = useState("all");
-  const [depth, setDepth] = useState<"scores" | "all">("scores");
+  const [depth, setDepth] = useState<"scores" | "latest" | "full">("scores");
   const [note, setNote] = useState<{ text: string; ok: boolean } | null>(null);
 
   const segmentKey: SegmentKey = segment === "insufficient" ? "operating" : segment;
@@ -73,18 +74,33 @@ export function AiPage() {
     months: span === "all" ? null : Number(span),
     depth,
   });
-  const selectionText = scores && picked.trim() ? selectionPrompt(scores, history, selection()) : "";
+  const selectionText =
+    scores && picked.trim() && depth !== "full" ? selectionPrompt(scores, history, selection()) : "";
   const copySelection = async () => {
     if (!scores) return;
-    if (!selectionText) {
+    const sel = selection();
+    if (!sel.tickers.length) {
       setNote({ text: "Enter at least one ticker.", ok: false });
       return;
     }
-    const ok = await copy(selectionText);
+    let text = selectionText;
+    if (sel.depth === "full") {
+      setNote({ text: "Reading the data pack...", ok: true });
+      try {
+        const csv = await loadMetricsCsv();
+        const all = history?.months ?? [];
+        const months = sel.months == null ? null : all.slice(-sel.months);
+        text = selectionPrompt(scores, history, sel, packMetricLines(csv, scores, sel.tickers, months));
+      } catch (error) {
+        setNote({ text: `Could not read the data pack: ${(error as Error).message}.`, ok: false });
+        return;
+      }
+    }
+    const ok = await copy(text);
     if (ok) countEvent("ai-copy-selection");
     setNote(
       ok
-        ? { text: `Copied ${selection().tickers.length} companies, about ${approxTokensK(selectionText)}k tokens. Paste it into your assistant.`, ok }
+        ? { text: `Copied ${sel.tickers.length} companies, about ${approxTokensK(text)}k tokens. Paste it into your assistant.`, ok }
         : { text: "Your browser did not allow copying.", ok },
     );
   };
@@ -187,8 +203,10 @@ export function AiPage() {
           <div>
             <p>
               A few companies over time, pasted as text: rank, composite and the four factor scores for
-              each month. With "plus latest metrics", also every metric behind the latest month; the
-              metrics of earlier months are in the data pack.
+              each month. "Plus latest metrics" adds every metric behind the latest month; "every metric,
+              every month" adds all of them for each month, so trends can be followed (it reads the
+              data pack in your browser, a few seconds the first time). The text can be long: check the
+              size shown before pasting.
             </p>
             <div className="aibtns">
               <input
@@ -208,11 +226,12 @@ export function AiPage() {
               <select
                 className="aitick aisel"
                 value={depth}
-                onChange={(e) => setDepth(e.target.value as "scores" | "all")}
+                onChange={(e) => setDepth(e.target.value as "scores" | "latest" | "full")}
                 aria-label="Depth"
               >
                 <option value="scores">Scores by month</option>
-                <option value="all">Scores plus latest metrics</option>
+                <option value="latest">Scores plus latest metrics</option>
+                <option value="full">Scores plus every metric, every month</option>
               </select>
               <button type="button" className="aibtn" onClick={copySelection} disabled={!scores}>
                 Copy selection

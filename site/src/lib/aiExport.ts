@@ -99,8 +99,11 @@ export interface Selection {
   tickers: string[];
   /** Latest n months, or null for every month on record. */
   months: number | null;
-  /** "scores": rank, composite and the four factors per month. "all": adds every metric of the latest month. */
-  depth: "scores" | "all";
+  /**
+   * "scores": rank, composite and the four factors per month. "latest": adds every metric of the latest month.
+   * "full": adds every metric of every month asked for, read from the data pack.
+   */
+  depth: "scores" | "latest" | "full";
 }
 
 /**
@@ -108,7 +111,12 @@ export interface Selection {
  * month; the metrics behind them are held for the latest month only, so older months' metrics are in the data
  * pack, not here.
  */
-export function selectionPrompt(scores: ScoresPayload, history: HistoryIndex | undefined, sel: Selection): string {
+export function selectionPrompt(
+  scores: ScoresPayload,
+  history: HistoryIndex | undefined,
+  sel: Selection,
+  packMetrics?: Map<string, string[]>,
+): string {
   const rows = new Map<string, StockRow>();
   for (const list of Object.values(scores.segments) as StockRow[][]) for (const r of list) rows.set(r.ticker, r);
   const out: string[] = [intro(scores.meta.scoring_date, scores.meta.weights_version), ""];
@@ -133,7 +141,12 @@ export function selectionPrompt(scores: ScoresPayload, history: HistoryIndex | u
         ].join(" | "),
       );
     }
-    if (sel.depth === "all" && row) {
+    if (sel.depth === "full") {
+      const lines = packMetrics?.get(ticker) ?? [];
+      out.push(lines.length ? "Every metric, by month (value, then sector percentile):" : "No metrics on record for this company in these months.");
+      out.push(...lines);
+    }
+    if (sel.depth === "latest" && row) {
       out.push(`Metrics behind the latest month (${scores.meta.scoring_date}):`);
       for (const [key, cell] of Object.entries(row.metrics)) {
         const spec = scores.metrics.find((m) => m.key === key);
@@ -146,4 +159,44 @@ export function selectionPrompt(scores: ScoresPayload, history: HistoryIndex | u
   out.push("A month in which a company was not ranked is missing from its list. August and September 2026 were rebuilt after the fact on the current method.");
   out.push(`Method: ${METHOD_URL}`);
   return out.join("\n");
+}
+
+/**
+ * Every metric of the chosen companies and months, from the data pack's metrics file, grouped by metric so a
+ * trend reads along one line: `ROIC [quality]: 2026-08 22.7% (p86) | 2026-09 ...`.
+ */
+export function packMetricLines(
+  csv: string,
+  scores: ScoresPayload,
+  tickers: string[],
+  months: string[] | null,
+): Map<string, string[]> {
+  const wanted = new Set(tickers.map((t) => t.toUpperCase()));
+  const monthSet = months ? new Set(months) : null;
+  const specs = new Map(scores.metrics.map((m) => [m.key, m]));
+  const grouped = new Map<string, Map<string, string[]>>();
+  const rows = csv.split(/\r?\n/);
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row) continue;
+    const [month, ticker, metric, , raw, pct] = row.split(",");
+    if (!wanted.has(ticker) || (monthSet && !monthSet.has(month))) continue;
+    const spec = specs.get(metric);
+    const value = raw === "" || raw == null ? "-" : spec ? metricValue(Number(raw), spec) : raw;
+    const entry = `${month} ${value} (p${pct === "" || pct == null ? "-" : Math.round(Number(pct))})`;
+    const byMetric = grouped.get(ticker) ?? new Map<string, string[]>();
+    byMetric.set(metric, [...(byMetric.get(metric) ?? []), entry]);
+    grouped.set(ticker, byMetric);
+  }
+  const out = new Map<string, string[]>();
+  for (const [ticker, byMetric] of grouped) {
+    out.set(
+      ticker,
+      [...byMetric.entries()].map(([metric, entries]) => {
+        const spec = specs.get(metric);
+        return `  ${spec?.label ?? metric}${spec ? ` [${spec.factor}]` : ""}: ${entries.join(" | ")}`;
+      }),
+    );
+  }
+  return out;
 }

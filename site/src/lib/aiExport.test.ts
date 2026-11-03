@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ScoresPayload, StockRow } from "../data/types";
-import { companyPrompt, selectionPrompt, tablePrompt, TABLE_ROWS } from "./aiExport";
+import { companyPrompt, packMetricLines, selectionPrompt, tablePrompt, TABLE_ROWS } from "./aiExport";
 
 const row = (rank: number, ticker: string): StockRow =>
   ({
@@ -47,11 +47,26 @@ describe("AI export", () => {
       months: ["2026-09", "2026-10"], observations: 2,
       tickers: { T1: [point("2026-09", 80, 3, 9, 1), point("2026-10", 89, 1, 10, 5)] },
     };
-    const text = selectionPrompt(payload, history, { tickers: ["t1", "zzz"], months: 1, depth: "all" });
+    const text = selectionPrompt(payload, history, { tickers: ["t1", "zzz"], months: 1, depth: "latest" });
     expect(text).toContain("2026-10 | 1 | 89.0 | 5 | 6 | 7 | 8 | 10 | 2.4");
     expect(text).not.toContain("2026-09 |");
     expect(text).toContain("ROE [quality]: 25.0%");
     expect(text).toContain("Not found in the ranked tables: ZZZ");
+  });
+
+  it("reads every month of a metric from the data pack, grouped so a trend is one line", () => {
+    const csv = [
+      "month,ticker,metric,factor,raw_value,sector_percentile,basis",
+      "2026-09,T1,roe,quality,0.2,80.0,sector",
+      "2026-10,T1,roe,quality,0.25,91.0,sector",
+      "2026-10,T2,roe,quality,0.1,10.0,sector",
+    ].join("\n");
+    const lines = packMetricLines(csv, payload, ["t1"], null);
+    expect(lines.get("T1")).toEqual(["  ROE [quality]: 2026-09 20.0% (p80) | 2026-10 25.0% (p91)"]);
+    expect(lines.has("T2")).toBe(false);
+    const text = selectionPrompt(payload, undefined, { tickers: ["T1"], months: null, depth: "full" }, lines);
+    expect(text).toContain("2026-09 20.0% (p80) | 2026-10 25.0% (p91)");
+    expect(packMetricLines(csv, payload, ["T1"], ["2026-10"]).get("T1")![0]).not.toContain("2026-09");
   });
 
   it("copies one company with its metrics and rank", () => {
