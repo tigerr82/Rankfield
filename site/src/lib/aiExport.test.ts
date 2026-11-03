@@ -38,6 +38,19 @@ describe("AI export", () => {
     expect(text).toContain("All 150 companies");
   });
 
+  it("copies every table in turn, the limit applying to each table on its own", () => {
+    const two = {
+      ...payload,
+      segments_meta: [...payload.segments_meta, { key: "banks", label: "Banks" }],
+      segments: { operating: rows, banks: [row(1, "B1"), row(2, "B2")] },
+    } as unknown as ScoresPayload;
+    const text = tablePrompt(two, "all", 10);
+    expect(text).toContain("Table: Operating companies. The top 10 of 150");
+    expect(text).toContain("Table: Banks. All 2 companies");
+    expect(text.split(/\r?\n/).filter((l) => /^\d+ \| (T|B)/.test(l))).toHaveLength(12);
+    expect(text.match(/Method:/g)).toHaveLength(1);
+  });
+
   it("copies a selection over time, with the latest metrics on request", () => {
     const point = (month: string, composite: number, rank: number, price: number, q: number) => ({
       month, composite, rank, price, factors: { quality: q, growth: q + 1, valuation: q + 2, health: q + 3 },

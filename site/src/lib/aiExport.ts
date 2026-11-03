@@ -26,9 +26,33 @@ const num = (value: number | null | undefined, digits = 1) =>
 
 const change = (value: number | null) => (value == null ? "-" : value > 0 ? `+${value}` : `${value}`);
 
-/** Plain text for the open table: its best `limit` companies by rank, or all of them when `limit` is null. */
-export function tablePrompt(scores: ScoresPayload, segment: SegmentKey, limit: number | null = TABLE_ROWS): string {
+export const ALL_TABLES = "all";
+
+/** The ranked tables, in the order the site lists them. */
+export function tableKeys(scores: ScoresPayload): SegmentKey[] {
+  return scores.segments_meta.map((s) => s.key).filter((k) => scores.segments[k]?.length);
+}
+
+/**
+ * Plain text for one table: its best `limit` companies by rank, or all of them when `limit` is
+ * null. With ALL_TABLES, every table in turn, `limit` applying to each table on its own.
+ */
+export function tablePrompt(scores: ScoresPayload, segment: SegmentKey | typeof ALL_TABLES, limit: number | null = TABLE_ROWS): string {
   const meta = scores.meta;
+  if (segment === ALL_TABLES) {
+    const blocks = tableKeys(scores).map((key) => tableBlock(scores, key, limit).join("\n"));
+    return [intro(meta.scoring_date, meta.weights_version), "", blocks.join("\n\n"), "", `Method: ${METHOD_URL}`].join("\n");
+  }
+  return [
+    intro(meta.scoring_date, meta.weights_version),
+    "",
+    ...tableBlock(scores, segment, limit),
+    "",
+    `Method: ${METHOD_URL}`,
+  ].join("\n");
+}
+
+function tableBlock(scores: ScoresPayload, segment: SegmentKey, limit: number | null): string[] {
   const label = scores.segments_meta.find((s) => s.key === segment)?.label ?? segment;
   const all = [...(scores.segments[segment] ?? [])].sort((a, b) => a.rank - b.rank);
   const rows = limit == null ? all : all.slice(0, limit);
@@ -45,14 +69,10 @@ export function tablePrompt(scores: ScoresPayload, segment: SegmentKey, limit: n
     ].join(" | "),
   );
   return [
-    intro(meta.scoring_date, meta.weights_version),
-    "",
     `Table: ${label}. ${rows.length === all.length ? `All ${all.length} companies` : `The top ${rows.length} of ${all.length} companies by rank`}.`,
     "Columns: rank | ticker | name | sector or peer group | composite | Q | G | V | H | rank change | 1-month price change",
     ...lines,
-    "",
-    `Method: ${METHOD_URL}`,
-  ].join("\n");
+  ];
 }
 
 /** Plain text for one company, with every metric behind its factors. */

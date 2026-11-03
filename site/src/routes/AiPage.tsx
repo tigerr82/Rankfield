@@ -2,7 +2,7 @@ import { useState } from "react";
 import { usePayload } from "../data/usePayload";
 import { Shell, useScrollRef } from "../components/Shell";
 import {
-  approxTokensK, companyPrompt, packMetricLines, packUrl, ROW_CHOICES, selectionPrompt, tablePrompt, TABLE_ROWS,
+  ALL_TABLES, approxTokensK, companyPrompt, tableKeys, packMetricLines, packUrl, ROW_CHOICES, selectionPrompt, tablePrompt, TABLE_ROWS,
 } from "../lib/aiExport";
 import { loadMetricsCsv } from "../lib/pack";
 import { countEvent } from "../lib/track";
@@ -34,18 +34,27 @@ export function AiPage() {
   const [depth, setDepth] = useState<"scores" | "latest" | "full">("scores");
   const [note, setNote] = useState<{ text: string; ok: boolean } | null>(null);
 
-  const segmentKey: SegmentKey = segment === "insufficient" ? "operating" : segment;
-  const tableSize = scores?.segments[segmentKey]?.length ?? 0;
+  // Which table to copy: starts on the one open in the ranking, and can be any table or all of them.
+  const [tableChoice, setTableChoice] = useState<SegmentKey | typeof ALL_TABLES>(segment === "insufficient" ? "operating" : segment);
+  const keys = scores ? tableKeys(scores) : [];
+  const allTables = tableChoice === ALL_TABLES;
+  const segmentKey: SegmentKey = allTables ? "operating" : tableChoice;
+  const sizeOf = (key: SegmentKey) => scores?.segments[key]?.length ?? 0;
+  const tableSize = allTables ? keys.reduce((n, k) => n + sizeOf(k), 0) : sizeOf(segmentKey);
+  const biggest = allTables ? Math.max(0, ...keys.map(sizeOf)) : tableSize;
   const limit = rows === "all" ? null : Number(rows);
-  const tableLabel = scores?.segments_meta.find((s) => s.key === segmentKey)?.label;
+  const tableLabel = allTables ? "all tables" : scores?.segments_meta.find((s) => s.key === segmentKey)?.label;
 
   const copyTable = async () => {
     if (!scores) return;
-    const ok = await copy(tablePrompt(scores, segmentKey, limit));
+    const ok = await copy(tablePrompt(scores, tableChoice, limit));
     if (ok) countEvent("ai-copy-table");
+    const copied = allTables
+      ? keys.reduce((n, k) => n + (limit == null ? sizeOf(k) : Math.min(limit, sizeOf(k))), 0)
+      : limit == null ? tableSize : Math.min(limit, tableSize);
     setNote(
       ok
-        ? { text: `Copied ${limit == null || limit >= tableSize ? "all" : `the first ${limit}`} ${tableSize ? `of ${tableSize} ` : ""}companies in the ${tableLabel ?? segmentKey} table. Paste it into your assistant.`, ok }
+        ? { text: `Copied ${copied} of ${tableSize} companies (${tableLabel}). Paste it into your assistant.`, ok }
         : { text: "Your browser did not allow copying.", ok },
     );
   };
@@ -121,17 +130,23 @@ export function AiPage() {
               <b>Copy</b>
               <p>
                 Choose what to hand your assistant. Each copy includes the scores, the factors, the
-                month, and a short explanation of how to read them. <strong>A table copy pastes the first companies in the ranking</strong>, from rank 1 down: {TABLE_ROWS} by default, or more if you choose.
+                month, and a short explanation of how to read them. <strong>A table copy pastes the first companies in the ranking</strong>, from rank 1 down: {TABLE_ROWS} by default, or more if you choose. Pick one table, or all tables together (the count then applies to each table).
               </p>
               <div className="aibtns">
+                <select className="aitick aisel" value={tableChoice} onChange={(e) => setTableChoice(e.target.value as SegmentKey | typeof ALL_TABLES)} aria-label="Which table">
+                  {keys.map((k) => (
+                    <option key={k} value={k}>{scores?.segments_meta.find((s) => s.key === k)?.label ?? k}</option>
+                  ))}
+                  <option value={ALL_TABLES}>All tables together</option>
+                </select>
                 <select className="aitick aisel" value={rows} onChange={(e) => setRows(e.target.value)} aria-label="How many companies">
-                  {ROW_CHOICES.filter((n) => !tableSize || n < tableSize).map((n) => (
-                    <option key={n} value={n}>Top {n}</option>
+                  {ROW_CHOICES.filter((n) => !biggest || n < biggest).map((n) => (
+                    <option key={n} value={n}>{allTables ? `Top ${n} of each` : `Top ${n}`}</option>
                   ))}
                   <option value="all">{tableSize ? `All ${tableSize}` : "All"}</option>
                 </select>
                 <button type="button" className="aibtn" onClick={copyTable} disabled={!scores}>
-                  Copy the open table{tableLabel ? ` (${tableLabel})` : ""}
+                  {allTables ? "Copy all tables" : "Copy the table"}
                 </button>
                 <input
                   className="aitick"
