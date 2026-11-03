@@ -76,12 +76,12 @@ export function AiPage() {
               <b>Copy</b>
               <p>
                 Choose what to hand your assistant. Each copy includes the scores, the factors, the
-                month, and a short explanation of how to read them. A table copy holds its top{" "}
-                {TABLE_ROWS} companies.
+                month, and a short explanation of how to read them. <b>A table copy pastes the first{" "}
+                {TABLE_ROWS} companies in the ranking</b>, from rank 1 down.
               </p>
               <div className="aibtns">
                 <button type="button" className="aibtn" onClick={copyTable} disabled={!scores}>
-                  Copy the open table{tableLabel ? ` (${tableLabel})` : ""}
+                  Copy the top {TABLE_ROWS} of the open table{tableLabel ? ` (${tableLabel})` : ""}
                 </button>
                 <input
                   className="aitick"
