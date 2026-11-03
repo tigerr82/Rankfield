@@ -316,13 +316,12 @@ main {
 .seg button .mono { opacity: 0.8; }
 .themeseg button { padding: 4px 9px; }
 .seg.modeseg button { font-weight: 600; letter-spacing: 0.02em; }
-/* Use with AI: far right of the Segment row, as tall as the segment buttons. */
+/* Use with AI: far right of the header, on every page. */
 .ainav {
   margin-left: auto;
-  align-self: stretch;
   display: inline-flex;
   align-items: center;
-  padding: 0 14px;
+  padding: 5px 14px;
   background: var(--accent);
   color: var(--on-accent);
   border: 1px solid var(--accent);
@@ -334,13 +333,14 @@ main {
   white-space: nowrap;
 }
 .ainav:hover { filter: brightness(1.1); }
-.ainav-short { display: none; }
-.ainav { gap: 5px; }
-/* On a mid-width desktop window the Segment tabs leave little room: the label shortens
-   so the button stays on the Segment row instead of dropping to a line of its own. */
+.toolbar .hdr-meta { flex: none; }
+/* The run stamp in the Segment row is wide: on a mid-width window it would push to a line of
+   its own, so below 1700px it keeps only the date, and below 1300px it leaves the row. */
+@media (min-width: 768px) and (max-width: 1699px) {
+  .toolbar .hdr-meta .rs-scored, .toolbar .hdr-meta .rs-cov { display: none; }
+}
 @media (min-width: 768px) and (max-width: 1299px) {
-  .ainav-long { display: none; }
-  .ainav-short { display: inline; }
+  .toolbar .hdr-meta { display: none; }
 }
 .count { margin-left: auto; font-family: var(--font-mono); font-size: var(--t-small); color: var(--ink-3); }
 .count .countsub { opacity: 0.75; }
@@ -909,6 +909,8 @@ footer.pf a { color: var(--ink-2); }
     white-space: nowrap;
   }
   .hdr-meta .tag, .hdr-meta > span:last-child { display: none; }
+  header.app .ainav { order: 2; margin: 0 12px 0 auto; padding: 3px 10px; font-size: 12px; }
+  .toolbar .hdr-meta { display: none; }
   header.app nav.main,
   header.app .hdr-controls {
     flex: 1 0 100%;

@@ -4,7 +4,7 @@ import { countPage } from "./lib/track";
 import { AiPage } from "./routes/AiPage";
 import { AppHeader, StatusBanner } from "./components/Shell";
 import { AppStateProvider } from "./state/AppState";
-import { metricCoverage, usePayload } from "./data/usePayload";
+import { usePayload } from "./data/usePayload";
 import { RankingPage } from "./routes/RankingPage";
 import { StockPage } from "./routes/StockPage";
 import { MethodologyPage } from "./routes/MethodologyPage";
@@ -36,7 +36,7 @@ function Chrome() {
   return (
     <>
       <StatusBanner meta={scores?.meta} />
-      <AppHeader meta={scores?.meta} coverage={metricCoverage(scores)} />
+      <AppHeader />
       <Routes>
         <Route path="/" element={<RankingPage />} />
         <Route path="/stock/:ticker" element={<StockPage />} />

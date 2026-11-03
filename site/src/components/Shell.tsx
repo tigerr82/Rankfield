@@ -1,5 +1,5 @@
 import { useRef, type ReactNode, type RefObject } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import type { ScoresMeta } from "../data/types";
 import { usePayload } from "../data/usePayload";
 import { fullDate, weeksSince } from "../lib/format";
@@ -47,14 +47,41 @@ const THEMES: [Theme, string, string][] = [
   ["dark", "Dark", "Always dark"],
 ];
 
-export function AppHeader({ meta, coverage }: { meta?: ScoresMeta; coverage?: number }) {
+/** Run stamp: how many are scored, as of when, and how complete the data is. */
+export function RunStamp({ meta, coverage }: { meta?: ScoresMeta; coverage?: number }) {
+  const scored = meta
+    ? Object.entries(meta.counts).filter(([k]) => k !== "insufficient").reduce((a, [, v]) => a + v, 0)
+    : null;
+  return (
+    <div className="hdr-meta mono">
+    {scored != null && <span className="rs-scored" title="Stocks with a Rankfield Score this month">{scored.toLocaleString()} scored</span>}
+    {meta && (
+      <span title="Scores and prices are both as of this date - the last trading day of the prior month. They update together at the next monthly run.">
+        as of {fullDate(meta.scoring_date)}
+      </span>
+    )}
+    {meta?.first_run && (
+      <span
+        className="tag"
+        title="The first scoring run: there is no prior month yet, so change columns show a dash (never 0%) until the next monthly run."
+      >
+        First run
+      </span>
+    )}
+    {coverage != null && (
+      <span className="rs-cov" title="Share of applicable metrics resolved across every scored stock">
+        {Math.round(coverage * 100)}% coverage
+      </span>
+    )}
+  </div>
+  );
+}
+
+export function AppHeader() {
   const { theme, setTheme, mode, setMode } = useApp();
   // Basic/Pro decides which columns and filters the rankings show, so it sits
   // in the header - page-level, easy to find - and only where it has an effect.
   const onRankings = useLocation().pathname === "/";
-  const scored = meta
-    ? Object.entries(meta.counts).filter(([k]) => k !== "insufficient").reduce((a, [, v]) => a + v, 0)
-    : null;
   // One row. The brand line and tagline repeated what the page already shows,
   // and the three stats do not need a two-line label each - so the whole
   // header now costs a single line of height instead of three.
@@ -119,27 +146,10 @@ export function AppHeader({ meta, coverage }: { meta?: ScoresMeta; coverage?: nu
           </div>
         </span>
       </div>
-      <div className="hdr-meta mono">
-        {scored != null && <span title="Stocks with a Rankfield Score this month">{scored.toLocaleString()} scored</span>}
-        {meta && (
-          <span title="Scores and prices are both as of this date - the last trading day of the prior month. They update together at the next monthly run.">
-            as of {fullDate(meta.scoring_date)}
-          </span>
-        )}
-        {meta?.first_run && (
-          <span
-            className="tag"
-            title="The first scoring run: there is no prior month yet, so change columns show a dash (never 0%) until the next monthly run."
-          >
-            First run
-          </span>
-        )}
-        {coverage != null && (
-          <span title="Share of applicable metrics resolved across every scored stock">
-            {Math.round(coverage * 100)}% coverage
-          </span>
-        )}
-      </div>
+      {/* Far right of every page. */}
+      <Link to="/ai" className="ainav ainav-hdr" title="Use Rankfield with your own AI assistant">
+        ✦ Use with AI
+      </Link>
     </header>
   );
 }

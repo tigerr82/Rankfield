@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { RunStamp } from "./Shell";
+import { metricCoverage, usePayload } from "../data/usePayload";
 import type { SegmentKey, SegmentMeta } from "../data/types";
 import { useApp } from "../state/AppState";
 
@@ -50,6 +51,7 @@ const SORTS: { key: string; dir: 1 | -1; label: string; title: string }[] = [
 export function Toolbar({ segmentsMeta, counts, shown, total, scopeCounts }: Props) {
   const { query, setQuery, sortKey, sortDir, setSort, segment, setSegment,
           scope, setScope, railCollapsed, toggleRail } = useApp();
+  const { scores } = usePayload();
   const ref = useRef<HTMLDivElement | null>(null);
   useToolbarHeight(ref);
 
@@ -103,10 +105,8 @@ export function Toolbar({ segmentsMeta, counts, shown, total, scopeCounts }: Pro
           </div>
         </span>
 
-        {/* Far right of the Segment row, the same height as the segment buttons. */}
-        <Link to="/ai" className="ainav" title="Use Rankfield with your own AI assistant">
-          ✦ <span className="ainav-long">Use with AI</span><span className="ainav-short">AI</span>
-        </Link>
+        {/* Far right of the Segment row: how many are scored, as of when. */}
+        <RunStamp meta={scores?.meta} coverage={metricCoverage(scores)} />
       </div>
 
       {/* Show sits on its own line so that Segment, Show and Sort read as three
