@@ -1,3 +1,4 @@
+import { comparablePrice } from "./comparablePrice";
 import { metricValue } from "./format";
 import type { FactorKey, HistoryIndex, MetricSpec, ScoresPayload, SegmentKey, StockRow } from "../data/types";
 
@@ -131,13 +132,13 @@ export function selectionPrompt(
     }
     const shown = sel.months == null ? points : points.slice(-sel.months);
     out.push(`${ticker} - ${row?.name ?? ""} (${row?.peer_group ?? row?.sector ?? "-"})`);
-    out.push("month | rank | composite | Q | G | V | H | price | method version");
+    out.push("month | rank | composite | Q | G | V | H | price (adjusted for splits and dividends) | method version");
     for (const p of shown) {
       out.push(
         [
           p.month, p.rank ?? "-", num(p.composite),
           ...FACTOR_ORDER.map((k) => num(p.factors?.[k] ?? null, 0)),
-          p.price ?? "-", p.weights_version + (p.backtested ? " (backtested)" : ""),
+          comparablePrice(p) ?? "-", p.weights_version + (p.backtested ? " (backtested)" : ""),
         ].join(" | "),
       );
     }

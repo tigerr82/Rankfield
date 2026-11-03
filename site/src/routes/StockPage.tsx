@@ -6,6 +6,7 @@ import { ScoreCell } from "../components/cells";
 import { cleanName } from "../components/columns";
 import { DASH, fullDate, marketCap, metricValue, money, monthLabel, percent } from "../lib/format";
 import { stockOutcomes } from "../lib/analytics";
+import { comparablePrice } from "../lib/comparablePrice";
 import { displayComposite, isDefaultWeights } from "../lib/scoring";
 import { useApp } from "../state/AppState";
 
@@ -176,7 +177,7 @@ export function StockPage() {
                 <th className="al-l">Month</th>
                 <th className="al-r">Score</th>
                 <th className="al-r">Rank</th>
-                <th className="al-r">Price</th>
+                <th className="al-r" title="Month-end close, adjusted for splits and dividends so months compare. The first run's price is shown as recorded.">Price (adj.)</th>
                 <th className="al-l">Weights</th>
               </tr>
             </thead>
@@ -186,7 +187,7 @@ export function StockPage() {
                   <td className="al-l">{monthLabel(p.month)}{p.backtested && <span className="basis">BACKTEST</span>}</td>
                   <td className="al-r mono">{p.composite?.toFixed(1) ?? DASH}</td>
                   <td className="al-r mono">{p.rank ?? DASH}</td>
-                  <td className="al-r mono">{money(p.price)}</td>
+                  <td className="al-r mono">{money(comparablePrice(p))}</td>
                   <td className="al-l mono" style={{ fontSize: 11 }}>v{p.weights_version}</td>
                 </tr>
               ))}

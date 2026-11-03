@@ -139,6 +139,9 @@ export interface HistoryPoint {
   composite: number | null;
   rank: number | null;
   price: number | null;
+  /** The month-end price on the newest basis (split- and dividend-adjusted), for comparing months.
+   *  Null where the chain cannot be linked; absent in older payloads. */
+  price_adj?: number | null;
   /** Carried so the score-versus-price view can report per factor, not only
    *  on the composite. */
   factors: Record<FactorKey, number | null> | null;

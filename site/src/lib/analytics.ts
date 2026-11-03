@@ -18,6 +18,7 @@
  *    cap-weighted benchmark manufactures performance out of the mismatch alone.
  */
 import type { FactorKey, HistoryIndex, StockRow } from "../data/types";
+import { comparablePrice } from "./comparablePrice";
 import { heldOn, type WatchEvent } from "./portfolio";
 
 /** Below this many monthly observations, no result is presented as evidence. */
@@ -198,10 +199,13 @@ export function decileAnalysis(
     for (const points of Object.values(history.tickers)) {
       const a = points.find((p) => p.month === from);
       const b = points.find((p) => p.month === to);
-      if (!a || !b || a.price == null || b.price == null || a.price <= 0) continue;
+      if (!a || !b) continue;
+      const pa = comparablePrice(a);
+      const pb = comparablePrice(b);
+      if (pa == null || pb == null || pa <= 0) continue;
       const score = scoreAt(a, key);
       if (score == null) continue;
-      pairs.push({ score, ret: (b.price / a.price - 1) * 100 });
+      pairs.push({ score, ret: (pb / pa - 1) * 100 });
     }
     if (pairs.length < 30) continue;
 
@@ -250,8 +254,10 @@ export function stockOutcomes(history: HistoryIndex, ticker: string, horizon = 3
   for (let i = 0; i + horizon < points.length; i += 1) {
     const a = points[i];
     const b = points[i + horizon];
-    if (a.composite == null || a.price == null || b.price == null || a.price <= 0) continue;
-    out.push({ from: a.month, to: b.month, score: a.composite, ret: (b.price / a.price - 1) * 100 });
+    const pa = comparablePrice(a);
+    const pb = comparablePrice(b);
+    if (a.composite == null || pa == null || pb == null || pa <= 0) continue;
+    out.push({ from: a.month, to: b.month, score: a.composite, ret: (pb / pa - 1) * 100 });
   }
   return out;
 }

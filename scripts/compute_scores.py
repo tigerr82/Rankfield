@@ -27,6 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from rankfield.config import (
     DATA_DIR, HISTORY_DIR, ensure_dirs, load_settings, load_weights, read_json, write_json,
 )
+from rankfield.adjusted import adjusted_prices
 from rankfield.drift import build_drift_report
 from rankfield.exits import build_exits
 from rankfield.metrics import FACTORS, METRICS
@@ -378,7 +379,7 @@ def main() -> int:
         }, compact=True)
         print(f"  history -> {history_path}")
 
-    rebuild_history_index()
+    rebuild_history_index({r["ticker"]: r for seg in segments_out.values() for r in seg}, month_key(scoring_date))
 
     exits = build_exits(
         prior_by_ticker,
@@ -445,17 +446,22 @@ def main() -> int:
     return 0
 
 
-def rebuild_history_index() -> None:
+def rebuild_history_index(current_rows: dict | None = None, current_month: str | None = None) -> None:
     """ticker -> [{month, composite, rank}] for the sparkline column.
 
     Rebuilt from the append-only monthly files rather than accumulated in place,
-    so it can never drift from them.
+    so it can never drift from them. `price_adj` puts every month's price on the newest basis
+    (see rankfield.adjusted); `current_rows` are this run's rows, whose prices are restated, and
+    apply only when this run's month is the newest one on file.
     """
     index: dict[str, list[dict]] = {}
     months: list[str] = []
+    records = {p.stem.replace("scores_", ""): read_json(p) or {} for p in sorted(HISTORY_DIR.glob("scores_*.json"))}
+    newest = max(records) if records else None
+    adjusted = adjusted_prices(records, current_rows if current_month == newest else None)
     for path in sorted(HISTORY_DIR.glob("scores_*.json")):
         month = path.stem.replace("scores_", "")
-        payload = read_json(path) or {}
+        payload = records[month]
         months.append(month)
         for seg in payload.get("segments", {}).values():
             for row in seg:
@@ -464,6 +470,7 @@ def rebuild_history_index() -> None:
                     "composite": row.get("composite"),
                     "rank": row.get("rank"),
                     "price": row.get("price"),
+                    "price_adj": adjusted[month].get(row["ticker"]),
                     # Factor scores travel with the index so the score-versus-price
                     # view can report per factor, not only on the composite.
                     "factors": row.get("factors"),

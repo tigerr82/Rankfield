@@ -1,4 +1,5 @@
 import type { HistoryPoint, Stability } from "../data/types";
+import { comparablePrice } from "../lib/comparablePrice";
 import { DASH } from "../lib/format";
 
 /**
@@ -78,7 +79,7 @@ export function Sparkline({
   /** What is drawn: the score (the default) or the month-end price. */
   field?: "composite" | "price";
 }) {
-  const values = points.map((p) => p[field]).filter((v): v is number => v != null);
+  const values = points.map((p) => (field === "price" ? comparablePrice(p) : p.composite)).filter((v): v is number => v != null);
   if (values.length < 2) {
     return (
       <span className="mono" style={{ fontSize: 10, color: "var(--ink-3)" }} title="History begins accumulating from the first run; a sparkline needs at least two months.">

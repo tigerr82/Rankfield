@@ -201,7 +201,9 @@ if ROIC <= ${hurdle}% (hurdle):   min(p, 50)   (never above the midpoint)`}</pre
           on the old basis, and comparing against it would read a 10-for-1 split as −90%. The
           originally stored price is kept for audit and never used in the calculation. Any monthly
           move beyond ±50% is logged for review, because a corporate action is the far more likely
-          explanation than a real move.
+          explanation than a real move. The same holds for price history: every stored month is
+          chained to the next through the prior price each later run re-read, so the sparklines,
+          the score-against-return views and the data pack compare months on one adjusted basis.
         </div>
 
         <h2>Who gets scored</h2>

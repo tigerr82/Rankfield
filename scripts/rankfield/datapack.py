@@ -12,6 +12,8 @@ import io
 import zipfile
 from datetime import date
 
+from .adjusted import adjusted_prices
+
 METHOD_URL = "https://tigerr82.github.io/Rankfield/#/methodology"
 FACTORS = ["quality", "growth", "valuation", "health"]
 REBUILT_AFTER_DAYS = 7   # a record made more than a week after its scoring date was rebuilt
@@ -73,6 +75,7 @@ def build_pack(records: dict[str, dict], unranked: dict[str, dict], current: dic
         for r in rows:
             now_price[r["ticker"]] = r
 
+    adjusted = adjusted_prices(records, now_price)
     month_rows, score_rows, metric_rows, company_rows = [], [], [], {}
     for month in months:
         rec = records[month]
@@ -94,7 +97,7 @@ def build_pack(records: dict[str, dict], unranked: dict[str, dict], current: dic
                     month, meta["scoring_date"], r["ticker"], r.get("name"), seg_label.get(table, table),
                     r.get("peer_group") or "", r.get("sector") or "", r.get("rank"), r.get("composite"),
                     *[f.get(k) for k in FACTORS], r.get("rank_change"), r.get("composite_change"),
-                    int(bool(r.get("is_new"))), price, change, r.get("market_cap"), r.get("coverage"),
+                    int(bool(r.get("is_new"))), price, adjusted[month].get(r["ticker"]), change, r.get("market_cap"), r.get("coverage"),
                     r.get("fundamentals_asof"), r.get("form"), r.get("filed"), r.get("weights_version"),
                 ])
                 for key, cell in (r.get("metrics") or {}).items():
@@ -125,7 +128,7 @@ def build_pack(records: dict[str, dict], unranked: dict[str, dict], current: dic
         "scores_monthly.csv": _csv(
             ["month", "scoring_date", "ticker", "name", "table", "peer_group", "sector", "rank", "composite",
              "quality", "growth", "value", "health", "rank_change", "composite_change", "first_time_ranked",
-             "price", "price_change_pct", "market_cap", "metric_coverage", "fundamentals_asof", "form",
+             "price", "price_adjusted", "price_change_pct", "market_cap", "metric_coverage", "fundamentals_asof", "form",
              "filed", "method_version"], score_rows),
         "metrics_monthly.csv": _csv(["month", "ticker", "metric", "factor", "raw_value", "sector_percentile",
                                      "basis"], metric_rows),
@@ -155,7 +158,7 @@ WHAT IS HERE
                           and the tables it is not scored for.
   companies.csv           one row per company ever ranked.
   scores_monthly.csv      one row per company per month: table, rank, composite, the four factor
-                          scores (quality, growth, value, health), rank change, price, market cap.
+                          scores (quality, growth, value, health), rank change, price, price_adjusted, market cap.
   metrics_monthly.csv     one row per company per month per metric: raw value and sector percentile.
   not_ranked_monthly.csv  companies that were not ranked in a month and why (where recorded; see
                           months.csv, column not_ranked_recorded).
@@ -169,8 +172,12 @@ HOW TO READ IT
   - Compare months only within the same method_version, or say that the method changed.
   - Months marked "rebuilt after the fact" were scored later on the same method, from the data
     available then; treat them as weaker evidence than live months.
-  - Prices are the close on the scoring date as recorded. After a later split or dividend an older
-    price may differ from a broker's adjusted history. The latest month's price is restated weekly.
+  - price is the close on the scoring date as recorded then. After a split or spin-off an older
+    price is on the old basis, so a drop between two months may be a split, not a loss. The latest
+    month's price is restated weekly.
+  - price_adjusted puts every month on the newest basis (split- and dividend-adjusted), chained
+    from the prior-month price each later run re-read. Use it, never price, for returns between
+    months. It is empty where the chain cannot be linked (a gap in a company's months).
 
 EXAMPLE QUESTIONS
   - How did the ROIC percentile of MU, NVDA and AMD change month by month?
