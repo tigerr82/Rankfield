@@ -70,7 +70,6 @@ export function AppHeader({ meta, coverage }: { meta?: ScoresMeta; coverage?: nu
         <NavLink to="/stability">Stability</NavLink>
         <NavLink to="/methodology">Methodology</NavLink>
         <NavLink to="/coverage">Coverage</NavLink>
-        <NavLink to="/ai" className="ainav" title="Use Rankfield with your own AI assistant">✦ Use with AI</NavLink>
       </nav>
       {/* The two page-wide switches sit together straight after the navigation,
           each with its own label and a clear gap, so neither reads as part of the other. */}

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import type { SegmentKey, SegmentMeta } from "../data/types";
 import { useApp } from "../state/AppState";
 
@@ -102,6 +103,10 @@ export function Toolbar({ segmentsMeta, counts, shown, total, scopeCounts }: Pro
           </div>
         </span>
 
+        {/* Far right of the Segment row, the same height as the segment buttons. */}
+        <Link to="/ai" className="ainav" title="Use Rankfield with your own AI assistant">
+          ✦ <span className="ainav-long">Use with AI</span><span className="ainav-short">AI</span>
+        </Link>
       </div>
 
       {/* Show sits on its own line so that Segment, Show and Sort read as three

@@ -127,8 +127,6 @@ nav.main a {
   border-radius: var(--radius);
   border: 1px solid transparent;
 }
-nav.main a.ainav { background: var(--accent); color: var(--on-accent); font-weight: 600; margin-left: 2px; }
-nav.main a.ainav:hover { filter: brightness(1.1); color: var(--on-accent); }
 nav.main a:hover { background: var(--accent-soft); color: var(--ink); }
 nav.main a.active { background: var(--accent); color: var(--on-accent); }
 
@@ -318,6 +316,32 @@ main {
 .seg button .mono { opacity: 0.8; }
 .themeseg button { padding: 4px 9px; }
 .seg.modeseg button { font-weight: 600; letter-spacing: 0.02em; }
+/* Use with AI: far right of the Segment row, as tall as the segment buttons. */
+.ainav {
+  margin-left: auto;
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  font-family: var(--font-ui);
+  font-size: var(--t-body);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.ainav:hover { filter: brightness(1.1); }
+.ainav-short { display: none; }
+.ainav { gap: 5px; }
+/* On a mid-width desktop window the Segment tabs leave little room: the label shortens
+   so the button stays on the Segment row instead of dropping to a line of its own. */
+@media (min-width: 768px) and (max-width: 1299px) {
+  .ainav-long { display: none; }
+  .ainav-short { display: inline; }
+}
 .count { margin-left: auto; font-family: var(--font-mono); font-size: var(--t-small); color: var(--ink-3); }
 .count .countsub { opacity: 0.75; }
 .search {
