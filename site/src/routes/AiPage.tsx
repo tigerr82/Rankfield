@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { usePayload } from "../data/usePayload";
 import { Shell, useScrollRef } from "../components/Shell";
-import { companyPrompt, tablePrompt, TABLE_ROWS } from "../lib/aiExport";
+import { companyPrompt, ROW_CHOICES, tablePrompt, TABLE_ROWS } from "../lib/aiExport";
 import { countEvent } from "../lib/track";
 import { useApp } from "../state/AppState";
 import type { SegmentKey, StockRow } from "../data/types";
@@ -25,18 +25,21 @@ export function AiPage() {
   const { segment } = useApp();
   const scrollRef = useScrollRef();
   const [ticker, setTicker] = useState("");
+  const [rows, setRows] = useState<string>(String(TABLE_ROWS));
   const [note, setNote] = useState<{ text: string; ok: boolean } | null>(null);
 
   const segmentKey: SegmentKey = segment === "insufficient" ? "operating" : segment;
+  const tableSize = scores?.segments[segmentKey]?.length ?? 0;
+  const limit = rows === "all" ? null : Number(rows);
   const tableLabel = scores?.segments_meta.find((s) => s.key === segmentKey)?.label;
 
   const copyTable = async () => {
     if (!scores) return;
-    const ok = await copy(tablePrompt(scores, segmentKey));
+    const ok = await copy(tablePrompt(scores, segmentKey, limit));
     if (ok) countEvent("ai-copy-table");
     setNote(
       ok
-        ? { text: `Copied the top ${TABLE_ROWS} of the ${tableLabel ?? segmentKey} table. Paste it into your assistant.`, ok }
+        ? { text: `Copied ${limit == null || limit >= tableSize ? "all" : `the first ${limit}`} ${tableSize ? `of ${tableSize} ` : ""}companies in the ${tableLabel ?? segmentKey} table. Paste it into your assistant.`, ok }
         : { text: "Your browser did not allow copying.", ok },
     );
   };
@@ -76,12 +79,17 @@ export function AiPage() {
               <b>Copy</b>
               <p>
                 Choose what to hand your assistant. Each copy includes the scores, the factors, the
-                month, and a short explanation of how to read them. <b>A table copy pastes the first{" "}
-                {TABLE_ROWS} companies in the ranking</b>, from rank 1 down.
+                month, and a short explanation of how to read them. <strong>A table copy pastes the first companies in the ranking</strong>, from rank 1 down: {TABLE_ROWS} by default, or more if you choose.
               </p>
               <div className="aibtns">
+                <select className="aitick aisel" value={rows} onChange={(e) => setRows(e.target.value)} aria-label="How many companies">
+                  {ROW_CHOICES.filter((n) => !tableSize || n < tableSize).map((n) => (
+                    <option key={n} value={n}>Top {n}</option>
+                  ))}
+                  <option value="all">{tableSize ? `All ${tableSize}` : "All"}</option>
+                </select>
                 <button type="button" className="aibtn" onClick={copyTable} disabled={!scores}>
-                  Copy the top {TABLE_ROWS} of the open table{tableLabel ? ` (${tableLabel})` : ""}
+                  Copy the open table{tableLabel ? ` (${tableLabel})` : ""}
                 </button>
                 <input
                   className="aitick"
@@ -113,6 +121,14 @@ export function AiPage() {
             </div>
           </div>
         </div>
+
+        {rows === "all" && tableSize > 500 && (
+          <p className="muted">
+            A whole table of {tableSize} companies is about {Math.round(tableSize * 0.03)}k tokens. Some
+            assistants, mainly free plans, may refuse or cut a paste that long; if yours does, choose a
+            shorter list.
+          </p>
+        )}
 
         <h2>Questions that work well</h2>
         <ul>

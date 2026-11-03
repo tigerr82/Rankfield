@@ -32,6 +32,12 @@ describe("AI export", () => {
     expect(text).toContain("Not investment advice");
   });
 
+  it("copies the whole table when no limit is given", () => {
+    const text = tablePrompt(payload, "operating", null);
+    expect(text.split(/\r?\n/).filter((l) => /^\d+ \| T/.test(l))).toHaveLength(150);
+    expect(text).toContain("All 150 companies");
+  });
+
   it("copies one company with its metrics and rank", () => {
     const text = companyPrompt(payload, rows.find((r) => r.ticker === "T1")!);
     expect(text).toContain("T1 - T1 Inc");

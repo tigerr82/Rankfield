@@ -1097,5 +1097,6 @@ footer.pf a { color: var(--ink-2); }
   border: 1px solid var(--line-2); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink);
   text-transform: uppercase;
 }
+.aisel { width: auto; text-transform: none; }
 .aidone { font-size: var(--t-small); color: var(--accent); }
 .aiwarn { font-size: var(--t-small); color: var(--warn); }

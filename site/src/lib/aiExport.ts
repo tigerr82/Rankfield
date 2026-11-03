@@ -1,8 +1,9 @@
 import { metricValue } from "./format";
 import type { FactorKey, MetricSpec, ScoresPayload, SegmentKey, StockRow } from "../data/types";
 
-/** How many rows of a table go into one paste: a whole table is too long for most chats. */
+/** How many rows of a table go into one paste. The default is short; a whole table is long for some chats. */
 export const TABLE_ROWS = 100;
+export const ROW_CHOICES: number[] = [100, 250, 500];
 
 const FACTOR_ORDER: FactorKey[] = ["quality", "growth", "valuation", "health"];
 const FACTOR_SHORT: Record<FactorKey, string> = { quality: "Q", growth: "G", valuation: "V", health: "H" };
@@ -24,12 +25,12 @@ const num = (value: number | null | undefined, digits = 1) =>
 
 const change = (value: number | null) => (value == null ? "-" : value > 0 ? `+${value}` : `${value}`);
 
-/** Plain text for the open table: its best `TABLE_ROWS` companies by rank. */
-export function tablePrompt(scores: ScoresPayload, segment: SegmentKey): string {
+/** Plain text for the open table: its best `limit` companies by rank, or all of them when `limit` is null. */
+export function tablePrompt(scores: ScoresPayload, segment: SegmentKey, limit: number | null = TABLE_ROWS): string {
   const meta = scores.meta;
   const label = scores.segments_meta.find((s) => s.key === segment)?.label ?? segment;
   const all = [...(scores.segments[segment] ?? [])].sort((a, b) => a.rank - b.rank);
-  const rows = all.slice(0, TABLE_ROWS);
+  const rows = limit == null ? all : all.slice(0, limit);
   const lines = rows.map((r) =>
     [
       r.rank,
@@ -45,7 +46,7 @@ export function tablePrompt(scores: ScoresPayload, segment: SegmentKey): string 
   return [
     intro(meta.scoring_date, meta.weights_version),
     "",
-    `Table: ${label}. The top ${rows.length} of ${all.length} companies by rank.`,
+    `Table: ${label}. ${rows.length === all.length ? `All ${all.length} companies` : `The top ${rows.length} of ${all.length} companies by rank`}.`,
     "Columns: rank | ticker | name | sector or peer group | composite | Q | G | V | H | rank change | 1-month price change",
     ...lines,
     "",
