@@ -1,5 +1,5 @@
 import { metricValue } from "./format";
-import type { FactorKey, MetricSpec, ScoresPayload, SegmentKey, StockRow } from "../data/types";
+import type { FactorKey, HistoryIndex, MetricSpec, ScoresPayload, SegmentKey, StockRow } from "../data/types";
 
 /** How many rows of a table go into one paste. The default is short; a whole table is long for some chats. */
 export const TABLE_ROWS = 100;
@@ -84,4 +84,66 @@ export function companyPrompt(scores: ScoresPayload, row: StockRow): string {
     "",
     `Method: ${METHOD_URL}`,
   ].join("\n");
+}
+
+export const DATA_PACK_FILE = "rankfield_data_pack.zip";
+
+export function packUrl(): string {
+  return `${import.meta.env.BASE_URL.replace(/\/+$/, "")}/data/${DATA_PACK_FILE}`;
+}
+
+/** Rough size of a pasted text, in thousands of tokens. */
+export const approxTokensK = (text: string) => Math.max(1, Math.round(text.length / 3.5 / 1000));
+
+export interface Selection {
+  tickers: string[];
+  /** Latest n months, or null for every month on record. */
+  months: number | null;
+  /** "scores": rank, composite and the four factors per month. "all": adds every metric of the latest month. */
+  depth: "scores" | "all";
+}
+
+/**
+ * A few companies over time, as pasted text. The history carries rank, composite, factors and price for every
+ * month; the metrics behind them are held for the latest month only, so older months' metrics are in the data
+ * pack, not here.
+ */
+export function selectionPrompt(scores: ScoresPayload, history: HistoryIndex | undefined, sel: Selection): string {
+  const rows = new Map<string, StockRow>();
+  for (const list of Object.values(scores.segments) as StockRow[][]) for (const r of list) rows.set(r.ticker, r);
+  const out: string[] = [intro(scores.meta.scoring_date, scores.meta.weights_version), ""];
+  const unknown: string[] = [];
+  for (const raw of sel.tickers) {
+    const ticker = raw.trim().toUpperCase();
+    const row = rows.get(ticker);
+    const points = history?.tickers[ticker] ?? [];
+    if (!row && !points.length) {
+      unknown.push(ticker);
+      continue;
+    }
+    const shown = sel.months == null ? points : points.slice(-sel.months);
+    out.push(`${ticker} - ${row?.name ?? ""} (${row?.peer_group ?? row?.sector ?? "-"})`);
+    out.push("month | rank | composite | Q | G | V | H | price | method version");
+    for (const p of shown) {
+      out.push(
+        [
+          p.month, p.rank ?? "-", num(p.composite),
+          ...FACTOR_ORDER.map((k) => num(p.factors?.[k] ?? null, 0)),
+          p.price ?? "-", p.weights_version + (p.backtested ? " (backtested)" : ""),
+        ].join(" | "),
+      );
+    }
+    if (sel.depth === "all" && row) {
+      out.push(`Metrics behind the latest month (${scores.meta.scoring_date}):`);
+      for (const [key, cell] of Object.entries(row.metrics)) {
+        const spec = scores.metrics.find((m) => m.key === key);
+        if (spec) out.push(`  ${spec.label} [${spec.factor}]: ${metricValue(cell.raw, spec)} (percentile ${num(cell.pct, 0)})`);
+      }
+    }
+    out.push("");
+  }
+  if (unknown.length) out.push(`Not found in the ranked tables: ${unknown.join(", ")}`, "");
+  out.push("A month in which a company was not ranked is missing from its list. August and September 2026 were rebuilt after the fact on the current method.");
+  out.push(`Method: ${METHOD_URL}`);
+  return out.join("\n");
 }

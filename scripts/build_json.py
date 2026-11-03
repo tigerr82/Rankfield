@@ -14,7 +14,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from rankfield.config import DATA_DIR, SITE_PUBLIC_DATA, read_json
+from rankfield.config import DATA_DIR, HISTORY_DIR, SITE_PUBLIC_DATA, read_json, write_json
+from rankfield.datapack import unranked_record
 
 # The ranking table loads on page load; nothing else is fetched until a screen
 # needs it. One giant payload would be tens of megabytes.
@@ -41,6 +42,15 @@ def main() -> int:
         size = source.stat().st_size
         total += size
         print(f"  {name:<24} {size / 1e6:6.2f} MB")
+
+    # Who was not ranked this month, kept beside the monthly record for the data pack. Written
+    # once and never replaced: the weekly price run must not rewrite a month it did not score.
+    scores = read_json(DATA_DIR / "scores_full.json") or {}
+    month = scores.get("meta", {}).get("scoring_date", "")[:7]
+    target = HISTORY_DIR / f"unranked_{month}.json"
+    if month and (HISTORY_DIR / f"scores_{month}.json").exists() and not target.exists():
+        write_json(target, unranked_record(scores, read_json(DATA_DIR / "coverage_report.json") or {}))
+        print(f"  unranked_{month}.json written")
 
     # A small universe file for anything that needs names without the scores.
     universe = read_json(DATA_DIR / "universe.json") or {}

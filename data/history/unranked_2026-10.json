@@ -1,0 +1,1489 @@
+{
+ "scoring_date": "2026-10-31",
+ "entries": [
+  {
+   "ticker": "VRTX",
+   "name": "Vertex Pharmaceuticals Incorporated Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "BKNG",
+   "name": "Booking Holdings Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 7 of 12 applicable metrics (58%, threshold 70%)"
+  },
+  {
+   "ticker": "ENB",
+   "name": "Enbridge Inc Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 0 of 11 applicable metrics (0%, threshold 70%)"
+  },
+  {
+   "ticker": "EMR",
+   "name": "Emerson Electric Company Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 4 of 11 applicable metrics (36%, threshold 70%)"
+  },
+  {
+   "ticker": "EPD",
+   "name": "Enterprise Products Partners L.P. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "CP",
+   "name": "Canadian Pacific Kansas City Limited Common Shares",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 0 of 11 applicable metrics (0%, threshold 70%)"
+  },
+  {
+   "ticker": "MPWR",
+   "name": "Monolithic Power Systems Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "NKE",
+   "name": "Nike Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 11 applicable metrics (45%, threshold 70%)"
+  },
+  {
+   "ticker": "BKR",
+   "name": "Baker Hughes Company Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 11 applicable metrics (27%, threshold 70%)"
+  },
+  {
+   "ticker": "PCAR",
+   "name": "PACCAR Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 11 applicable metrics (27%, threshold 70%)"
+  },
+  {
+   "ticker": "F",
+   "name": "Ford Motor Company Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "FERG",
+   "name": "Ferguson Enterprises Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 1 of 11 applicable metrics (9%, threshold 70%)"
+  },
+  {
+   "ticker": "LYV",
+   "name": "Live Nation Entertainment Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "DHI",
+   "name": "D.R. Horton Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 11 applicable metrics (45%, threshold 70%)"
+  },
+  {
+   "ticker": "PCG",
+   "name": "Pacific Gas & Electric Co. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "TKO",
+   "name": "TKO Group Holdings Inc. Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "EME",
+   "name": "EMCOR Group Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "EXPD",
+   "name": "Expeditors International of Washington Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 12 applicable metrics (25%, threshold 70%)"
+  },
+  {
+   "ticker": "UTHR",
+   "name": "United Therapeutics Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "INCY",
+   "name": "Incyte Corp. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "SYM",
+   "name": "Symbotic Inc. Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "PR",
+   "name": "Permian Resources Corporation Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "APA",
+   "name": "APA Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "MEDP",
+   "name": "Medpace Holdings Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "TLN",
+   "name": "Talen Energy Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "NVR",
+   "name": "NVR Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 1 of 11 applicable metrics (9%, threshold 70%)"
+  },
+  {
+   "ticker": "NWSA",
+   "name": "News Corporation Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 11 applicable metrics (27%, threshold 70%)"
+  },
+  {
+   "ticker": "MTZ",
+   "name": "MasTec Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 11 applicable metrics (45%, threshold 70%)"
+  },
+  {
+   "ticker": "BBIO",
+   "name": "BridgeBio Pharma Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "CNH",
+   "name": "CNH Industrial N.V. Common Shares",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 4 of 11 applicable metrics (36%, threshold 70%)"
+  },
+  {
+   "ticker": "TXT",
+   "name": "Textron Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 1 of 11 applicable metrics (9%, threshold 70%)"
+  },
+  {
+   "ticker": "GKOS",
+   "name": "Glaukos Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "LOGI",
+   "name": "Logitech International S.A. Ordinary Shares",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 4 of 12 applicable metrics (33%, threshold 70%)"
+  },
+  {
+   "ticker": "CDE",
+   "name": "Coeur Mining Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 12 applicable metrics (25%, threshold 70%)"
+  },
+  {
+   "ticker": "TEM",
+   "name": "Tempus AI Inc. Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "IONQ",
+   "name": "IonQ Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "HUBS",
+   "name": "HubSpot Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "ELAN",
+   "name": "Elanco Animal Health Incorporated Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 11 applicable metrics (45%, threshold 70%)"
+  },
+  {
+   "ticker": "ALGN",
+   "name": "Align Technology Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "AES",
+   "name": "The AES Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 4 of 11 applicable metrics (36%, threshold 70%)"
+  },
+  {
+   "ticker": "MDGL",
+   "name": "Madrigal Pharmaceuticals Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "CGNX",
+   "name": "Cognex Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "OSCR",
+   "name": "Oscar Health Inc. Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "PTGX",
+   "name": "Protagonist Therapeutics Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 12 applicable metrics (25%, threshold 70%)"
+  },
+  {
+   "ticker": "PCOR",
+   "name": "Procore Technologies Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "VICR",
+   "name": "Vicor Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "IBRX",
+   "name": "ImmunityBio Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "CYTK",
+   "name": "Cytokinetics Incorporated Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 6 of 12 applicable metrics (50%, threshold 70%)"
+  },
+  {
+   "ticker": "NE",
+   "name": "Noble Corporation plc A Ordinary Shares",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "URBN",
+   "name": "Urban Outfitters Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "QLYS",
+   "name": "Qualys Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "EMN",
+   "name": "Eastman Chemical Company Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 11 applicable metrics (45%, threshold 70%)"
+  },
+  {
+   "ticker": "MSGK",
+   "name": "MSG Knickerbockers Corp. Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 7 of 12 applicable metrics (58%, threshold 70%)"
+  },
+  {
+   "ticker": "SLAB",
+   "name": "Silicon Laboratories Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "HUT",
+   "name": "Hut 8 Corp. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 4 of 12 applicable metrics (33%, threshold 70%)"
+  },
+  {
+   "ticker": "GRAL",
+   "name": "GRAIL Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "GATX",
+   "name": "GATX Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 7 of 11 applicable metrics (64%, threshold 70%)"
+  },
+  {
+   "ticker": "TTD",
+   "name": "The Trade Desk Inc. Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "DLB",
+   "name": "Dolby Laboratories Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "PAGP",
+   "name": "Plains GP Holdings L.P. Class A Units representing Limited Partner Interests",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "AAON",
+   "name": "AAON Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "HRI",
+   "name": "Herc Holdings Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 11 applicable metrics (27%, threshold 70%)"
+  },
+  {
+   "ticker": "PLXS",
+   "name": "Plexus Corp. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "MIRM",
+   "name": "Mirum Pharmaceuticals Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "CRUS",
+   "name": "Cirrus Logic Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "BCPC",
+   "name": "Balchem Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "TREX",
+   "name": "Trex Company Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "SHC",
+   "name": "Sotera Health Company Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 11 applicable metrics (45%, threshold 70%)"
+  },
+  {
+   "ticker": "PTEN",
+   "name": "Patterson-UTI Energy Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "MBLY",
+   "name": "Mobileye Global Inc. Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "PTCT",
+   "name": "PTC Therapeutics Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 7 of 12 applicable metrics (58%, threshold 70%)"
+  },
+  {
+   "ticker": "OGS",
+   "name": "ONE Gas Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 7 of 12 applicable metrics (58%, threshold 70%)"
+  },
+  {
+   "ticker": "JOBY",
+   "name": "Joby Aviation Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "AGX",
+   "name": "Argan Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "OKLO",
+   "name": "Oklo Inc. Class A common stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "SFM",
+   "name": "Sprouts Farmers Market Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "SEZL",
+   "name": "Sezzle Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 12 applicable metrics (25%, threshold 70%)"
+  },
+  {
+   "ticker": "NNI",
+   "name": "Nelnet Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 11 applicable metrics (27%, threshold 70%)"
+  },
+  {
+   "ticker": "OTF",
+   "name": "Blue Owl Technology Finance Corp. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 1 of 11 applicable metrics (9%, threshold 70%)"
+  },
+  {
+   "ticker": "CORZ",
+   "name": "Core Scientific Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "MTH",
+   "name": "Meritage Homes Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 7 of 11 applicable metrics (64%, threshold 70%)"
+  },
+  {
+   "ticker": "HESM",
+   "name": "Hess Midstream LP Class A Representing Limited Partner Interests",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 6 of 12 applicable metrics (50%, threshold 70%)"
+  },
+  {
+   "ticker": "INDV",
+   "name": "Indivior Pharmaceuticals Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 7 of 12 applicable metrics (58%, threshold 70%)"
+  },
+  {
+   "ticker": "LQDA",
+   "name": "Liquidia Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 12 applicable metrics (25%, threshold 70%)"
+  },
+  {
+   "ticker": "ABCL",
+   "name": "AbCellera Biologics Inc. Common Shares",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 12 applicable metrics (25%, threshold 70%)"
+  },
+  {
+   "ticker": "BOOT",
+   "name": "Boot Barn Holdings Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "BFH",
+   "name": "Bread Financial Holdings Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 2 of 11 applicable metrics (18%, threshold 70%)"
+  },
+  {
+   "ticker": "KLIC",
+   "name": "Kulicke and Soffa Industries Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "GTX",
+   "name": "Garrett Motion Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 4 of 11 applicable metrics (36%, threshold 70%)"
+  },
+  {
+   "ticker": "LOPE",
+   "name": "Grand Canyon Education Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 12 applicable metrics (25%, threshold 70%)"
+  },
+  {
+   "ticker": "OLED",
+   "name": "Universal Display Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "IEP",
+   "name": "Icahn Enterprises L.P. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 11 applicable metrics (45%, threshold 70%)"
+  },
+  {
+   "ticker": "AVPT",
+   "name": "AvePoint Inc. Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "USAR",
+   "name": "USA Rare Earth Inc. Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "ACAD",
+   "name": "ACADIA Pharmaceuticals Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "CELC",
+   "name": "Celcuity Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 7 of 12 applicable metrics (58%, threshold 70%)"
+  },
+  {
+   "ticker": "PFSI",
+   "name": "PennyMac Financial Services Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 11 applicable metrics (27%, threshold 70%)"
+  },
+  {
+   "ticker": "MHO",
+   "name": "M/I Homes Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 4 of 12 applicable metrics (33%, threshold 70%)"
+  },
+  {
+   "ticker": "ACLS",
+   "name": "Axcelis Technologies Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "TNET",
+   "name": "TriNet Group Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 11 applicable metrics (27%, threshold 70%)"
+  },
+  {
+   "ticker": "SPSC",
+   "name": "SPS Commerce Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "KBH",
+   "name": "KB Home Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 1 of 11 applicable metrics (9%, threshold 70%)"
+  },
+  {
+   "ticker": "ASST",
+   "name": "Strive Inc. Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 2 of 12 applicable metrics (17%, threshold 70%)"
+  },
+  {
+   "ticker": "TR",
+   "name": "Tootsie Roll Industries Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "QS",
+   "name": "QuantumScape Corporation Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "UWMC",
+   "name": "UWM Holdings Corporation Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 11 applicable metrics (27%, threshold 70%)"
+  },
+  {
+   "ticker": "POWI",
+   "name": "Power Integrations Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "LUNR",
+   "name": "Intuitive Machines Inc. Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 6 of 12 applicable metrics (50%, threshold 70%)"
+  },
+  {
+   "ticker": "PLUS",
+   "name": "ePlus inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "PAYO",
+   "name": "Payoneer Global Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 12 applicable metrics (25%, threshold 70%)"
+  },
+  {
+   "ticker": "CALX",
+   "name": "Calix Inc Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "PGNY",
+   "name": "Progyny Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "AGM",
+   "name": "Federal Agricultural Mortgage Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 11 applicable metrics (27%, threshold 70%)"
+  },
+  {
+   "ticker": "CNXN",
+   "name": "PC Connection Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "ANDE",
+   "name": "Andersons Inc. (The) Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 11 applicable metrics (45%, threshold 70%)"
+  },
+  {
+   "ticker": "BCRX",
+   "name": "BioCryst Pharmaceuticals Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "DV",
+   "name": "DoubleVerify Holdings Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "PPTA",
+   "name": "Perpetua Resources Corp. Common Shares",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "VCEL",
+   "name": "Vericel Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "SEPN",
+   "name": "Septerna Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 7 of 12 applicable metrics (58%, threshold 70%)"
+  },
+  {
+   "ticker": "SAM",
+   "name": "Boston Beer Company Inc. (The) Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "IDT",
+   "name": "IDT Corporation Class B Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "ZYME",
+   "name": "Zymeworks Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 12 applicable metrics (25%, threshold 70%)"
+  },
+  {
+   "ticker": "NEXT",
+   "name": "NextDecade Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "MCRI",
+   "name": "Monarch Casino & Resort Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 4 of 11 applicable metrics (36%, threshold 70%)"
+  },
+  {
+   "ticker": "MQ",
+   "name": "Marqeta Inc. Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "PRDO",
+   "name": "Perdoceo Education Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 12 applicable metrics (25%, threshold 70%)"
+  },
+  {
+   "ticker": "HAPN",
+   "name": "Happen Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 6 of 11 applicable metrics (55%, threshold 70%)"
+  },
+  {
+   "ticker": "ATEX",
+   "name": "Anterix Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 12 applicable metrics (25%, threshold 70%)"
+  },
+  {
+   "ticker": "NTLA",
+   "name": "Intellia Therapeutics Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 7 of 12 applicable metrics (58%, threshold 70%)"
+  },
+  {
+   "ticker": "CTS",
+   "name": "CTS Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "BFLY",
+   "name": "Butterfly Network Inc. Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "NUVB",
+   "name": "Nuvation Bio Inc. Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "NVAX",
+   "name": "Novavax Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "HCSG",
+   "name": "Healthcare Services Group Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 11 applicable metrics (27%, threshold 70%)"
+  },
+  {
+   "ticker": "PRLB",
+   "name": "Proto Labs Inc. Common stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "URGN",
+   "name": "UroGen Pharma Ltd. Ordinary Shares",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "RARE",
+   "name": "Ultragenyx Pharmaceutical Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 6 of 12 applicable metrics (50%, threshold 70%)"
+  },
+  {
+   "ticker": "HYMC",
+   "name": "Hycroft Mining Holding Corporation Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "ALHC",
+   "name": "Alignment Healthcare Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "INOD",
+   "name": "Innodata Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 11 applicable metrics (27%, threshold 70%)"
+  },
+  {
+   "ticker": "QUBT",
+   "name": "Quantum Computing Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "SBET",
+   "name": "Sharplink Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "CSWC",
+   "name": "Capital Southwest Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 11 applicable metrics (27%, threshold 70%)"
+  },
+  {
+   "ticker": "PWP",
+   "name": "Perella Weinberg Partners Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 7 of 12 applicable metrics (58%, threshold 70%)"
+  },
+  {
+   "ticker": "ANAB",
+   "name": "AnaptysBio Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "NSSC",
+   "name": "NAPCO Security Technologies Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "LQDT",
+   "name": "Liquidity Services Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "FRNM",
+   "name": "Freenome Inc. Common stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 12 applicable metrics (25%, threshold 70%)"
+  },
+  {
+   "ticker": "AMPX",
+   "name": "Amprius Technologies Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "CRAI",
+   "name": "CRA International Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "STAA",
+   "name": "STAAR Surgical Company Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "SNDX",
+   "name": "Syndax Pharmaceuticals Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "VSTM",
+   "name": "Verastem Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 6 of 12 applicable metrics (50%, threshold 70%)"
+  },
+  {
+   "ticker": "TMC",
+   "name": "TMC the metals company Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 12 applicable metrics (25%, threshold 70%)"
+  },
+  {
+   "ticker": "TBN",
+   "name": "Tamboran Resources Corporation Common stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 7 of 12 applicable metrics (58%, threshold 70%)"
+  },
+  {
+   "ticker": "GDYN",
+   "name": "Grid Dynamics Holdings Inc. Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "SENEA",
+   "name": "Seneca Foods Corp. Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 2 of 12 applicable metrics (17%, threshold 70%)"
+  },
+  {
+   "ticker": "AMRC",
+   "name": "Ameresco Inc. Class A Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 2 of 12 applicable metrics (17%, threshold 70%)"
+  },
+  {
+   "ticker": "JANX",
+   "name": "Janux Therapeutics Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 12 applicable metrics (25%, threshold 70%)"
+  },
+  {
+   "ticker": "NPK",
+   "name": "National Presto Industries Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "YELP",
+   "name": "Yelp Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "HSTM",
+   "name": "HealthStream Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "KFRC",
+   "name": "Kforce Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 12 applicable metrics (42%, threshold 70%)"
+  },
+  {
+   "ticker": "UTL",
+   "name": "UNITIL Corporation Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "EQH",
+   "name": "Equitable Holdings Inc. Common Stock",
+   "table": "insurers",
+   "kind": "insufficient_data",
+   "reason": "resolved 7 of 12 applicable metrics (58%, threshold 70%)"
+  },
+  {
+   "ticker": "GSHD",
+   "name": "Goosehead Insurance Inc. Class A Common Stock",
+   "table": "insurers",
+   "kind": "insufficient_data",
+   "reason": "resolved 4 of 9 applicable metrics (44%, threshold 70%)"
+  },
+  {
+   "ticker": "SEIC",
+   "name": "SEI Investments Company Common Stock",
+   "table": "capital_markets",
+   "kind": "insufficient_data",
+   "reason": "resolved 6 of 10 applicable metrics (60%, threshold 70%)"
+  },
+  {
+   "ticker": "STEP",
+   "name": "StepStone Group Inc. Class A Common Stock",
+   "table": "capital_markets",
+   "kind": "insufficient_data",
+   "reason": "resolved 5 of 10 applicable metrics (50%, threshold 70%)"
+  },
+  {
+   "ticker": "AAMI",
+   "name": "Acadian Asset Management Inc. Common Stock",
+   "table": "capital_markets",
+   "kind": "insufficient_data",
+   "reason": "resolved 4 of 10 applicable metrics (40%, threshold 70%)"
+  },
+  {
+   "ticker": "BAM",
+   "name": "Brookfield Asset Management Inc Class A Limited Voting Shares",
+   "table": "reits",
+   "kind": "insufficient_data",
+   "reason": "resolved 6 of 9 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "NLY",
+   "name": "Annaly Capital Management Inc. Common Stock",
+   "table": "reits",
+   "kind": "insufficient_data",
+   "reason": "resolved 4 of 9 applicable metrics (44%, threshold 70%)"
+  },
+  {
+   "ticker": "AGNC",
+   "name": "AGNC Investment Corp. Common Stock",
+   "table": "reits",
+   "kind": "insufficient_data",
+   "reason": "resolved 2 of 9 applicable metrics (22%, threshold 70%)"
+  },
+  {
+   "ticker": "SKT",
+   "name": "Tanger Inc. Common Stock",
+   "table": "reits",
+   "kind": "insufficient_data",
+   "reason": "resolved 3 of 9 applicable metrics (33%, threshold 70%)"
+  },
+  {
+   "ticker": "DRH",
+   "name": "Diamondrock Hospitality Company Common Stock",
+   "table": "reits",
+   "kind": "insufficient_data",
+   "reason": "resolved 4 of 9 applicable metrics (44%, threshold 70%)"
+  },
+  {
+   "ticker": "DX",
+   "name": "Dynex Capital Inc. Common Stock",
+   "table": "reits",
+   "kind": "insufficient_data",
+   "reason": "resolved 2 of 9 applicable metrics (22%, threshold 70%)"
+  },
+  {
+   "ticker": "ROIV",
+   "name": "Roivant Sciences Ltd. Common Shares",
+   "table": "pre_revenue",
+   "kind": "insufficient_data",
+   "reason": "resolved 2 of 7 applicable metrics (29%, threshold 70%)"
+  },
+  {
+   "ticker": "KOD",
+   "name": "Kodiak Sciences Inc Common Stock",
+   "table": "pre_revenue",
+   "kind": "insufficient_data",
+   "reason": "resolved 2 of 7 applicable metrics (29%, threshold 70%)"
+  },
+  {
+   "ticker": "IMVT",
+   "name": "Immunovant Inc. Common Stock",
+   "table": "pre_revenue",
+   "kind": "insufficient_data",
+   "reason": "resolved 1 of 7 applicable metrics (14%, threshold 70%)"
+  },
+  {
+   "ticker": "EWTX",
+   "name": "Edgewise Therapeutics Inc. Common Stock",
+   "table": "pre_revenue",
+   "kind": "insufficient_data",
+   "reason": "resolved 2 of 7 applicable metrics (29%, threshold 70%)"
+  },
+  {
+   "ticker": "XENE",
+   "name": "Xenon Pharmaceuticals Inc. Common Shares",
+   "table": "pre_revenue",
+   "kind": "insufficient_data",
+   "reason": "resolved 2 of 7 applicable metrics (29%, threshold 70%)"
+  },
+  {
+   "ticker": "IMNM",
+   "name": "Immunome Inc. Common Stock",
+   "table": "pre_revenue",
+   "kind": "insufficient_data",
+   "reason": "resolved 2 of 7 applicable metrics (29%, threshold 70%)"
+  },
+  {
+   "ticker": "TRVI",
+   "name": "Trevi Therapeutics Inc. Common Stock",
+   "table": "pre_revenue",
+   "kind": "insufficient_data",
+   "reason": "resolved 2 of 7 applicable metrics (29%, threshold 70%)"
+  },
+  {
+   "ticker": "TYRA",
+   "name": "Tyra Biosciences Inc. Common Stock",
+   "table": "pre_revenue",
+   "kind": "insufficient_data",
+   "reason": "resolved 2 of 7 applicable metrics (29%, threshold 70%)"
+  },
+  {
+   "ticker": "INBX",
+   "name": "Inhibrx Biosciences Inc. Common Stock",
+   "table": "pre_revenue",
+   "kind": "insufficient_data",
+   "reason": "resolved 4 of 7 applicable metrics (57%, threshold 70%)"
+  },
+  {
+   "ticker": "CHRN",
+   "name": "ChronoScale Holdings Corporation Common Stock",
+   "table": "operating",
+   "kind": "excluded",
+   "reason": "liquidity: average daily dollar volume $2.9M below the $5M floor"
+  },
+  {
+   "ticker": "MEDP",
+   "name": "Medpace Holdings Inc. Common Stock",
+   "table": "operating",
+   "kind": "insufficient_data",
+   "reason": "resolved 8 of 12 applicable metrics (67%, threshold 70%)"
+  },
+  {
+   "ticker": "AVBP",
+   "name": "ArriVent BioPharma Inc. Common Stock",
+   "table": "pre_revenue",
+   "kind": "market_cap_floor",
+   "reason": "market cap $733M, below the $1B floor"
+  },
+  {
+   "ticker": "VRTS",
+   "name": "Virtus Investment Partners Inc. Common Stock",
+   "table": "capital_markets",
+   "kind": "market_cap_floor",
+   "reason": "market cap $783M, below the $1B floor"
+  },
+  {
+   "ticker": "BCAX",
+   "name": "Bicara Therapeutics Inc. Common Stock",
+   "table": "pre_revenue",
+   "kind": "market_cap_floor",
+   "reason": "market cap $604M, below the $1B floor"
+  },
+  {
+   "ticker": "NPKI",
+   "name": "NPK International Inc. Common Stock",
+   "table": "operating",
+   "kind": "market_cap_floor",
+   "reason": "market cap $794M, below the $1B floor"
+  },
+  {
+   "ticker": "ABUS",
+   "name": "Arbutus Biopharma Corporation Common Stock",
+   "table": "operating",
+   "kind": "market_cap_floor",
+   "reason": "market cap $645M, below the $1B floor"
+  },
+  {
+   "ticker": "VPG",
+   "name": "Vishay Precision Group Inc. Common Stock",
+   "table": "operating",
+   "kind": "market_cap_floor",
+   "reason": "market cap $727M, below the $1B floor"
+  },
+  {
+   "ticker": "RCAT",
+   "name": "Red Cat Holdings Inc. Common Stock",
+   "table": "operating",
+   "kind": "market_cap_floor",
+   "reason": "market cap $707M, below the $1B floor"
+  },
+  {
+   "ticker": "AEVA",
+   "name": "Aeva Technologies Inc. Common Stock",
+   "table": "operating",
+   "kind": "market_cap_floor",
+   "reason": "market cap $646M, below the $1B floor"
+  },
+  {
+   "ticker": "BW",
+   "name": "Babcock & Wilcox Enterprises Inc. Common Stock",
+   "table": "operating",
+   "kind": "market_cap_floor",
+   "reason": "market cap $636M, below the $1B floor"
+  },
+  {
+   "ticker": "OI",
+   "name": "O-I Glass Inc. Common Stock",
+   "table": "operating",
+   "kind": "market_cap_floor",
+   "reason": "market cap $788M, below the $1B floor"
+  },
+  {
+   "ticker": "FUN",
+   "name": "Six Flags Entertainment Corporation Common Stock New",
+   "table": "operating",
+   "kind": "market_cap_floor",
+   "reason": "market cap $765M, below the $1B floor"
+  },
+  {
+   "ticker": "IBOC",
+   "name": "International Bancshares Corporation Common Stock",
+   "table": "banks",
+   "kind": "unlisted",
+   "reason": "no longer in the exchange listing feed (delisted, acquired, renamed or moved)"
+  },
+  {
+   "ticker": "RAMP",
+   "name": "LiveRamp Holdings Inc. Common Stock",
+   "table": "operating",
+   "kind": "unlisted",
+   "reason": "no longer in the exchange listing feed (delisted, acquired, renamed or moved)"
+  },
+  {
+   "ticker": "TCBI",
+   "name": "Texas Capital Bancshares Inc. Common Stock",
+   "table": "banks",
+   "kind": "unlisted",
+   "reason": "no longer in the exchange listing feed (delisted, acquired, renamed or moved)"
+  },
+  {
+   "ticker": "OBK",
+   "name": "Origin Bancorp Inc. Common Stock",
+   "table": "banks",
+   "kind": "unlisted",
+   "reason": "no longer in the exchange listing feed (delisted, acquired, renamed or moved)"
+  },
+  {
+   "ticker": "DDS",
+   "name": "Dillard's Inc. Common Stock",
+   "table": "operating",
+   "kind": "unlisted",
+   "reason": "no longer in the exchange listing feed (delisted, acquired, renamed or moved)"
+  },
+  {
+   "ticker": "QRVO",
+   "name": "Qorvo Inc. Common Stock",
+   "table": "operating",
+   "kind": "unlisted",
+   "reason": "no longer in the exchange listing feed (delisted, acquired, renamed or moved)"
+  },
+  {
+   "ticker": "BLFS",
+   "name": "BioLife Solutions Inc. Common Stock",
+   "table": "operating",
+   "kind": "unlisted",
+   "reason": "no longer in the exchange listing feed (delisted, acquired, renamed or moved)"
+  },
+  {
+   "ticker": "ACA",
+   "name": "Arcosa Inc. Common Stock",
+   "table": "operating",
+   "kind": "unlisted",
+   "reason": "no longer in the exchange listing feed (delisted, acquired, renamed or moved)"
+  },
+  {
+   "ticker": "KVUE",
+   "name": "Kenvue Inc. Common Stock",
+   "table": "operating",
+   "kind": "unlisted",
+   "reason": "no longer in the exchange listing feed (delisted, acquired, renamed or moved)"
+  },
+  {
+   "ticker": "ATKR",
+   "name": "Atkore Inc. Common Stock",
+   "table": "operating",
+   "kind": "unlisted",
+   "reason": "no longer in the exchange listing feed (delisted, acquired, renamed or moved)"
+  },
+  {
+   "ticker": "CBZ",
+   "name": "CBIZ Inc. Common Stock",
+   "table": "operating",
+   "kind": "unlisted",
+   "reason": "no longer in the exchange listing feed (delisted, acquired, renamed or moved)"
+  },
+  {
+   "ticker": "CCO",
+   "name": "Clear Channel Outdoor Holdings Inc. Common Stock",
+   "table": "operating",
+   "kind": "unlisted",
+   "reason": "no longer in the exchange listing feed (delisted, acquired, renamed or moved)"
+  },
+  {
+   "ticker": "WBD",
+   "name": "Warner Bros. Discovery Inc. Series A Common Stock",
+   "table": "operating",
+   "kind": "unlisted",
+   "reason": "no longer in the exchange listing feed (delisted, acquired, renamed or moved)"
+  },
+  {
+   "ticker": "CECO",
+   "name": "CECO Environmental Corp. Common Stock",
+   "table": "operating",
+   "kind": "unlisted",
+   "reason": "no longer in the exchange listing feed (delisted, acquired, renamed or moved)"
+  }
+ ]
+}

@@ -1116,6 +1116,7 @@ footer.pf a { color: var(--ink-2); }
   font: inherit; font-size: var(--t-small); padding: 5px 12px; cursor: pointer;
   background: var(--accent); color: var(--on-accent); border: 1px solid var(--accent); border-radius: var(--radius-sm);
 }
+a.aibtn { text-decoration: none; display: inline-block; }
 .aibtn.alt { background: none; color: var(--accent); }
 .aibtn:hover { filter: brightness(1.08); }
 .aitick {

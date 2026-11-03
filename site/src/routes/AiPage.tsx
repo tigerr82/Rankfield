@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { usePayload } from "../data/usePayload";
 import { Shell, useScrollRef } from "../components/Shell";
-import { companyPrompt, ROW_CHOICES, tablePrompt, TABLE_ROWS } from "../lib/aiExport";
+import {
+  approxTokensK, companyPrompt, packUrl, ROW_CHOICES, selectionPrompt, tablePrompt, TABLE_ROWS,
+} from "../lib/aiExport";
 import { countEvent } from "../lib/track";
 import { useApp } from "../state/AppState";
 import type { SegmentKey, StockRow } from "../data/types";
@@ -21,11 +23,14 @@ async function copy(text: string): Promise<boolean> {
  * sees the question that is asked afterwards.
  */
 export function AiPage() {
-  const { scores } = usePayload();
+  const { scores, history } = usePayload();
   const { segment } = useApp();
   const scrollRef = useScrollRef();
   const [ticker, setTicker] = useState("");
   const [rows, setRows] = useState<string>(String(TABLE_ROWS));
+  const [picked, setPicked] = useState("");
+  const [span, setSpan] = useState("all");
+  const [depth, setDepth] = useState<"scores" | "all">("scores");
   const [note, setNote] = useState<{ text: string; ok: boolean } | null>(null);
 
   const segmentKey: SegmentKey = segment === "insufficient" ? "operating" : segment;
@@ -59,6 +64,27 @@ export function AiPage() {
     setNote(
       ok
         ? { text: `Copied ${row.ticker}. Paste it into your assistant.`, ok }
+        : { text: "Your browser did not allow copying.", ok },
+    );
+  };
+
+  const selection = () => ({
+    tickers: picked.split(/[\s,;]+/).filter(Boolean).slice(0, 20),
+    months: span === "all" ? null : Number(span),
+    depth,
+  });
+  const selectionText = scores && picked.trim() ? selectionPrompt(scores, history, selection()) : "";
+  const copySelection = async () => {
+    if (!scores) return;
+    if (!selectionText) {
+      setNote({ text: "Enter at least one ticker.", ok: false });
+      return;
+    }
+    const ok = await copy(selectionText);
+    if (ok) countEvent("ai-copy-selection");
+    setNote(
+      ok
+        ? { text: `Copied ${selection().tickers.length} companies, about ${approxTokensK(selectionText)}k tokens. Paste it into your assistant.`, ok }
         : { text: "Your browser did not allow copying.", ok },
     );
   };
@@ -129,6 +155,66 @@ export function AiPage() {
             shorter list.
           </p>
         )}
+
+        <h2>Every month, every metric</h2>
+        <div className="aistep">
+          <div>
+            <b>Download the full data pack</b>
+            <p>
+              Every month Rankfield has scored: each company's rank, composite and four factor scores,
+              and every metric behind them with its raw value and sector percentile. Upload the ZIP to
+              an assistant that can analyse files (Claude, ChatGPT, Gemini) and ask about any company,
+              metric or month. It is rebuilt with every monthly and weekly update.
+            </p>
+            <div className="aibtns">
+              <a className="aibtn" href={packUrl()} download onClick={() => countEvent("ai-download-pack")}>
+                Download rankfield_data_pack.zip
+              </a>
+              <span className="muted">{scores ? `Through ${scores.meta.scoring_date}` : ""}</span>
+            </div>
+            <p className="muted">Not for chats that only read pasted text: use the selection copy below.</p>
+          </div>
+        </div>
+
+        <h2>Copy a selection</h2>
+        <div className="aistep">
+          <div>
+            <p>
+              A few companies over time, pasted as text: rank, composite and the four factor scores for
+              each month. With "plus latest metrics", also every metric behind the latest month; the
+              metrics of earlier months are in the data pack.
+            </p>
+            <div className="aibtns">
+              <input
+                className="aitick"
+                style={{ width: "22ch" }}
+                value={picked}
+                onChange={(e) => setPicked(e.target.value)}
+                placeholder="MU, NVDA, AMD"
+                aria-label="Tickers"
+              />
+              <select className="aitick aisel" value={span} onChange={(e) => setSpan(e.target.value)} aria-label="Months">
+                <option value="all">All months</option>
+                <option value="6">Last 6 months</option>
+                <option value="3">Last 3 months</option>
+                <option value="1">Last month only</option>
+              </select>
+              <select
+                className="aitick aisel"
+                value={depth}
+                onChange={(e) => setDepth(e.target.value as "scores" | "all")}
+                aria-label="Depth"
+              >
+                <option value="scores">Scores by month</option>
+                <option value="all">Scores plus latest metrics</option>
+              </select>
+              <button type="button" className="aibtn" onClick={copySelection} disabled={!scores}>
+                Copy selection
+              </button>
+              {selectionText && <span className="muted">about {approxTokensK(selectionText)}k tokens</span>}
+            </div>
+          </div>
+        </div>
 
         <h2>Questions that work well</h2>
         <ul>

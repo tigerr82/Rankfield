@@ -19,3 +19,6 @@ data/.cache/
 
 # TypeScript incremental build artifact
 site/tsconfig.tsbuildinfo
+
+# Generated at deploy from the monthly records
+site/public/data/rankfield_data_pack.zip
