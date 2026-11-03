@@ -127,6 +127,8 @@ nav.main a {
   border-radius: var(--radius);
   border: 1px solid transparent;
 }
+nav.main a.ainav { background: var(--accent); color: var(--on-accent); font-weight: 600; margin-left: 2px; }
+nav.main a.ainav:hover { filter: brightness(1.1); color: var(--on-accent); }
 nav.main a:hover { background: var(--accent-soft); color: var(--ink); }
 nav.main a.active { background: var(--accent); color: var(--on-accent); }
 
@@ -1071,3 +1073,29 @@ footer.pf a { color: var(--ink-2); }
   .moverstoggle { margin: 8px 10px 0; }
   .othertabs { margin: 10px 10px -2px; gap: 3px 12px; }
 }
+
+/* ============================================================ Use with your AI */
+
+.aisteps { display: grid; gap: 12px; margin: 0 0 22px; }
+.aistep { display: flex; gap: 14px; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--surface-2); }
+.aistep .num {
+  flex: none; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent); font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.aistep b { display: block; margin-bottom: 2px; }
+.aistep p { margin: 0; color: var(--ink-2); }
+.aibtns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+.aibtn {
+  font: inherit; font-size: var(--t-small); padding: 5px 12px; cursor: pointer;
+  background: var(--accent); color: var(--on-accent); border: 1px solid var(--accent); border-radius: var(--radius-sm);
+}
+.aibtn.alt { background: none; color: var(--accent); }
+.aibtn:hover { filter: brightness(1.08); }
+.aitick {
+  font: inherit; font-size: var(--t-small); width: 9ch; padding: 4px 8px;
+  border: 1px solid var(--line-2); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink);
+  text-transform: uppercase;
+}
+.aidone { font-size: var(--t-small); color: var(--accent); }
+.aiwarn { font-size: var(--t-small); color: var(--warn); }

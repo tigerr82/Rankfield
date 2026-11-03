@@ -1,4 +1,7 @@
-import { HashRouter, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { HashRouter, Route, Routes, useLocation } from "react-router-dom";
+import { countPage } from "./lib/track";
+import { AiPage } from "./routes/AiPage";
 import { AppHeader, StatusBanner } from "./components/Shell";
 import { AppStateProvider } from "./state/AppState";
 import { metricCoverage, usePayload } from "./data/usePayload";
@@ -28,6 +31,8 @@ export function App() {
 
 function Chrome() {
   const { scores } = usePayload();
+  const { pathname } = useLocation();
+  useEffect(() => countPage(pathname), [pathname]);
   return (
     <>
       <StatusBanner meta={scores?.meta} />
@@ -40,6 +45,7 @@ function Chrome() {
         <Route path="/stability" element={<StabilityPage />} />
         <Route path="/methodology" element={<MethodologyPage />} />
         <Route path="/coverage" element={<CoveragePage />} />
+        <Route path="/ai" element={<AiPage />} />
         <Route path="*" element={<RankingPage />} />
       </Routes>
     </>
