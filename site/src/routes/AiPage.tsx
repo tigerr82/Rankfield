@@ -4,7 +4,8 @@ import { Shell, useScrollRef } from "../components/Shell";
 import {
   ALL_TABLES, approxTokensK, companyPrompt, tableKeys, packMetricLines, packUrl, ROW_CHOICES, selectionPrompt, tablePrompt, TABLE_ROWS,
 } from "../lib/aiExport";
-import { loadMetricsCsv } from "../lib/pack";
+import { loadMetricsCsv, loadPackTexts, zipTexts } from "../lib/pack";
+import { subsetPack } from "../lib/packSubset";
 import { countEvent } from "../lib/track";
 import { useApp } from "../state/AppState";
 import type { SegmentKey, StockRow } from "../data/types";
@@ -57,6 +58,41 @@ export function AiPage() {
         ? { text: `Copied ${copied} of ${tableSize} companies (${tableLabel}). Paste it into your assistant.`, ok }
         : { text: "Your browser did not allow copying.", ok },
     );
+  };
+
+  // The chosen table(s) as a ZIP of the data-pack files, every month and every metric. An
+  // assistant that analyses files reads only what a question needs, so size costs few tokens.
+  const downloadTables = async () => {
+    if (!scores) return;
+    setNote({ text: "Preparing the file...", ok: true });
+    try {
+      const chosen = allTables ? keys : [segmentKey];
+      const label = (k: SegmentKey) => scores.segments_meta.find((s) => s.key === k)?.label ?? k;
+      const keep: Record<string, Set<string>> = {};
+      if (limit != null) {
+        for (const k of chosen) {
+          keep[label(k)] = new Set([...(scores.segments[k] ?? [])].sort((a, b) => a.rank - b.rank).slice(0, limit).map((r) => r.ticker));
+        }
+      }
+      const names = chosen.map(label);
+      const text = await loadPackTexts();
+      const subset = subsetPack(text, {
+        tables: names, keep,
+        note: `${names.join(", ")}; ${limit == null ? "every company ever ranked in them" : `the top ${limit} of each by rank in ${scores.meta.scoring_date.slice(0, 7)}, over every month`}.`,
+      });
+      const blob = await zipTexts(subset);
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `rankfield_${allTables ? "all_tables" : segmentKey}_${scores.meta.scoring_date.slice(0, 7)}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(link.href), 10000);
+      countEvent("ai-download-pack");
+      setNote({ text: `Downloaded ${names.join(", ")}. Upload the ZIP to your assistant.`, ok: true });
+    } catch (error) {
+      setNote({ text: `Could not prepare the file: ${(error as Error).message}.`, ok: false });
+    }
   };
 
   const copyCompany = async () => {
@@ -129,8 +165,12 @@ export function AiPage() {
             <div>
               <b>Copy</b>
               <p>
-                Choose what to hand your assistant. Each copy includes the scores, the factors, the
-                month, and a short explanation of how to read them. <strong>A table copy pastes the first companies in the ranking</strong>, from rank 1 down: {TABLE_ROWS} by default, or more if you choose. Pick one table, or all tables together (the count then applies to each table).
+                Choose a table, or all tables together, and how many companies from the top of each.
+                <strong> Download</strong> gives a ZIP with every month and every metric for them; upload it
+                to an assistant that can analyse files, which reads only what your question needs, so even
+                all tables cost few tokens. <strong>Copy as text</strong> (one table at a time) pastes the first companies in the ranking, from rank 1
+                down ({TABLE_ROWS} by default), with the month and a short note on how to read them; the whole text counts
+                toward your chat's limit.
               </p>
               <div className="aibtns">
                 <select className="aitick aisel" value={tableChoice} onChange={(e) => setTableChoice(e.target.value as SegmentKey | typeof ALL_TABLES)} aria-label="Which table">
@@ -145,9 +185,14 @@ export function AiPage() {
                   ))}
                   <option value="all">{tableSize ? `All ${tableSize}` : "All"}</option>
                 </select>
-                <button type="button" className="aibtn" onClick={copyTable} disabled={!scores}>
-                  {allTables ? "Copy all tables" : "Copy the table"}
+                <button type="button" className="aibtn" onClick={downloadTables} disabled={!scores}>
+                  {allTables ? "Download all tables (ZIP)" : "Download the table (ZIP)"}
                 </button>
+                {!allTables && (
+                  <button type="button" className="aibtn alt" onClick={copyTable} disabled={!scores}>
+                    Copy as text
+                  </button>
+                )}
                 <input
                   className="aitick"
                   value={ticker}
@@ -166,8 +211,8 @@ export function AiPage() {
           <div className="aistep">
             <span className="num">2</span>
             <div>
-              <b>Paste into your chat</b>
-              <p>Open your assistant in a new conversation and paste.</p>
+              <b>Upload or paste into your chat</b>
+              <p>Open your assistant in a new conversation and upload the ZIP, or paste the text.</p>
             </div>
           </div>
           <div className="aistep">
@@ -179,7 +224,7 @@ export function AiPage() {
           </div>
         </div>
 
-        {rows === "all" && tableSize > 500 && (
+        {!allTables && rows === "all" && tableSize > 500 && (
           <p className="muted">
             A whole table of {tableSize} companies is about {Math.round(tableSize * 0.03)}k tokens. Some
             assistants, mainly free plans, may refuse or cut a paste that long; if yours does, choose a

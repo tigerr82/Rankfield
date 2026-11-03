@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ScoresPayload, StockRow } from "../data/types";
+import { parseCsv, subsetPack } from "./packSubset";
 import { companyPrompt, packMetricLines, selectionPrompt, tablePrompt, TABLE_ROWS } from "./aiExport";
 
 const row = (rank: number, ticker: string): StockRow =>
@@ -21,6 +22,31 @@ const payload = {
   segments: { operating: rows },
   insufficient: [],
 } as unknown as ScoresPayload;
+
+describe("table subset of the data pack", () => {
+  const files = {
+    "README.txt": "full readme",
+    "scores_monthly.csv": ["month,ticker,name,table", "2026-09,A,\"A, Inc\",Banks", "2026-10,A,\"A, Inc\",Banks", "2026-10,B,B Inc,Banks", "2026-10,C,C Inc,REITs"].join("\n"),
+    "metrics_monthly.csv": ["month,ticker,metric", "2026-09,A,roe", "2026-10,A,roe", "2026-10,B,roe", "2026-10,C,roe"].join("\n"),
+    "companies.csv": ["ticker,name", "A,\"A, Inc\"", "B,B Inc", "C,C Inc"].join("\n"),
+    "not_ranked_monthly.csv": ["month,ticker,table", "2026-10,Z,Banks", "2026-10,Y,REITs"].join("\n"),
+  };
+
+  it("keeps only the chosen tables, and only the kept companies of a limited table, over every month", () => {
+    const out = subsetPack(files, { tables: ["Banks"], keep: { Banks: new Set(["A"]) }, note: "Banks; top 1." });
+    expect(parseCsv(out["scores_monthly.csv"]).map((r) => r[0] + r[1])).toEqual(["monthticker", "2026-09A", "2026-10A"]);
+    expect(parseCsv(out["scores_monthly.csv"])[1][2]).toBe("A, Inc");
+    expect(parseCsv(out["metrics_monthly.csv"])).toHaveLength(3);
+    expect(parseCsv(out["companies.csv"]).map((r) => r[0])).toEqual(["ticker", "A"]);
+    expect(parseCsv(out["not_ranked_monthly.csv"]).map((r) => r[1])).toEqual(["ticker", "Z"]);
+    expect(out["README.txt"]).toContain("SUBSET OF THE FULL DATA PACK: Banks; top 1.");
+  });
+
+  it("keeps every company of a table that has no limit", () => {
+    const out = subsetPack(files, { tables: ["Banks", "REITs"], keep: {}, note: "all" });
+    expect(parseCsv(out["scores_monthly.csv"])).toHaveLength(5);
+  });
+});
 
 describe("AI export", () => {
   it("copies the best rows of a table in rank order and says how many were left out", () => {
