@@ -172,7 +172,13 @@ export function AiPage() {
               </a>
               <span className="muted">{scores ? `Through ${scores.meta.scoring_date}` : ""}</span>
             </div>
-            <p className="muted">Not for chats that only read pasted text: use the selection copy below.</p>
+            <p className="muted">
+              <strong>Why a file and not a paste?</strong> Everything at once - every company, every month,
+              every metric - is hundreds of thousands of words, and grows every month: far more than a chat accepts as pasted text. As an
+              uploaded file the assistant does not read it all: it runs code on it and looks up only what
+              your question needs. That works in assistants that can analyse files (Claude, ChatGPT,
+              Gemini). If yours cannot, or it only reads pasted text, use the selection copy below.
+            </p>
           </div>
         </div>
 
