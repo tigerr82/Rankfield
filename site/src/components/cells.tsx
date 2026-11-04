@@ -95,9 +95,23 @@ export function Sparkline({
     .map((v, i) => `${i === 0 ? "M" : "L"}${(i * step).toFixed(1)},${(height - ((v - min) / span) * height).toFixed(1)}`)
     .join(" ");
   const rising = values[values.length - 1] >= values[0];
+  const color = rising ? "var(--up)" : "var(--down)";
+  // One filled dot per month while there is room (about 5px a month); on a long history only
+  // the latest month and every sixth month back from it, counted from the newest so the dots
+  // stay where they are as months are added.
+  const last = values.length - 1;
+  const roomForAll = step >= 5;
+  const months = points.filter((p) => (field === "price" ? comparablePrice(p) : p.composite) != null).map((p) => p.month);
   return (
     <svg className="spark" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-label={`${field === "price" ? "Price" : "Composite"} over ${values.length} months`}>
-      <path d={d} fill="none" stroke={rising ? "var(--up)" : "var(--down)"} strokeWidth="1.3" />
+      <path d={d} fill="none" stroke={color} strokeWidth="1.3" />
+      {values.map((v, i) =>
+        roomForAll || (last - i) % 6 === 0 ? (
+          <circle key={i} cx={Math.min(Math.max(i * step, 1), width - 1)} cy={Math.min(Math.max(height - ((v - min) / span) * height, 1), height - 1)} r="1" fill={color}>
+            <title>{`${months[i] ?? ""}: ${v.toFixed(1)}`}</title>
+          </circle>
+        ) : null,
+      )}
     </svg>
   );
 }
