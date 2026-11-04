@@ -215,6 +215,18 @@ middle and lower half; existing companies moved a median 0.1 composite points an
 dropped out, and Sandisk stayed first. Applies from the December run; the August to October records
 keep 2.4 and are not re-scored. Weights and factor definitions are unchanged.
 
+The same rule hid ExxonMobil, then worth about $770 billion: since 1 July 2026 it reports as ExxonMobil
+Holdings Corporation, a new holding company with a new SEC registration number and one periodic filing,
+while its record of decades sits under Exxon Mobil Corporation's. A company that changes number this
+way (a holding-company reorganisation, a merger into a new parent) now reads its predecessors' filings
+as its own, from `config/successors.json`, where each entry is checked by hand: ExxonMobil Holdings,
+Viper Energy and Pinnacle Financial Partners. The fetch also flags any other short-record company that
+has filed an 8-K12B, the form a successor issuer files, so the next case appears in the coverage report
+with a request to check it and is not lost silently. In a dry run, Exxon ranked 419th of 1,283
+operating companies (composite 56.0) and Pinnacle 126th of 136 banks (27.8, its merger year's balance
+sheet included); Viper still has too few metrics resolved (58% of the 70% needed) and sits in
+*Insufficient data*.
+
 Limits, stated: regulatory capital ratios (CET1) are tagged by none of the fifteen largest banks, so
 capital is judged on equity over assets within the large banks. Citigroup is not ranked: it filed
 its 10-Qs in May and August, but the SEC's structured data for it stops at December 2025, which the

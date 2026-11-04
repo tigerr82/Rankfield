@@ -82,7 +82,9 @@ def build_rows(universe, fundamentals, prices, settings, funnel, excluded, prior
             excluded.append({
                 "ticker": ticker, "stage": "structural hygiene",
                 "reason": f"only {fund['quarters_filed']} periodic filings on record under CIK "
-                          f"{listing['cik']} (need {cfg['min_quarters_filed']}) - growth metrics unreliable",
+                          f"{listing['cik']} (need {cfg['min_quarters_filed']}) - growth metrics unreliable"
+                          + (" - it filed an 8-K12B, so it may be the successor to another registrant: "
+                             "check config/successors.json" if fund.get("successor_notice") else ""),
             })
             continue
         # Every input is judged against the company's own latest balance sheet,

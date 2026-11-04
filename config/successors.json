@@ -1,0 +1,8 @@
+{
+  "note": "A company that changed SEC registration number (holding-company reorganisation, merger into a new parent) is keyed here by its current number. Its predecessors' filings are read as its own history. Each entry was checked by hand: the successor's 8-K12B names the same business, the predecessor's last periodic report precedes it, and the successor's earliest balance sheet matches the predecessor's.",
+  "successors": {
+    "0002115436": {"ticker": "XOM", "predecessors": ["0000034088"], "why": "ExxonMobil Holdings Corporation took over from Exxon Mobil Corporation on 2026-07-01 (8-K12B)."},
+    "0002074176": {"ticker": "VNOM", "predecessors": ["0001602065"], "why": "Viper Energy, Inc. succeeded Viper Energy Partners LP; its first balance sheet (2024-12-31, $5.07B) continues the partnership's."},
+    "0002082866": {"ticker": "PNFP", "predecessors": ["0001115055"], "why": "Pinnacle Financial Partners, Inc. (formerly Steel Newco) is the parent after the Synovus merger; its 2024-12-31 balance sheet ($52.6B) is the old Pinnacle's."}
+  }
+}

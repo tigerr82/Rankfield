@@ -274,6 +274,9 @@ if ROIC <= ${hurdle}% (hurdle):   min(p, 50)   (never above the midpoint)`}</pre
             required (a year and more of reports), or growth metrics are unreliable. A recent
             listing or spin-off with five to seven is ranked if it passes the coverage rule above;
             a metric its short history cannot support is simply not scored.
+            A company that changed SEC registration number (a holding-company reorganisation, a
+            merger into a new parent) reads its predecessors' filings as its own, from a list
+            checked by hand; ExxonMobil is one.
           </li>
           <li>
             <b>Liquidity floor</b> on average daily dollar volume, the correct substitute for a size

@@ -18,8 +18,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from rankfield.config import CACHE_DIR, DATA_DIR, ensure_dirs, load_settings, read_json, user_agent, write_json
-from rankfield.facts import FactSet
+from rankfield.config import CACHE_DIR, CONFIG_DIR, DATA_DIR, ensure_dirs, load_settings, read_json, user_agent, write_json
+from rankfield.facts import FactSet, merge_predecessor_facts
 from rankfield.metrics import REVENUE, compute_metrics
 from rankfield.providers import get_fundamentals_provider
 from rankfield.util import last_day_of_prior_month, retry_failed
@@ -49,6 +49,8 @@ def main() -> int:
         cache_dir=CACHE_DIR / "facts",
         per_sec=settings["http"]["sec_rate_limit_per_sec"],
     )
+    successors = (read_json(CONFIG_DIR / "successors.json") or {}).get("successors", {})
+    min_filings = settings["universe"]["min_quarters_filed"]
     tax_clamp = tuple(settings["scoring"]["effective_tax_clamp"])
     max_input_age = settings["scoring"]["max_input_age_days"]
 
@@ -69,7 +71,24 @@ def main() -> int:
             with lock:
                 failures.append({"ticker": ticker, "reason": "no XBRL facts on file"})
             return
+        # A company that changed SEC registration number reads its predecessors' filings as its own.
+        mapped = successors.get(listing["cik"])
+        if mapped:
+            try:
+                older = [edgar.company_facts(cik, use_cache=not args.no_cache) for cik in mapped["predecessors"]]
+            except Exception as exc:  # noqa: BLE001
+                with lock:
+                    failures.append({"ticker": ticker, "reason": f"predecessor fetch failed: {exc}"[:200], "transient": True})
+                return
+            raw = merge_predecessor_facts(raw, [o for o in older if o and o.get("facts")])
         fs = FactSet(raw, as_of, max_input_age_days=max_input_age)
+        # A short record under an unmapped number may be a successor issuer: flag it for review.
+        notice = False
+        if not mapped and fs.quarters_filed < min_filings:
+            try:
+                notice = edgar.files_successor_notice(listing["cik"])
+            except Exception:  # noqa: BLE001 - a courtesy check; its absence changes nothing
+                notice = False
         result = compute_metrics(fs, market_cap=listing.get("market_cap"), tax_clamp=tax_clamp)
         revenue = fs.ttm(REVENUE)
         # A readable report older than the freshness rule: ask the filing index whether the
@@ -96,6 +115,8 @@ def main() -> int:
             "files_domestic_forms": fs.files_domestic_forms,
             "forms": sorted(fs.forms),
             "newer_filing": newer,
+            "predecessors": mapped["predecessors"] if mapped else [],
+            "successor_notice": notice,
         }
         with lock:
             out[ticker] = record

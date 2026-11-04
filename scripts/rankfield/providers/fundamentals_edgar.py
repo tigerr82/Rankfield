@@ -109,3 +109,20 @@ class EdgarFundamentals:
                 if best is None or period > best["report_date"]:
                     best = {"form": form, "filed": filed, "report_date": period}
         return best
+
+    def files_successor_notice(self, cik: str) -> bool:
+        """True when the registrant has filed an 8-K12B: it took over another registrant's reporting.
+
+        That form is how a holding-company reorganisation or merger announces that the new
+        registrant is the successor issuer, so a company with a short record and this form probably
+        has a longer history under another registration number (see config/successors.json).
+        """
+        payload = http_json(
+            SUBMISSIONS_URL.format(cik=cik), user_agent=self.user_agent, limiter=self.limiter, allow_404=True,
+        )
+        return has_successor_notice(payload)
+
+
+def has_successor_notice(submissions: dict | None) -> bool:
+    recent = ((submissions or {}).get("filings") or {}).get("recent") or {}
+    return any(form in ("8-K12B", "8-K12G3") for form in recent.get("form", []))

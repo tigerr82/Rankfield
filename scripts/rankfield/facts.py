@@ -415,3 +415,30 @@ class FactSet:
                         }
                     )
         return out
+
+
+def merge_predecessor_facts(raw: dict, predecessors: list[dict]) -> dict:
+    """The company's own facts with its predecessor registrants' history added in front.
+
+    A holding-company reorganisation, a merger into a new parent or a redomicile gives the same
+    business a new SEC registration number, and with it a record that starts on the day of the
+    change: ExxonMobil Holdings (2026) had one periodic filing, Exxon Mobil Corp. decades. Facts
+    are joined as filed, nothing is rewritten, identical entries are kept once, and the successor's
+    name and registrant stay the company's own.
+    """
+    merged = {**raw, "facts": {}}
+    sources = [*predecessors, raw]
+    for source in sources:
+        for taxonomy, tags in (source.get("facts") or {}).items():
+            out_tags = merged["facts"].setdefault(taxonomy, {})
+            for tag, body in tags.items():
+                target = out_tags.setdefault(tag, {**{k: v for k, v in body.items() if k != "units"}, "units": {}})
+                for unit, entries in (body.get("units") or {}).items():
+                    seen = target["units"].setdefault(unit, [])
+                    keys = {tuple(sorted(e.items())) for e in seen}
+                    for entry in entries:
+                        key = tuple(sorted(entry.items()))
+                        if key not in keys:
+                            keys.add(key)
+                            seen.append(entry)
+    return merged
