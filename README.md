@@ -203,6 +203,18 @@ Bank of America 139th -> 83rd, Wells Fargo 136th -> 49th; the large banks now sp
 Both months regenerated from fresh EDGAR downloads, each with its own scoring date; the 2.3 records
 are in git.
 
+**2026-11 — methodology 2.5: a shorter history is enough to be ranked.** A reader asked why Sandisk,
+a listed company with years of accounts and wide coverage, was not ranked in August and September.
+It was spun off from Western Digital in February 2025, so under its own filer number it had seven
+periodic filings until its 10-Q of 30 October, and the structural filter required eight. The rule
+existed so that growth metrics are not built on too little history, but the coverage rule already
+sends a company without enough resolvable metrics to *Insufficient data*; the filing count shut out
+companies that could be scored. The minimum is now five filings. A dry run on the October data (in a
+scratch copy; nothing published) ranked 17 more companies out of 39 newly eligible, mostly in the
+middle and lower half; existing companies moved a median 0.1 composite points and 5 places, none
+dropped out, and Sandisk stayed first. Applies from the December run; the August to October records
+keep 2.4 and are not re-scored. Weights and factor definitions are unchanged.
+
 Limits, stated: regulatory capital ratios (CET1) are tagged by none of the fifteen largest banks, so
 capital is judged on equity over assets within the large banks. Citigroup is not ranked: it filed
 its 10-Qs in May and August, but the SEC's structured data for it stops at December 2025, which the

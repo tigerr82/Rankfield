@@ -270,8 +270,10 @@ if ROIC <= ${hurdle}% (hurdle):   min(p, 50)   (never above the midpoint)`}</pre
           <li>
             <b>Structural hygiene.</b> Dual-class duplicates collapsed to one line per company
             (keyed on SEC filer, keeping the more liquid class); foreign private issuers filing 20-F
-            removed; SPACs, shells, trusts and funds removed; at least eight periodic filings
-            required, or growth metrics are unreliable.
+            removed; SPACs, shells, trusts and funds removed; at least five periodic filings
+            required (a year and more of reports), or growth metrics are unreliable. A recent
+            listing or spin-off with five to seven is ranked if it passes the coverage rule above;
+            a metric its short history cannot support is simply not scored.
           </li>
           <li>
             <b>Liquidity floor</b> on average daily dollar volume, the correct substitute for a size
