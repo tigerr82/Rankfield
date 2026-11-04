@@ -107,7 +107,7 @@ export function Sparkline({
       <path d={d} fill="none" stroke={color} strokeWidth="1.3" />
       {values.map((v, i) =>
         roomForAll || (last - i) % 6 === 0 ? (
-          <circle key={i} cx={Math.min(Math.max(i * step, 1), width - 1)} cy={Math.min(Math.max(height - ((v - min) / span) * height, 1), height - 1)} r="1.5" fill={color}>
+          <circle key={i} cx={Math.min(Math.max(i * step, 1.5), width - 1.5)} cy={Math.min(Math.max(height - ((v - min) / span) * height, 1.5), height - 1.5)} r="1.5" fill={color}>
             <title>{`${months[i] ?? ""}: ${v.toFixed(1)}`}</title>
           </circle>
         ) : null,
