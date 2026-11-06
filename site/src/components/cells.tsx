@@ -90,10 +90,12 @@ export function Sparkline({
   const min = Math.min(...values);
   const max = Math.max(...values);
   const span = max - min || 1;
-  const step = width / (values.length - 1);
-  const d = values
-    .map((v, i) => `${i === 0 ? "M" : "L"}${(i * step).toFixed(1)},${(height - ((v - min) / span) * height).toFixed(1)}`)
-    .join(" ");
+  // The line and its dots are drawn inside an inset, so the first and last dots sit on the line
+  // ends instead of being pushed off them at the frame's edge.
+  const pad = 2;
+  const step = (width - 2 * pad) / (values.length - 1);
+  const pts = values.map((v, i) => ({ x: pad + i * step, y: pad + (height - 2 * pad) - ((v - min) / span) * (height - 2 * pad), v }));
+  const d = pts.map((q, i) => `${i === 0 ? "M" : "L"}${q.x.toFixed(1)},${q.y.toFixed(1)}`).join(" ");
   const rising = values[values.length - 1] >= values[0];
   const color = rising ? "var(--up)" : "var(--down)";
   // One filled dot per month while there is room (about 5px a month); on a long history only
@@ -104,11 +106,11 @@ export function Sparkline({
   const months = points.filter((p) => (field === "price" ? comparablePrice(p) : p.composite) != null).map((p) => p.month);
   return (
     <svg className="spark" width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-label={`${field === "price" ? "Price" : "Composite"} over ${values.length} months`}>
-      <path d={d} fill="none" stroke={color} strokeWidth="1.3" />
-      {values.map((v, i) =>
+      <path d={d} fill="none" stroke={color} strokeWidth="1.3" strokeLinejoin="round" strokeLinecap="round" />
+      {pts.map((q, i) =>
         roomForAll || (last - i) % 6 === 0 ? (
-          <circle key={i} cx={Math.min(Math.max(i * step, 1.6), width - 1.6)} cy={Math.min(Math.max(height - ((v - min) / span) * height, 1.6), height - 1.6)} r="1.6" fill={color}>
-            <title>{`${months[i] ?? ""}: ${v.toFixed(1)}`}</title>
+          <circle key={i} cx={q.x.toFixed(1)} cy={q.y.toFixed(1)} r="1.4" fill={color}>
+            <title>{`${months[i] ?? ""}: ${q.v.toFixed(1)}`}</title>
           </circle>
         ) : null,
       )}
