@@ -6,7 +6,7 @@
   "block_scored_drop_pct": 5,
   "recently_abandoned_days": 450
  },
- "scored_now": 1647,
+ "scored_now": 1664,
  "recently_abandoned_tags": [
   {
    "ticker": "BBT",
@@ -150,6 +150,12 @@
    "candidates": {}
   },
   {
+   "ticker": "NP",
+   "concept": "LongTermDebt",
+   "last_reported": "2025-09-30",
+   "candidates": {}
+  },
+  {
    "ticker": "NUVB",
    "concept": "CostOfGoodsAndServicesSold",
    "last_reported": "2025-09-30",
@@ -230,7 +236,7 @@
  ],
  "status": "warn",
  "scored_prior": 1661,
- "scored_change_pct": -0.84,
+ "scored_change_pct": 0.18,
  "dropped_out": [
   {
    "ticker": "ABUS",
