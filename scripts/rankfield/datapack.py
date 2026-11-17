@@ -16,6 +16,8 @@ from .adjusted import adjusted_prices
 
 METHOD_URL = "https://tigerr82.github.io/Rankfield/#/methodology"
 FACTORS = ["quality", "growth", "valuation", "health"]
+# Measured beside the rank, used in none of it (see shadow.py); empty before they were recorded.
+RESEARCH = ["momentum_12_1", "net_payout_yield", "accruals"]
 REBUILT_AFTER_DAYS = 7   # a record made more than a week after its scoring date was rebuilt
 # August and September 2026 were scored on the current method after the fact (the project began in
 # October); their record dates do not show it, so they are named here.
@@ -99,6 +101,7 @@ def build_pack(records: dict[str, dict], unranked: dict[str, dict], current: dic
                     *[f.get(k) for k in FACTORS], r.get("rank_change"), r.get("composite_change"),
                     int(bool(r.get("is_new"))), price, adjusted[month].get(r["ticker"]), change, r.get("market_cap"), r.get("coverage"),
                     r.get("fundamentals_asof"), r.get("form"), r.get("filed"), r.get("weights_version"),
+                    *[(r.get("research") or {}).get(k) for k in RESEARCH],
                 ])
                 for key, cell in (r.get("metrics") or {}).items():
                     spec = specs.get(key, {})
@@ -129,7 +132,7 @@ def build_pack(records: dict[str, dict], unranked: dict[str, dict], current: dic
             ["month", "scoring_date", "ticker", "name", "table", "peer_group", "sector", "rank", "composite",
              "quality", "growth", "value", "health", "rank_change", "composite_change", "first_time_ranked",
              "price", "price_adjusted", "price_change_pct", "market_cap", "metric_coverage", "fundamentals_asof", "form",
-             "filed", "method_version"], score_rows),
+             "filed", "method_version", *RESEARCH], score_rows),
         "metrics_monthly.csv": _csv(["month", "ticker", "metric", "factor", "raw_value", "sector_percentile",
                                      "basis"], metric_rows),
         "not_ranked_monthly.csv": _csv(["month", "ticker", "name", "table", "kind", "reason"], not_ranked),
@@ -178,6 +181,12 @@ HOW TO READ IT
   - price_adjusted puts every month on the newest basis (split- and dividend-adjusted), chained
     from the prior-month price each later run re-read. Use it, never price, for returns between
     months. It is empty where the chain cannot be linked (a gap in a company's months).
+  - momentum_12_1, net_payout_yield and accruals are research columns recorded beside the rank from
+    the month they were first measured. They are NOT part of any score. momentum_12_1 is the
+    adjusted-price return from twelve months to one month before the scoring date; net_payout_yield
+    is stock repurchased less stock issued over the last twelve months, over market cap; accruals is
+    (net income - operating cash flow) over average assets, and means little for banks and insurers.
+    Empty means not measured that month.
 
 EXAMPLE QUESTIONS
   - How did the ROIC percentile of MU, NVDA and AMD change month by month?

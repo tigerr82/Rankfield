@@ -34,6 +34,8 @@ def main() -> int:
     settings = load_settings()
     scoring_date = date.fromisoformat(args.as_of) if args.as_of else last_day_of_prior_month(date.today())
     prior_scoring_date = last_day_of_prior_month(scoring_date.replace(day=1))
+    # the month end twelve months before the scoring date
+    year_before = last_day_of_prior_month(date(scoring_date.year - 1 + (scoring_date.month == 12), scoring_date.month % 12 + 1, 1))
 
     universe = read_json(DATA_DIR / "universe.json")
     if not universe:
@@ -53,7 +55,7 @@ def main() -> int:
     def work(listing: dict) -> None:
         ticker = listing["ticker"]
         try:
-            series = provider.history(ticker, range_="1y")
+            series = provider.history(ticker, range_="2y")
         except Exception as exc:  # noqa: BLE001 - recorded, never silently dropped
             failures.append({"ticker": ticker, "reason": str(exc)[:200], "transient": True})
             return
@@ -65,6 +67,12 @@ def main() -> int:
         if not now:
             failures.append({"ticker": ticker, "reason": f"no close on or before {scoring_date}"})
             return
+        # Research measure, not scored: the return from twelve months before the scoring date to one
+        # month before it, skipping the latest month (the usual 12-1 momentum, on adjusted closes).
+        momentum = None
+        start = series.close_on_or_before(year_before)
+        if start and prior and start[1] and (year_before - date.fromisoformat(start[0])).days <= 7:
+            momentum = round(prior[1] / start[1] - 1, 4)
         change_pct = None
         if prior and prior[1]:
             change_pct = (now[1] / prior[1] - 1) * 100
@@ -85,6 +93,7 @@ def main() -> int:
             "change_pct": round(change_pct, 4) if change_pct is not None else None,
             "change_abs": round(now[1] - prior[1], 4) if prior else None,
             "adv_dollar": series.avg_dollar_volume(63, as_of=scoring_date),
+            "momentum_12_1": momentum,
             "splits_in_window": series.splits,
         }
 

@@ -22,6 +22,7 @@ from rankfield.config import CACHE_DIR, CONFIG_DIR, DATA_DIR, ensure_dirs, load_
 from rankfield.facts import FactSet, merge_predecessor_facts
 from rankfield.metrics import REVENUE, compute_metrics
 from rankfield.providers import get_fundamentals_provider
+from rankfield.shadow import shadow_metrics
 from rankfield.util import last_day_of_prior_month, retry_failed
 
 
@@ -117,6 +118,7 @@ def main() -> int:
             "newer_filing": newer,
             "predecessors": mapped["predecessors"] if mapped else [],
             "successor_notice": notice,
+            "shadow": shadow_metrics(fs, listing.get("market_cap")),
         }
         with lock:
             out[ticker] = record

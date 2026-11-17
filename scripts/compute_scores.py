@@ -136,6 +136,8 @@ def build_rows(universe, fundamentals, prices, settings, funnel, excluded, prior
                 if carry else []),
             "data_lag": lag if carry else None,
             "revenue_ttm": fund["revenue_ttm"],
+            "research": {**((fund.get("shadow") or {}).get("values") or {}),
+                         "momentum_12_1": price.get("momentum_12_1")},
         })
 
     funnel.append({"stage": "has EDGAR fundamentals", "count": len(universe["listings"]) - stage_counts["no_fundamentals"]})
@@ -294,6 +296,8 @@ def main() -> int:
                 if k not in ("fundamentals_asof", "filed", "accn", "form", "stale_inputs", "unmapped_candidates")
             },
             "notes": row["notes"],
+            # Measured beside the rank and used nowhere in it: see rankfield/shadow.py.
+            "research": row.get("research"),
             "weights_version": weights_cfg["version"],
             "is_new": was is None,
             "composite_change": (

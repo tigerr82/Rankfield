@@ -227,6 +227,17 @@ operating companies (composite 56.0) and Pinnacle 126th of 136 banks (27.8, its 
 sheet included); Viper still has too few metrics resolved (58% of the 70% needed) and sits in
 *Insufficient data*.
 
+**Research measures, recorded and not scored (from the November 2026 data).** Three signals the
+literature ties to later returns and the four factors do not contain are now stored beside every
+ranked company each month and used in no score: 12-1 price momentum (adjusted return from twelve
+months to one month before the scoring date), net payout yield (stock repurchased less stock issued,
+trailing twelve months, over market cap) and accruals ((net income - operating cash flow) over average
+assets; not meaningful for banks and insurers). They are in each month's history record under
+`research` and in `scores_monthly.csv` of the data pack. The point is to let a year of months show
+whether adding any of them would improve the ranking. A version that used one would start from the
+month it was adopted; months already recorded are never re-scored with it, and the months before these
+were first measured simply have no value. Decided 2026-11-17; no weight or factor changed.
+
 Limits, stated: regulatory capital ratios (CET1) are tagged by none of the fifteen largest banks, so
 capital is judged on equity over assets within the large banks. Citigroup is not ranked: it filed
 its 10-Qs in May and August, but the SEC's structured data for it stops at December 2025, which the

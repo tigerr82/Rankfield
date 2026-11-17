@@ -78,3 +78,14 @@ def test_unranked_record_collects_insufficient_data_and_exits():
     coverage = {"exits": [{"ticker": "E1", "name": "E", "segment": "banks", "kind": "unlisted", "reason": "gone"}]}
     kinds = {e["ticker"]: e["kind"] for e in unranked_record(scores, coverage)["entries"]}
     assert kinds == {"I1": "insufficient_data", "E1": "unlisted"}
+
+
+def test_research_measures_are_in_the_pack_where_recorded_and_empty_where_not():
+    records = {"2026-09": _record("2026-09-30", [_row("AAA", 2, 80)]),
+               "2026-10": _record("2026-10-31", [_row("AAA", 1, 90, research={
+                   "momentum_12_1": 0.2, "net_payout_yield": 0.03, "accruals": None})])}
+    scores = {r["month"]: r for r in _files(build_pack(records, {}, CURRENT, "x"))["scores_monthly.csv"]}
+    assert scores["2026-09"]["momentum_12_1"] == ""
+    assert scores["2026-10"]["momentum_12_1"] == "0.2"
+    assert scores["2026-10"]["net_payout_yield"] == "0.03"
+    assert scores["2026-10"]["accruals"] == ""

@@ -206,6 +206,15 @@ if ROIC <= ${hurdle}% (hurdle):   min(p, 50)   (never above the midpoint)`}</pre
           the score-against-return views and the data pack compare months on one adjusted basis.
         </div>
 
+        <p>
+          <b>Measured, not scored.</b> From November 2026 the data pack also carries three research
+          columns beside each rank: 12-1 price momentum, net payout yield (stock repurchased less
+          stock issued, over market cap) and accruals (net income less operating cash flow, over
+          average assets). They enter no score. They are recorded so that a year of months can show
+          whether any of them would improve the ranking, and a version that used one would apply
+          only to months after it was adopted.
+        </p>
+
         <h2>Who gets scored</h2>
         <p>
           The full qualifying universe is scored — the default <i>view</i> is narrowed, not the
