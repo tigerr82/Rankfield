@@ -227,10 +227,11 @@ operating companies (composite 56.0) and Pinnacle 126th of 136 banks (27.8, its 
 sheet included); Viper still has too few metrics resolved (58% of the 70% needed) and sits in
 *Insufficient data*.
 
-**Research measures, recorded and not scored (from the November 2026 data).** Three signals the
+**Research measures, recorded and not scored (from the November 2026 data).** Signals the
 literature ties to later returns and the four factors do not contain are now stored beside every
-ranked company each month and used in no score: 12-1 price momentum (adjusted return from twelve
-months to one month before the scoring date), net payout yield (stock repurchased less stock issued,
+ranked company each month and used in no score: price momentum over twelve and over six months
+(adjusted return from twelve, or six, months to one month before the scoring date: 12-1 and 6-1; both
+kept so a year of data can say which window predicts better), net payout yield (stock repurchased less stock issued,
 trailing twelve months, over market cap) and accruals ((net income - operating cash flow) over average
 assets; not meaningful for banks and insurers). They are in each month's history record under
 `research` and in `scores_monthly.csv` of the data pack. The point is to let a year of months show

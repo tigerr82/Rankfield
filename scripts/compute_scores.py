@@ -137,7 +137,8 @@ def build_rows(universe, fundamentals, prices, settings, funnel, excluded, prior
             "data_lag": lag if carry else None,
             "revenue_ttm": fund["revenue_ttm"],
             "research": {**((fund.get("shadow") or {}).get("values") or {}),
-                         "momentum_12_1": price.get("momentum_12_1")},
+                         "momentum_12_1": price.get("momentum_12_1"),
+                         "momentum_6_1": price.get("momentum_6_1")},
         })
 
     funnel.append({"stage": "has EDGAR fundamentals", "count": len(universe["listings"]) - stage_counts["no_fundamentals"]})

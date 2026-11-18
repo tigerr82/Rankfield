@@ -83,9 +83,10 @@ def test_unranked_record_collects_insufficient_data_and_exits():
 def test_research_measures_are_in_the_pack_where_recorded_and_empty_where_not():
     records = {"2026-09": _record("2026-09-30", [_row("AAA", 2, 80)]),
                "2026-10": _record("2026-10-31", [_row("AAA", 1, 90, research={
-                   "momentum_12_1": 0.2, "net_payout_yield": 0.03, "accruals": None})])}
+                   "momentum_12_1": 0.2, "momentum_6_1": -0.1, "net_payout_yield": 0.03, "accruals": None})])}
     scores = {r["month"]: r for r in _files(build_pack(records, {}, CURRENT, "x"))["scores_monthly.csv"]}
     assert scores["2026-09"]["momentum_12_1"] == ""
     assert scores["2026-10"]["momentum_12_1"] == "0.2"
+    assert scores["2026-10"]["momentum_6_1"] == "-0.1"
     assert scores["2026-10"]["net_payout_yield"] == "0.03"
     assert scores["2026-10"]["accruals"] == ""

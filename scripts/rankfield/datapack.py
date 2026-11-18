@@ -17,7 +17,7 @@ from .adjusted import adjusted_prices
 METHOD_URL = "https://tigerr82.github.io/Rankfield/#/methodology"
 FACTORS = ["quality", "growth", "valuation", "health"]
 # Measured beside the rank, used in none of it (see shadow.py); empty before they were recorded.
-RESEARCH = ["momentum_12_1", "net_payout_yield", "accruals"]
+RESEARCH = ["momentum_12_1", "momentum_6_1", "net_payout_yield", "accruals"]
 REBUILT_AFTER_DAYS = 7   # a record made more than a week after its scoring date was rebuilt
 # August and September 2026 were scored on the current method after the fact (the project began in
 # October); their record dates do not show it, so they are named here.
@@ -181,9 +181,10 @@ HOW TO READ IT
   - price_adjusted puts every month on the newest basis (split- and dividend-adjusted), chained
     from the prior-month price each later run re-read. Use it, never price, for returns between
     months. It is empty where the chain cannot be linked (a gap in a company's months).
-  - momentum_12_1, net_payout_yield and accruals are research columns recorded beside the rank from
-    the month they were first measured. They are NOT part of any score. momentum_12_1 is the
-    adjusted-price return from twelve months to one month before the scoring date; net_payout_yield
+  - momentum_12_1, momentum_6_1, net_payout_yield and accruals are research columns recorded beside
+    the rank from the month they were first measured. They are NOT part of any score. momentum_12_1
+    is the adjusted-price return from twelve months to one month before the scoring date, and
+    momentum_6_1 the same over six months; net_payout_yield
     is stock repurchased less stock issued over the last twelve months, over market cap; accruals is
     (net income - operating cash flow) over average assets, and means little for banks and insurers.
     Empty means not measured that month.

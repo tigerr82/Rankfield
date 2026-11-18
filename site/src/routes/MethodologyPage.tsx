@@ -207,8 +207,9 @@ if ROIC <= ${hurdle}% (hurdle):   min(p, 50)   (never above the midpoint)`}</pre
         </div>
 
         <p>
-          <b>Measured, not scored.</b> From November 2026 the data pack also carries three research
-          columns beside each rank: 12-1 price momentum, net payout yield (stock repurchased less
+          <b>Measured, not scored.</b> From November 2026 the data pack also carries four research
+          columns beside each rank: price momentum over twelve and over six months (each skipping the
+          latest month), net payout yield (stock repurchased less
           stock issued, over market cap) and accruals (net income less operating cash flow, over
           average assets). They enter no score. They are recorded so that a year of months can show
           whether any of them would improve the ranking, and a version that used one would apply

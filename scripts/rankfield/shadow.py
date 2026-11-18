@@ -1,8 +1,8 @@
 """Research measures recorded beside each month's rank. None of them is scored.
 
-Three candidates the literature ties to later returns and the four factors do not contain:
-net buyback yield, earnings accruals, and price momentum (momentum is cut from the price
-series in fetch_prices.py). They are stored so that a year of history can show whether adding
+Candidates the literature ties to later returns and the four factors do not contain:
+net buyback yield, earnings accruals, and price momentum over twelve and over six months
+(momentum is cut from the price series, see `momentum` below). They are stored so that a year of history can show whether adding
 one would improve the ranking. They change no score and no rank, and a methodology version
 that used one would apply only to months after it was adopted.
 
@@ -20,14 +20,33 @@ Definitions, chosen once like the metrics in metrics.py:
 """
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import date, timedelta
 
 from .facts import FactSet
 from .metrics import ASSETS, NET_INCOME, OPERATING_CASH_FLOW
-from .util import parse_iso, safe_div
+from .util import last_day_of_prior_month, parse_iso, safe_div
 
 REPURCHASE = ["PaymentsForRepurchaseOfCommonStock", "PaymentsForRepurchaseOfEquity"]
 ISSUANCE = ["ProceedsFromIssuanceOfCommonStock", "ProceedsFromIssuanceOrSaleOfEquity"]
+
+
+def month_end_back(when: date, months: int) -> date:
+    """The last day of the month `months` before the month of `when`."""
+    index = when.year * 12 + (when.month - 1) - months
+    year, month = index // 12, index % 12 + 1
+    return last_day_of_prior_month(date(year + (month == 12), month % 12 + 1, 1))
+
+
+def momentum(series, scoring: date, months: int) -> float | None:
+    """Adjusted return from `months` months before the scoring date to one month before it,
+    skipping the latest month (the usual 12-1 and 6-1 momentum). None when the price history
+    does not reach back far enough."""
+    end = series.close_on_or_before(month_end_back(scoring, 1))
+    target = month_end_back(scoring, months)
+    start = series.close_on_or_before(target)
+    if not end or not start or not start[1] or (target - date.fromisoformat(start[0])).days > 7:
+        return None
+    return round(end[1] / start[1] - 1, 4)
 
 
 def _val(fact: dict | None):

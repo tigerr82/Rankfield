@@ -65,3 +65,32 @@ def test_nothing_is_invented_without_a_market_cap_or_a_cash_flow_statement():
     out = shadow_metrics(bare, 2000.0)
     assert out["values"] == {"net_payout_yield": None, "accruals": None}
     assert out["sources"]["accruals"]
+
+
+class _Series:
+    def __init__(self, closes):
+        self.dates, self.closes = list(closes), list(closes.values())
+
+    def close_on_or_before(self, when):
+        target = when.isoformat()
+        hits = [(d, c) for d, c in zip(self.dates, self.closes) if d <= target]
+        return hits[-1] if hits else None
+
+
+def test_month_ends_walk_back_across_a_year_boundary():
+    from rankfield.shadow import month_end_back
+    assert month_end_back(date(2026, 10, 31), 1) == date(2026, 9, 30)
+    assert month_end_back(date(2026, 2, 28), 3) == date(2025, 11, 30)
+    assert month_end_back(date(2026, 1, 31), 12) == date(2025, 1, 31)
+    assert month_end_back(date(2026, 12, 31), 12) == date(2025, 12, 31)
+
+
+def test_momentum_skips_the_latest_month_and_needs_the_history():
+    from rankfield.shadow import momentum
+    series = _Series({"2025-10-31": 100.0, "2026-04-30": 120.0, "2026-09-30": 150.0, "2026-10-31": 90.0})
+    scoring = date(2026, 10, 31)
+    assert momentum(series, scoring, 12) == 0.5      # 150 / 100 - 1, the October fall is skipped
+    assert momentum(series, scoring, 6) == 0.25      # 150 / 120 - 1
+    young = _Series({"2026-05-29": 100.0, "2026-09-30": 150.0, "2026-10-31": 90.0})
+    assert momentum(young, scoring, 12) is None
+    assert momentum(young, scoring, 6) is None
