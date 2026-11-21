@@ -6,7 +6,7 @@
   "block_scored_drop_pct": 5,
   "recently_abandoned_days": 450
  },
- "scored_now": 1663,
+ "scored_now": 1661,
  "recently_abandoned_tags": [
   {
    "ticker": "BBT",
@@ -236,7 +236,7 @@
  ],
  "status": "warn",
  "scored_prior": 1661,
- "scored_change_pct": 0.12,
+ "scored_change_pct": 0.0,
  "dropped_out": [
   {
    "ticker": "ABUS",
@@ -265,6 +265,11 @@
   },
   {
    "ticker": "BCAX",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "BKH",
    "reason": "no longer eligible (universe, price, filing or liquidity filters)",
    "candidates": {}
   },
@@ -329,12 +334,22 @@
    "candidates": {}
   },
   {
+   "ticker": "NWE",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
    "ticker": "OBK",
    "reason": "no longer eligible (universe, price, filing or liquidity filters)",
    "candidates": {}
   },
   {
    "ticker": "OI",
+   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
+   "candidates": {}
+  },
+  {
+   "ticker": "PCRX",
    "reason": "no longer eligible (universe, price, filing or liquidity filters)",
    "candidates": {}
   },
@@ -350,11 +365,6 @@
   },
   {
    "ticker": "RCAT",
-   "reason": "no longer eligible (universe, price, filing or liquidity filters)",
-   "candidates": {}
-  },
-  {
-   "ticker": "ROKU",
    "reason": "no longer eligible (universe, price, filing or liquidity filters)",
    "candidates": {}
   },
